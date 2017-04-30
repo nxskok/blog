@@ -13,15 +13,6 @@
     
     <item>
       <title>A post</title>
-      <link>/apost/</link>
-      <pubDate>Sat, 29 Apr 2017 00:00:00 +0000</pubDate>
-      
-      <guid>/apost/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>A post</title>
       <link>/2017/04/29/a-post/</link>
       <pubDate>Sat, 29 Apr 2017 00:00:00 +0000</pubDate>
       
@@ -36,7 +27,7 @@ z=1:5 z ## [1] 1 2 3 4 5 sd(z) ## [1] 1.581139 </description>
       <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
       
       <guid>/about/</guid>
-      <description>Ken Butler is a Lecturer in Statistics at the University of Toronto Scarborough, and Supervisor of Studies of the Applied Statistics Minor program there. He also likes exploring and learning about Toronto.</description>
+      <description>Ken Butler is a Lecturer in Statistics at the University of Toronto Scarborough, and Supervisor of Studies of the Applied Statistics Minor program there. He also likes exploring and learning about Toronto. Hello.</description>
     </item>
     
   </channel>
