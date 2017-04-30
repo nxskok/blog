@@ -5,7 +5,7 @@ date: "April 29, 2017"
 output: html_document
 ---
 
-![map of the route](walk-2017-04-29.jpg)
+![map of the route](https://scontent-yyz1-1.xx.fbcdn.net/v/t1.0-9/18198260_10155257583714805_7151285938864367693_n.jpg?oh=861c1c4ed92f4a791c545740559f94d0&oe=59BB8163)
 
 
 So I was at Yorkdale, with no subway south. So I figured I'd arrange a walk and see how far I got. I rode the shuttle bus to Lawrence West, seeing at first hand how ill-suited Toronto is to the car: onto the Allen, a *long* lineup to turn left onto Lawrence (for us, to get in front of the subway station) and a zoo of cars on Lawrence, including a line of cars waiting to turn left onto the northbound Allen and blocking one of the eastbound through lanes in the process.
