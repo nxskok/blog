@@ -22,21 +22,21 @@ z=1:5 z ## [1] 1 2 3 4 5 sd(z) ## [1] 1.581139 </description>
     </item>
     
     <item>
+      <title>Saturday walk in the city</title>
+      <link>/2017/04/29/saturday-walk-in-the-city/</link>
+      <pubDate>Sat, 29 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/04/29/saturday-walk-in-the-city/</guid>
+      <description>So I was at Yorkdale, with no subway south. So I figured I’d arrange a walk and see how far I got. I rode the shuttle bus to Lawrence West, seeing at first hand how ill-suited Toronto is to the car: onto the Allen, a long lineup to turn left onto Lawrence (for us, to get in front of the subway station) and a zoo of cars on Lawrence, including a line of cars waiting to turn left onto the northbound Allen and blocking one of the eastbound through lanes in the process.</description>
+    </item>
+    
+    <item>
       <title>About</title>
       <link>/about/</link>
       <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
       
       <guid>/about/</guid>
       <description>Ken Butler is a Lecturer in Statistics at the University of Toronto Scarborough, and Supervisor of Studies of the Applied Statistics Minor program there. He also likes exploring and learning about Toronto. Hello.</description>
-    </item>
-    
-    <item>
-      <title>Saturday walk in the city</title>
-      <link>/1/01/01/saturday-walk-in-the-city/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/1/01/01/saturday-walk-in-the-city/</guid>
-      <description>So I was at Yorkdale, with no subway south. So I figured I’d arrange a walk and see how far I got. I rode the shuttle bus to Lawrence West, seeing at first hand how ill-suited Toronto is to the car: onto the Allen, a long lineup to turn left onto Lawrence (for us, to get in front of the subway station) and a zoo of cars on Lawrence, including a line of cars waiting to turn left onto the northbound Allen and blocking one of the eastbound through lanes in the process.</description>
     </item>
     
   </channel>
