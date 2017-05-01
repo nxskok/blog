@@ -1,0 +1,32 @@
+---
+title: About this blog
+author: ~
+date: '2017-04-30'
+slug: ''
+categories: []
+tags: []
+---
+
+
+
+<p>I discovered that one can host a blog on Github, on which I already have an account, via a thing called Github Pages. As if that weren’t enough, posting content to this blog is done via R Studio. I created a new project called <code>blog</code> that is linked to a Github repository, and installed the <code>blogdown</code> package (by the amazingly prolific Yihui Xie), and then I create a new post such as this one by, at the console, typing</p>
+<pre class="r"><code>library(blogdown)
+new_post(title=&quot;This blog&quot;,file=&quot;This-blog.Rmd&quot;)</code></pre>
+<p>and then a new R Markdown window pops up, into which I can type any R Markdown (that is, marked-up text plus optional R code). When I’m happy with what I have, I save it, go back to the console, and type</p>
+<pre class="r"><code>serve_site()</code></pre>
+<p>which previews my new post, at least as long as it’s in the right folder (still not sure about that).</p>
+<p>When it looks all right, I “commit” my changes to Github in the usual way, and then the whole blog appears on Github Pages. It’s, almost, magic.</p>
+<p>Plus I can generate some random data and draw a histogram of it:</p>
+<pre class="r"><code>d=data.frame(z=rnorm(1000))
+head(d)</code></pre>
+<pre><code>##            z
+## 1 -0.6264538
+## 2  0.1836433
+## 3 -0.8356286
+## 4  1.5952808
+## 5  0.3295078
+## 6 -0.8204684</code></pre>
+<pre class="r"><code>d %&gt;% ggplot(aes(x=z))+geom_histogram(bins=10)</code></pre>
+<p><img src="/post/about-this-blog_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Pretty bell-curved, I say (as it should be, of course).</p>
+<p>Most of the work there was in getting the <code>tidyverse</code> startup messages to disappear, but that’s another story, of course.</p>

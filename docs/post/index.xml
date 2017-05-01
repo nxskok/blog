@@ -12,6 +12,15 @@
     
     
     <item>
+      <title>About this blog</title>
+      <link>/2017/04/30/about-this-blog/</link>
+      <pubDate>Sun, 30 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/04/30/about-this-blog/</guid>
+      <description>I discovered that one can host a blog on Github, on which I already have an account, via a thing called Github Pages. As if that weren’t enough, posting content to this blog is done via R Studio. I created a new project called blog that is linked to a Github repository, and installed the blogdown package (by the amazingly prolific Yihui Xie), and then I create a new post such as this one by, at the console, typing</description>
+    </item>
+    
+    <item>
       <title>Sunday walk</title>
       <link>/2017/04/30/sunday-walk/</link>
       <pubDate>Sun, 30 Apr 2017 00:00:00 +0000</pubDate>
