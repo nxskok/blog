@@ -1,5 +1,5 @@
 ---
-title: Sunday walk
+title: Sunday walk in Scarborough
 author: ~
 date: '2017-04-30'
 slug: ''
