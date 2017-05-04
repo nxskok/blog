@@ -12,6 +12,15 @@
     
     
     <item>
+      <title>Images</title>
+      <link>/2017/05/03/images/</link>
+      <pubDate>Wed, 03 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/03/images/</guid>
+      <description>For my last post, I had a lot of trouble finding out how to make the images appear. It turns out that the secret is to save them in the static folder, and then to treat that folder as the “root” (that is, start its name with a forward slash) when making the R Markdown for the image. Here is a picture I took at a spot surprisingly close to where I live, in November last year:</description>
+    </item>
+    
+    <item>
       <title>Round the back of the S wing</title>
       <link>/2017/05/03/round-the-back-of-the-s-wing/</link>
       <pubDate>Wed, 03 May 2017 00:00:00 +0000</pubDate>

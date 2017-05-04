@@ -1,0 +1,12 @@
+---
+title: Images
+author: ~
+date: '2017-05-03'
+slug: ''
+categories: []
+tags: []
+---
+
+For my last post, I had a lot of trouble finding out how to make the images appear. It turns out that the secret is to save them in the `static` folder, and then to treat that folder as the "root" (that is, start its name with a forward slash) when making the R Markdown for the image. Here is a picture I took at a spot surprisingly close to where I live, in November last year:
+
+![](/IMG894.jpg)
