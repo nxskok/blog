@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cycling on Ken&#39;s Blog</title>
+    <link>/tags/cycling/</link>
+    <description>Recent content in Cycling on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 07 May 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/cycling/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Bike Ride</title>
+      <link>/2017/05/07/bike-ride/</link>
+      <pubDate>Sun, 07 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/07/bike-ride/</guid>
+      <description>It was finally good enough weather for a bike ride today:
+ Not a very long ride, but enough to get the legs going again (with some huffing and puffing into the wind).</description>
+    </item>
+    
+  </channel>
+</rss>
