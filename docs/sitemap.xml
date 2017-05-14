@@ -2,6 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/sunday-walk-20170514/</loc>
+    <lastmod>2017-05-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/2017/05/14/sunday-walk---riverdale-parks/</loc>
+    <lastmod>2017-05-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/goslings/</loc>
+    <lastmod>2017-05-08T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/2017/05/08/fluffy-yellow-things/</loc>
+    <lastmod>2017-05-08T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2017/05/07/bike-ride/</loc>
     <lastmod>2017-05-07T00:00:00+00:00</lastmod>
   </url>
@@ -79,13 +99,13 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-05-07T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2017-05-07T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -103,7 +123,7 @@
   
   <url>
     <loc>/tags/walking/</loc>
-    <lastmod>2017-05-05T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
