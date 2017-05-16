@@ -6,10 +6,22 @@
     <description>Recent content in Posts on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 14 May 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 16 May 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Making scatterplots against multiple explanatory variables</title>
+      <link>/2017/05/16/making-scatterplots-against-multiple-explanatory-variables/</link>
+      <pubDate>Tue, 16 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/16/making-scatterplots-against-multiple-explanatory-variables/</guid>
+      <description>Introduction An R post here.
+I wanted to share something about drawing scatterplots against many variables at once, using gather, ggplot and facet_wrap from the tidyverse.
+First we need to load the tidyverse:
+library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ## Loading tidyverse: tidyr ## Loading tidyverse: readr ## Loading tidyverse: purrr ## Loading tidyverse: dplyr ## Conflicts with tidy packages ---------------------------------------------- ## filter(): dplyr, stats ## lag(): dplyr, stats  Gather Let’s start with gather.</description>
+    </item>
     
     <item>
       <title>Sunday walk - Riverdale park(s)</title>
