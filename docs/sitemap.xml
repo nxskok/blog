@@ -2,6 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/2017/05/19/welch-analysis-of-variance/</loc>
+    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/welch/</loc>
+    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/multi-scatter/</loc>
     <lastmod>2017-05-16T00:00:00+00:00</lastmod>
   </url>
@@ -109,25 +119,31 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-05-16T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2017-05-16T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/r/</loc>
-    <lastmod>2017-05-16T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/sports/</loc>
     <lastmod>2017-05-07T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/statistics/</loc>
+    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

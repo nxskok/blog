@@ -6,10 +6,21 @@
     <description>Recent content in R on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 16 May 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 19 May 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Welch analysis of variance</title>
+      <link>/2017/05/19/welch-analysis-of-variance/</link>
+      <pubDate>Fri, 19 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/19/welch-analysis-of-variance/</guid>
+      <description>Introduction The standard analysis of variance based on the \(F\)-test has two major assumptions:
+Normally distributed data Equal variance within each group.  The analysis can handle a certain amount of non-normality, but the equal-variance assumption is important because it is required for the idea of “an” error variance to make sense (that is what the error mean square is estimating).
+Is it possible to make an ANOVA that can allow for the groups to have different variances?</description>
+    </item>
     
     <item>
       <title>Making scatterplots against multiple explanatory variables</title>
