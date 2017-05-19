@@ -59,7 +59,7 @@
 
   <article class="article">
     
-    <span class="article-duration">7 min read</span>
+    <span class="article-duration">9 min read</span>
     
 
     <h1 class="article-title">Welch analysis of variance</h1>
@@ -191,7 +191,34 @@ rats.2</code></pre>
 ## Lowjump-Control   11.4 -12.53396 35.333957 0.4744032
 ## Lowjump-Highjump -26.2 -50.13396 -2.266043 0.0297843</code></pre>
 <p>This says the that mean bone density for the high-jumping group is significantly higher than for the other two groups, which are not significantly different. This says, therefore, that it is the high jumping that makes a difference.</p>
-<p>The standard follow-up for Welch’s ANOVA appears to be “Games-Howell”.</p>
+<p>The standard follow-up for Welch’s ANOVA appears to be “Games-Howell”. This is part of the function <code>oneway</code> in the <code>userfriendlyscience</code> package:</p>
+<pre class="r"><code>library(userfriendlyscience)
+with(rats,oneway(x=group,y=density,posthoc=&quot;games-howell&quot;))</code></pre>
+<pre><code>## Warning in oneway(x = group, y = density, posthoc = &quot;games-howell&quot;): ###
+## Warning: the x variable (group) is not a factor! Converting it myself - but
+## note that variables in R have data types, and it&#39;s advisable to set these
+## adequately (use for example &#39;as.factor&#39;; see &#39;?as.factor&#39; for help)!</code></pre>
+<pre><code>## ### Oneway Anova for y=density and x=group (groups: Control, Highjump, Lowjump)
+## 
+## Omega squared: 95% CI = [.07; .55], point estimate = .32
+## Eta Squared: 95% CI = [.11; .52], point estimate = .37
+## 
+##                                      SS Df      MS    F    p
+## Between groups (error + effect) 7433.87  2 3716.93 7.98 .002
+## Within groups (error only)      12579.5 27  465.91          
+## 
+## 
+## ### Post hoc test: games-howell
+## 
+##                   diff  ci.lo ci.hi    t    df    p p.adjusted
+## Highjump-Control  37.6  11.28 63.92 3.72 14.83 0.01       .017
+## Lowjump-Control   11.4 -15.90 38.70 1.08 16.19 0.54       .542
+## Lowjump-Highjump -26.2 -46.80 -5.60 3.25 17.60 0.01       .024</code></pre>
+<p>Note that the ANOVA at the top is the standard <span class="math inline">\(F\)</span>-test, not the Welch ANOVA, but the Games-Howell below is correct. The Games-Howell adjusted P-values differ slightly from Tukey, but tell exactly the same story: no difference between low jump and control, but high jump is better than both. We can therefore be more confident that the conclusions we drew before are not dependent on the unequal spreads.</p>
+<p>I would recommend doing the Welch ANOVA using <code>oneway.test</code> (worrying only about the approximate normality of the data), and follow up with Games-Howell (ignoring the first part of the <code>oneway</code> output). This would be consistent with routinely using the Welch-Satterthwaite <span class="math inline">\(t\)</span>-test over the pooled test, on the grounds that you never know whether the group variances are “sufficiently equal”. It is always possible to run the regular ANOVA and Tukey as well; if the results are similar, evidently the groups have similar variances and it doesn’t really matter what you do.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
 </div>
 
     </div>
