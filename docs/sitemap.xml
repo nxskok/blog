@@ -2,6 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/2017/05/22/victoria-day-bike-ride/</loc>
+    <lastmod>2017-05-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/vicbike/</loc>
+    <lastmod>2017-05-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2017/05/19/welch-analysis-of-variance/</loc>
     <lastmod>2017-05-19T00:00:00+00:00</lastmod>
   </url>
@@ -107,6 +117,12 @@
   </url>
   
   <url>
+    <loc>/tags/bike/</loc>
+    <lastmod>2017-05-22T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/categories/</loc>
     <priority>0</priority>
   </url>
@@ -119,13 +135,13 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-22T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2017-05-19T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-22T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -149,7 +165,7 @@
   
   <url>
     <loc>/tags/</loc>
-    <lastmod>2017-05-07T00:00:00+00:00</lastmod>
+    <lastmod>2017-05-22T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

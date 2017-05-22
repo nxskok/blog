@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bike on Ken&#39;s Blog</title>
+    <link>/tags/bike/</link>
+    <description>Recent content in Bike on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 22 May 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/bike/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Victoria Day bike ride</title>
+      <link>/2017/05/22/victoria-day-bike-ride/</link>
+      <pubDate>Mon, 22 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/22/victoria-day-bike-ride/</guid>
+      <description>I suppose I should have ridden Victoria Park on Victoria Day, but I didn’t:
+ When the wind is blowing from the west, don’t ride out to the east!</description>
+    </item>
+    
+    <item>
+      <title>Victoria Day bike ride</title>
+      <link>/vicbike/</link>
+      <pubDate>Mon, 22 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/vicbike/</guid>
+      <description>I suppose I should have ridden Victoria Park on Victoria Day, but I didn’t:
+ When the wind is blowing from the west, don’t start your bike ride to the east!</description>
+    </item>
+    
+  </channel>
+</rss>
