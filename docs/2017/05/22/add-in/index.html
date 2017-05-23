@@ -6,8 +6,8 @@
 <meta name="generator" content="Hugo 0.20.6" />
 
 
-<title>Victoria Day bike ride - Ken&#39;s Blog</title>
-<meta property="og:title" content="Victoria Day bike ride - Ken&#39;s Blog">
+<title>Add-in - Ken&#39;s Blog</title>
+<meta property="og:title" content="Add-in - Ken&#39;s Blog">
 
 
 
@@ -16,6 +16,11 @@
 
 
 
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.10.0/styles/github.min.css' rel='stylesheet' type='text/css'>
 
 
 
@@ -57,27 +62,22 @@
     <span class="article-duration">1 min read</span>
     
 
-    <h1 class="article-title">Victoria Day bike ride</h1>
+    <h1 class="article-title">Add-in</h1>
 
     
     <span class="article-date">2017/05/22</span>
     
 
     <div class="article-content">
-      <p>I suppose I should have ridden Victoria Park on Victoria Day, but I didn’t:</p>
-<div class="figure">
-<img src="../../../../bike_20170522x.png" />
-
-</div>
-<p>When the wind is blowing from the west, don’t ride out to the east!</p>
-<p>My new phone now has Human on it, which works better than on the tablet (so I uninstalled it from there). This is a screenshot of the map I had on the phone. The advantage is that I only need to take my phone with me (which I would do anyway); the disadvantage is that the map comes out smaller.</p>
-<p>Human is tied in with Google Fit, so I guess I can look there (on the computer) and see what the map looks like:</p>
-<div class="figure">
-<img src="../../../../bike_2_20170522.png" />
-
-</div>
-<p>Yeah, better.</p>
-<p>Also, think I need a new inner tube. The rear wheel has been starting rides with air and ending them without. That means I have to remember how to get the rear tire off, which I always have trouble with.</p>
+      <p>I just discovered a couple of things:</p>
+<ol style="list-style-type: decimal">
+<li>an R Studio add-in called <code>CRANsearcher</code> that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to <span class="citation">@juliasilge</span> on Twitter for this.) To install:</li>
+</ol>
+<pre class="r"><code>devtools::install_github(&quot;RhoInc/CRANsearcher&quot;)</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and “serving the site” so I can preview it. Unfortunately it adds the extension <code>.rmd</code> instead of <code>.Rmd</code>. I had to manually change it.</li>
+</ol>
+<p>I should look there more often.</p>
 
     </div>
   </article>
@@ -100,6 +100,16 @@
 
     </div>
     
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.10.0/highlight.min.js"></script>
+
+<script src="//cdn.bootcss.com/highlight.js/9.10.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.10.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
 
     
 

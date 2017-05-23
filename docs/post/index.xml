@@ -12,13 +12,24 @@
     
     
     <item>
+      <title>Add-in</title>
+      <link>/2017/05/22/add-in/</link>
+      <pubDate>Mon, 22 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/22/add-in/</guid>
+      <description>I just discovered a couple of things:
+an R Studio add-in called CRANsearcher that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to @juliasilge on Twitter for this.) To install:  devtools::install_github(&amp;quot;RhoInc/CRANsearcher&amp;quot;) This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and “serving the site” so I can preview it.</description>
+    </item>
+    
+    <item>
       <title>Victoria Day bike ride</title>
       <link>/2017/05/22/victoria-day-bike-ride/</link>
       <pubDate>Mon, 22 May 2017 00:00:00 +0000</pubDate>
       
       <guid>/2017/05/22/victoria-day-bike-ride/</guid>
       <description>I suppose I should have ridden Victoria Park on Victoria Day, but I didn’t:
- When the wind is blowing from the west, don’t ride out to the east!</description>
+ When the wind is blowing from the west, don’t ride out to the east!
+My new phone now has Human on it, which works better than on the tablet (so I uninstalled it from there). This is a screenshot of the map I had on the phone. The advantage is that I only need to take my phone with me (which I would do anyway); the disadvantage is that the map comes out smaller.</description>
     </item>
     
     <item>

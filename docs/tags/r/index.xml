@@ -6,10 +6,20 @@
     <description>Recent content in R on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 19 May 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 22 May 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Add-in</title>
+      <link>/2017/05/22/add-in/</link>
+      <pubDate>Mon, 22 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/22/add-in/</guid>
+      <description>I just discovered a couple of things:
+an R Studio add-in called CRANsearcher that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to @juliasilge on Twitter for this.) To install:  devtools::install_github(&amp;quot;RhoInc/CRANsearcher&amp;quot;) This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and “serving the site” so I can preview it.</description>
+    </item>
     
     <item>
       <title>Welch analysis of variance</title>
