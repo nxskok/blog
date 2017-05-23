@@ -19,6 +19,6 @@ devtools::install_github("RhoInc/CRANsearcher")
 
 
 2. This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and "serving the site" so I can preview it. 
-Unfortunately it adds the extension `.rmd` instead of `.Rmd`. I had to manually change it.
+Unfortunately it adds the extension `.rmd` instead of `.Rmd`. I had to manually change it. But it does put things in the right folders.
 
 I should look there more often. 
