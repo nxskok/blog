@@ -12,6 +12,16 @@
     
     
     <item>
+      <title>Comments</title>
+      <link>/2017/05/31/comments/</link>
+      <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/31/comments/</guid>
+      <description>I seem to have Disqus comments enabled now. The crucial thing appeared to be the disqus.html file that Yihui Xie wrote at !(https://github.com/rstudio/blogdown/issues/52). I changed the disqus shortname given there to mine, added my shortname to the disqusShortname in config.toml, and it seems to work.
+I tried a number of other things before that that didn’t work, in case you think I’m any kind of genius.</description>
+    </item>
+    
+    <item>
       <title>Odd sums</title>
       <link>/2017/05/31/odd-sums/</link>
       <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
