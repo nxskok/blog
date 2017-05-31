@@ -98,7 +98,7 @@
 ##   feed4 = col_double()
 ## )</code></pre>
 <pre class="r"><code>pigs1</code></pre>
-<pre><code>## # A tibble: 5 × 5
+<pre><code>## # A tibble: 5 x 5
 ##     pig feed1 feed2 feed3 feed4
 ##   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
 ## 1     1  60.8  68.7  92.6  87.9
@@ -118,18 +118,18 @@
 <p>The column <code>pig</code> was not included in the <code>gather</code>. This was the number of the pig within each feed group, so this gets repeated once for each feed.</p>
 <p>This is the output:</p>
 <pre class="r"><code>pigs2</code></pre>
-<pre><code>## # A tibble: 20 × 3
+<pre><code>## # A tibble: 20 x 3
 ##      pig  feed weight
 ##    &lt;int&gt; &lt;chr&gt;  &lt;dbl&gt;
-## 1      1 feed1   60.8
-## 2      2 feed1   57.0
-## 3      3 feed1   65.0
-## 4      4 feed1   58.6
-## 5      5 feed1   61.7
-## 6      1 feed2   68.7
-## 7      2 feed2   67.7
-## 8      3 feed2   74.0
-## 9      4 feed2   66.3
+##  1     1 feed1   60.8
+##  2     2 feed1   57.0
+##  3     3 feed1   65.0
+##  4     4 feed1   58.6
+##  5     5 feed1   61.7
+##  6     1 feed2   68.7
+##  7     2 feed2   67.7
+##  8     3 feed2   74.0
+##  9     4 feed2   66.3
 ## 10     5 feed2   69.8
 ## 11     1 feed3   92.6
 ## 12     2 feed3   92.1
@@ -188,20 +188,21 @@ summary(weight.1)</code></pre>
 ##   Wt = col_double()
 ## )</code></pre>
 <pre class="r"><code>athletes</code></pre>
-<pre><code>## # A tibble: 202 × 13
-##       Sex   Sport   RCC   WCC    Hc    Hg  Ferr   BMI   SSF `%Bfat`   LBM
-##     &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-## 1  female Netball  4.56  13.3  42.2  13.6    20 19.16  49.0   11.29 53.14
-## 2  female Netball  4.15   6.0  38.0  12.7    59 21.15 110.2   25.26 47.09
-## 3  female Netball  4.16   7.6  37.5  12.3    22 21.40  89.0   19.39 53.44
-## 4  female Netball  4.32   6.4  37.7  12.3    30 21.03  98.3   19.63 48.78
-## 5  female Netball  4.06   5.8  38.7  12.8    78 21.77 122.1   23.11 56.05
-## 6  female Netball  4.12   6.1  36.6  11.8    21 21.38  90.4   16.86 56.45
-## 7  female Netball  4.17   5.0  37.4  12.7   109 21.47 106.9   21.32 53.11
-## 8  female Netball  3.80   6.6  36.5  12.4   102 24.45 156.6   26.57 54.41
-## 9  female Netball  3.96   5.5  36.3  12.4    71 22.63 101.1   17.93 55.97
-## 10 female Netball  4.44   9.7  41.4  14.1    64 22.80 126.4   24.97 51.62
-## # ... with 192 more rows, and 2 more variables: Ht &lt;dbl&gt;, Wt &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 202 x 13
+##       Sex   Sport   RCC   WCC    Hc    Hg  Ferr   BMI   SSF `%Bfat`
+##     &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+##  1 female Netball  4.56  13.3  42.2  13.6    20 19.16  49.0   11.29
+##  2 female Netball  4.15   6.0  38.0  12.7    59 21.15 110.2   25.26
+##  3 female Netball  4.16   7.6  37.5  12.3    22 21.40  89.0   19.39
+##  4 female Netball  4.32   6.4  37.7  12.3    30 21.03  98.3   19.63
+##  5 female Netball  4.06   5.8  38.7  12.8    78 21.77 122.1   23.11
+##  6 female Netball  4.12   6.1  36.6  11.8    21 21.38  90.4   16.86
+##  7 female Netball  4.17   5.0  37.4  12.7   109 21.47 106.9   21.32
+##  8 female Netball  3.80   6.6  36.5  12.4   102 24.45 156.6   26.57
+##  9 female Netball  3.96   5.5  36.3  12.4    71 22.63 101.1   17.93
+## 10 female Netball  4.44   9.7  41.4  14.1    64 22.80 126.4   24.97
+## # ... with 192 more rows, and 3 more variables: LBM &lt;dbl&gt;, Ht &lt;dbl&gt;,
+## #   Wt &lt;dbl&gt;</code></pre>
 <p>The gender of and sport played by each athlete are in the first two columns, and their height (in centimetres) and weight (in kilograms) are in the last two. A scatterplot of height vs. weight looks like this:</p>
 <pre class="r"><code>ggplot(athletes,aes(x=Ht,y=Wt))+geom_point()</code></pre>
 <p><img src="../../../../post/multi-scatter_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
@@ -245,34 +246,34 @@ summary(weight.1)</code></pre>
 ##   run = col_integer()
 ## )</code></pre>
 <pre class="r"><code>asphalt</code></pre>
-<pre><code>## # A tibble: 31 × 7
+<pre><code>## # A tibble: 31 x 7
 ##    pct.a.surf pct.a.base fines voids rut.depth viscosity   run
 ##         &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt;
-## 1        4.68       4.87   8.4 4.916      6.75      2.80     1
-## 2        5.19       4.50   6.5 4.563     13.00      1.40     1
-## 3        4.82       4.73   7.9 5.321     14.75      1.40     1
-## 4        4.85       4.76   8.3 4.865     12.60      3.30     1
-## 5        4.86       4.95   8.4 3.776      8.25      1.70     1
-## 6        5.16       4.45   7.4 4.397     10.67      2.90     1
-## 7        4.82       5.05   6.8 4.867      7.28      3.70     1
-## 8        4.86       4.70   8.6 4.828     12.67      1.70     1
-## 9        4.78       4.84   6.7 4.865     12.58      0.92     1
+##  1       4.68       4.87   8.4 4.916      6.75      2.80     1
+##  2       5.19       4.50   6.5 4.563     13.00      1.40     1
+##  3       4.82       4.73   7.9 5.321     14.75      1.40     1
+##  4       4.85       4.76   8.3 4.865     12.60      3.30     1
+##  5       4.86       4.95   8.4 3.776      8.25      1.70     1
+##  6       5.16       4.45   7.4 4.397     10.67      2.90     1
+##  7       4.82       5.05   6.8 4.867      7.28      3.70     1
+##  8       4.86       4.70   8.6 4.828     12.67      1.70     1
+##  9       4.78       4.84   6.7 4.865     12.58      0.92     1
 ## 10       5.16       4.76   7.7 4.034     20.60      0.68     1
 ## # ... with 21 more rows</code></pre>
 <p>How can we plot <code>rut.depth</code> against each of the other variables, one per facet? <code>ggplot</code> likes to have a data frame with one column of <span class="math inline">\(y\)</span>-values to plot, and <em>one</em> column of <span class="math inline">\(x\)</span>-values. How can we make this? By gathering up all the explanatory variables into <em>one</em> column, keeping track of which <span class="math inline">\(x\)</span>-variable is which:</p>
 <pre class="r"><code>asphalt %&gt;% gather(xname,x,c(pct.a.surf:voids,viscosity:run))</code></pre>
-<pre><code>## # A tibble: 186 × 3
+<pre><code>## # A tibble: 186 x 3
 ##    rut.depth      xname     x
 ##        &lt;dbl&gt;      &lt;chr&gt; &lt;dbl&gt;
-## 1       6.75 pct.a.surf  4.68
-## 2      13.00 pct.a.surf  5.19
-## 3      14.75 pct.a.surf  4.82
-## 4      12.60 pct.a.surf  4.85
-## 5       8.25 pct.a.surf  4.86
-## 6      10.67 pct.a.surf  5.16
-## 7       7.28 pct.a.surf  4.82
-## 8      12.67 pct.a.surf  4.86
-## 9      12.58 pct.a.surf  4.78
+##  1      6.75 pct.a.surf  4.68
+##  2     13.00 pct.a.surf  5.19
+##  3     14.75 pct.a.surf  4.82
+##  4     12.60 pct.a.surf  4.85
+##  5      8.25 pct.a.surf  4.86
+##  6     10.67 pct.a.surf  5.16
+##  7      7.28 pct.a.surf  4.82
+##  8     12.67 pct.a.surf  4.86
+##  9     12.58 pct.a.surf  4.78
 ## 10     20.60 pct.a.surf  5.16
 ## # ... with 176 more rows</code></pre>
 <p>You can check that the values shown in the <code>x</code> column are the first few values of <code>pct.a.surf</code>, and the values in the <code>rut.depth</code> column are correctly the corresponding ones for the same pavement.</p>
@@ -285,18 +286,18 @@ summary(weight.1)</code></pre>
 <pre class="r"><code>asphalt2=asphalt %&gt;% 
   mutate(log.viscosity=log(viscosity),log.rut.depth=log(rut.depth))
 asphalt2</code></pre>
-<pre><code>## # A tibble: 31 × 9
+<pre><code>## # A tibble: 31 x 9
 ##    pct.a.surf pct.a.base fines voids rut.depth viscosity   run
 ##         &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt;
-## 1        4.68       4.87   8.4 4.916      6.75      2.80     1
-## 2        5.19       4.50   6.5 4.563     13.00      1.40     1
-## 3        4.82       4.73   7.9 5.321     14.75      1.40     1
-## 4        4.85       4.76   8.3 4.865     12.60      3.30     1
-## 5        4.86       4.95   8.4 3.776      8.25      1.70     1
-## 6        5.16       4.45   7.4 4.397     10.67      2.90     1
-## 7        4.82       5.05   6.8 4.867      7.28      3.70     1
-## 8        4.86       4.70   8.6 4.828     12.67      1.70     1
-## 9        4.78       4.84   6.7 4.865     12.58      0.92     1
+##  1       4.68       4.87   8.4 4.916      6.75      2.80     1
+##  2       5.19       4.50   6.5 4.563     13.00      1.40     1
+##  3       4.82       4.73   7.9 5.321     14.75      1.40     1
+##  4       4.85       4.76   8.3 4.865     12.60      3.30     1
+##  5       4.86       4.95   8.4 3.776      8.25      1.70     1
+##  6       5.16       4.45   7.4 4.397     10.67      2.90     1
+##  7       4.82       5.05   6.8 4.867      7.28      3.70     1
+##  8       4.86       4.70   8.6 4.828     12.67      1.70     1
+##  9       4.78       4.84   6.7 4.865     12.58      0.92     1
 ## 10       5.16       4.76   7.7 4.034     20.60      0.68     1
 ## # ... with 21 more rows, and 2 more variables: log.viscosity &lt;dbl&gt;,
 ## #   log.rut.depth &lt;dbl&gt;</code></pre>
@@ -341,18 +342,18 @@ asphalt2</code></pre>
 <p>We should also plot the residuals against each of the explanatory variables, to see whether we have the form of the relationship right for each one. The problem is that the residuals and fitted values are in one place (<code>rut.1</code>) and the explanatory variables are in another (<code>asphalt2</code>). A nice way to solve this is to use <code>augment</code> from package <code>broom</code> to create a dataset with both the original data <em>and</em> things calculated from the model:</p>
 <pre class="r"><code>library(broom)
 augment(rut.1,asphalt2) %&gt;% as_tibble()</code></pre>
-<pre><code>## # A tibble: 31 × 16
+<pre><code>## # A tibble: 31 x 16
 ##    pct.a.surf pct.a.base fines voids rut.depth viscosity   run
 ##         &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt;
-## 1        4.68       4.87   8.4 4.916      6.75      2.80     1
-## 2        5.19       4.50   6.5 4.563     13.00      1.40     1
-## 3        4.82       4.73   7.9 5.321     14.75      1.40     1
-## 4        4.85       4.76   8.3 4.865     12.60      3.30     1
-## 5        4.86       4.95   8.4 3.776      8.25      1.70     1
-## 6        5.16       4.45   7.4 4.397     10.67      2.90     1
-## 7        4.82       5.05   6.8 4.867      7.28      3.70     1
-## 8        4.86       4.70   8.6 4.828     12.67      1.70     1
-## 9        4.78       4.84   6.7 4.865     12.58      0.92     1
+##  1       4.68       4.87   8.4 4.916      6.75      2.80     1
+##  2       5.19       4.50   6.5 4.563     13.00      1.40     1
+##  3       4.82       4.73   7.9 5.321     14.75      1.40     1
+##  4       4.85       4.76   8.3 4.865     12.60      3.30     1
+##  5       4.86       4.95   8.4 3.776      8.25      1.70     1
+##  6       5.16       4.45   7.4 4.397     10.67      2.90     1
+##  7       4.82       5.05   6.8 4.867      7.28      3.70     1
+##  8       4.86       4.70   8.6 4.828     12.67      1.70     1
+##  9       4.78       4.84   6.7 4.865     12.58      0.92     1
 ## 10       5.16       4.76   7.7 4.034     20.60      0.68     1
 ## # ... with 21 more rows, and 9 more variables: log.viscosity &lt;dbl&gt;,
 ## #   log.rut.depth &lt;dbl&gt;, .fitted &lt;dbl&gt;, .se.fit &lt;dbl&gt;, .resid &lt;dbl&gt;,
