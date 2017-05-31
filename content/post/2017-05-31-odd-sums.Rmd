@@ -74,4 +74,4 @@ or directly
 dhyper(4,4,4,4)
 ```
 
-This is about five times smaller than my simulation gave. I think there is an error in my logic rather than my simulation, but I can't find it (yet).
+This is about five times smaller than my simulation gave. I think there is an error in my logic rather than my simulation, but I can't find it (yet). Bum.
