@@ -5,7 +5,7 @@ languageCode = "en-us"
 title = "Ken's Blog"
 theme = "hugo-lithium-theme"
 googleAnalytics = ""
-disqusShortname = ""
+disqusShortname = "kens-blog-2"
 ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
 
 [permalinks]
