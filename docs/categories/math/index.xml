@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Math on Ken&#39;s Blog</title>
+    <link>/categories/math/</link>
+    <description>Recent content in Math on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 31 May 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/math/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Odd sums</title>
+      <link>/2017/05/31/odd-sums/</link>
+      <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/31/odd-sums/</guid>
+      <description>While waiting for my coffee at work this morning, I was leafing through a recreational mathematics journal. It said, “the numbers 1–9 are arranged at random in a 3 by 3 matrix. What is the probability that the row sums and column sums are all odd?”
+Well, I thought, that ought to be easy enough to simulate. Randomly shuffle the numbers 1–9 using sample, and then insert them into a matrix with three columns.</description>
+    </item>
+    
+  </channel>
+</rss>
