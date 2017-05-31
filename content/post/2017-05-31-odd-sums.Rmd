@@ -52,7 +52,7 @@ So, all the rows and columns have odd sums just over 7% of the time.
 
 The challenge in the place where I got the problem (Crux Mathematicorum) was to obtain the exact answer and prove that it is correct. 
 
-If you look at the second example matrix above, the one with all row and column sums odd, there is a row with all odd numbers and a column with all odd numbers as well. Or, to put it another way, each row and column has *an odd number of odd numbers* in it: either one or three odd numbers. There are five odd numbers in 1--9, so the only way they can distribute themselves, to get all row and column sums odd, is a row with three odd numbers and two rows with one odd number, and likewise for the columns. A row that has no odd numbers, or two of them, will add up to something even.
+If you look at the second example matrix above, the one with all row and column sums odd, there is a row with all odd numbers and a column with all odd numbers as well. Or, to put it another way, each row and column has **an odd number of odd numbers** in it: either one or three odd numbers. There are five odd numbers in 1--9, so the only way they can distribute themselves, to get all row and column sums odd, is a row with three odd numbers and two rows with one odd number, and likewise for the columns. A row that has no odd numbers, or two of them, will add up to something even.
 
 A second insight is that we can exchange any rows or any columns without affecting the row and column sums. So that means ("without loss of generality" as the mathematicians say) that we only need to consider arrays with a particular number, say 1, at the top left corner. Since there are only five odd numbers, if we have 1 top left, the other odd numbers 3, 5, 7 and 9 must also be in the first row and first column, with the four even numbers at the bottom right.
 
@@ -74,5 +74,4 @@ or directly
 dhyper(4,4,4,4)
 ```
 
-This is about five times smaller than my simulation gave. I think there is an error in my logic rather than my simulation.
-
+This is about five times smaller than my simulation gave. I think there is an error in my logic rather than my simulation, but I can't find it (yet).
