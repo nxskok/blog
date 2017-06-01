@@ -6,18 +6,28 @@
     <description>Recent content on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 31 May 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 01 Jun 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Carter and Guthrie</title>
-      <link>/2017/05/31/carter-and-guthrie/</link>
-      <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
+      <link>/2017/06/01/carter-and-guthrie/</link>
+      <pubDate>Thu, 01 Jun 2017 00:00:00 +0000</pubDate>
       
-      <guid>/2017/05/31/carter-and-guthrie/</guid>
+      <guid>/2017/06/01/carter-and-guthrie/</guid>
       <description>Introduction Carter and Guthrie, in 2004, proposed a method of modelling cricket matches. Their aim was to provide an alternative method of deciding interrupted matches, in the manner of Duckworth and Lewis. What was interesting to me is that they estimate a probability of winning (which is then held fixed over interruptions), and it seemed to me that one could estimate and update the probability of winning as the game progresses, which would be a useful adjunct for spectators.</description>
+    </item>
+    
+    <item>
+      <title>Carter and Guthrie part 2: model-building</title>
+      <link>/2017/06/01/carter-and-guthrie-part-2-model-building/</link>
+      <pubDate>Thu, 01 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/06/01/carter-and-guthrie-part-2-model-building/</guid>
+      <description>Estimating the parameters Start, as ever, with the tidyverse, along with MASS for modelling later:
+library(MASS) library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ## Loading tidyverse: tidyr ## Loading tidyverse: readr ## Loading tidyverse: purrr ## Loading tidyverse: dplyr ## Conflicts with tidy packages ---------------------------------------------- ## filter(): dplyr, stats ## lag(): dplyr, stats ## select(): dplyr, MASS The model The Carter and Guthrie model is a simplified version of cricketing reality, thus:</description>
     </item>
     
     <item>
