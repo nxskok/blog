@@ -1,0 +1,434 @@
+---
+title: Carter and Guthrie
+author: Ken
+date: '2017-05-31'
+slug: carter-and-guthrie
+categories:
+  - cricket
+  - R
+  - statistics
+tags: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Carter and Guthrie, in 2004, proposed a method of modelling cricket matches. Their aim was to provide an alternative method of deciding interrupted matches, in the manner of Duckworth and Lewis. What was interesting to me is that they estimate a *probability* of winning (which is then held fixed over interruptions), and it seemed to me that one could estimate and update the probability of winning as the game progresses, which would be a useful adjunct for spectators.
+
+Data for the update come from `yorkrdata`, by the author of the R package `yorkr`. 
+
+# Gathering and arranging data
+
+## Getting a match file
+
+Start with the `tidyverse`:
+
+```{r}
+library(tidyverse)
+```
+
+The data in `yorkrdata` are in the form of `.RData` files (saved dataframes), which were downloaded as a `.zip` file and extracted to the working directory.
+One such file is `Afghanistan-Bangladesh-2015-02-18.RData`. It will be convenient to write a function for reading in files of this kind:
+
+```{r}
+readMatch=function(fname) {
+  load(fname)
+  overs
+}
+```
+
+The data frame for each match was originally called `overs`, so when it is `load`ed, it acquires the name it had when it was `save`d. This is inconvenient, so I abstract it into a function.
+
+What does one of these data frames contain?
+
+```{r}
+fname="Afghanistan-Bangladesh-2015-02-18.RData"
+d=readMatch(fname)
+glimpse(d)
+```
+
+The data frame contains one row for each ball. The columns include a coded representation of innings (team batting first or second), over and ball within over, the name of the batsman and bowler, the number of runs from that ball (regular `runs` and the various types of extras), the kind of wicket from that ball (if any), and at the end, some information about the match: the date, the type of match, the number of overs per side, the venue, the names of the teams, the winner and the result. These last are the same thing repeated on every line.
+
+It will be convenient to have a function that returns some information about the match from its filename:
+
+```{r}
+matchInfo=function(fname) {
+  d=readMatch(fname)
+  data.frame(fname=fname,date=d$date[1],type=d$matchType[1])
+}
+```
+
+and to test it:
+
+```{r}
+matchInfo(fname)
+```
+
+## Data frame of what we want
+
+We don't need all the information in the match data frame, and we do need to re-process some of what there is. Specifically: 
+
+- grab the ball code and the scoring info
+- separate out the ball code into the inns, over and ball within that innings
+- create new variables, making sure that numeric things are numeric and that we know whether each ball contains a wicket or is a extra, defined here as a no ball or a wide that will result in another ball. (I should be more careful about counting these, since the number of balls left as calculated later will be slightly wrong.) Other extras, such as leg byes, are treated as regular runs.
+- the total number of balls so far in the innings 
+- treat each innings separately. The Carter-Guthrie analysis uses only the first innings.
+- grab only the variables we want.
+
+
+```{r}
+processMatch=function(fname) {
+  readMatch(fname) %>% select(ball,noballs,wides,totalRuns,wicketKind) %>% 
+    separate(ball,into=c("inns","over","ball")) %>% 
+    group_by(inns) %>% 
+    mutate(over=as.numeric(over),
+           ball=as.numeric(ball),
+           isWkt=(wicketKind!="not-out"),
+           wktDown=cumsum(isWkt),
+           isExtra=(noballs+wides>0),
+           totalBalls=6*over+ball) %>%
+    select(inns,totalBalls,isExtra,isWkt,wktDown,totalRuns)
+}
+```
+
+Testing:
+
+```{r}
+d=processMatch(fname)
+d
+```
+
+It is also useful to summarize a match, as done by the function below
+
+```{r}
+summarizeMatch=function(fname) {
+  processMatch(fname) %>% summarize(
+                                 runTotal=max(cumsum(totalRuns)),
+                                 wktTotal=max(wktDown),
+                                 ballTotal=max(totalBalls)
+                                 ) 
+}
+```
+
+and to test:
+
+```{r}
+summarizeMatch(fname)
+```
+
+The team batting first scored 267 and were all out on the last ball of their 50 overs (300 balls); the team batting second were all out for 162 in the 43rd over, and thus lost by 105 runs.
+
+It will also be necessary to determine whether the innings of the team batting first was "complete" (that is, either the team was all out or batted out the full 50 overs). This could fail to happen because the match is interrupted, and for the estimation, we want to ignore these matches:
+
+```{r}
+firstComplete=function(fname) {
+  summarizeMatch(fname) %>% 
+    mutate(complete=ifelse(wktTotal[1]==10,T,ifelse(ballTotal[1]>=300,T,F))) %>% 
+    mutate(fname=fname) %>% 
+    select(c(fname,complete)) %>% 
+    slice(1)
+}
+firstComplete(fname)
+```
+
+
+## Getting all the files
+
+The files we want to consider are `.RData` files *with a dash and two numbers before the dot* (the tail end of the match date). There are some other `.RData` files that were in the `.zip`, but we don't want to consider those:
+
+```{r,listfiles}
+files=list.files(pattern = "-[0-9][0-9].RData$")
+head(files)
+length(files)
+```
+
+We are going to apply our functions to a list of filenames (since they all take filenames as input: that was a design decision).  Here, each function returns a data frame, so we use `map` from `purrr` to produce a **list** of data frames, which we then run through `bind_rows` to produce a big data frame with these rows stacked atop each other. This is something we'll be doing a lot, so let's make a function to do it all. `v` is a vector (of eg.\ file names) and `f` is a function that returns a data frame, so that my `xx` is a list of data frames:
+
+```{r}
+atop=function(v,f) {
+  xx=map(v,f)
+  bind_rows(xx)
+}
+```
+
+Since it doesn't have a data frame as a first argument (I couldn't make that work), it won't work in a pipe.
+
+We need to test this, so let's check whether each of our match files has a complete first innings (which we'll need to check anyway):
+
+
+```{r,firstcomplete}
+isComplete=atop(files,firstComplete)
+isComplete
+```
+
+The second line is the match we've been using to test. What is up with the lines here that are `FALSE`?
+
+```{r}
+isComplete %>% slice(3:9) -> tmp
+atop(tmp$fname,summarizeMatch)
+```
+
+In each case, a match takes up two lines; we only need the line starting with "1st". You see that each first innings is not done yet (less than 10 wickets) but the allotted 300 balls have not been used. I guess that these matches were interrupted, with a revised number of overs for at least the team batting second. In any case, we don't want to include these in our analysis.
+
+In addition, we need to check whether each match is a ODI (which we want to assess) or something else. That's another application of `atop`:
+
+```{r}
+v=atop(files,matchInfo)
+head(v)
+tab=table(v$type)
+tab
+```
+
+There are `r tab[1]` one-day internationals, and `r tab[2]` Twenty-20 matches, which are a mixture of internationals and Indian Premier League. 
+
+## Getting all the matches we want
+
+To get just the matches we want, we do this:
+
+- read all the matches' info
+- select only the ones whose type is ODI
+- of those, select the ones that have complete first innings
+- construct the desired (big) data for these (just first innings) 
+
+Since `atop` returns a data frame, we can use it as the *start* of a pipe:
+
+```{r,twoatop}
+atop(files,matchInfo) %>% filter(type=="ODI") -> odis
+atop(odis$fname,firstComplete) %>% filter(complete) -> complete.odis
+complete.odis
+```
+
+There are `r nrow(complete.odis)` complete ODIs. Now to get the actual information, which we can expect to be slow:
+
+```{r,slow}
+atop(complete.odis$fname,processMatch) %>% 
+  filter(inns=="1st") -> d
+d
+```
+
+`r nrow(d)` rows! But that's what we need.
+
+# Estimating the parameters
+
+## The model
+
+The @carter2004cricket model is a simplified version of cricketing reality, thus:
+
+- with a certain probability (which is fixed), a ball is an extra (wide or no ball), which counts one run and leads to an extra ball being bowled. (The assumption is that no additional runs are scored, for example runs scored off a no ball.)
+- otherwise, with a certain probability, which depends on the number of balls and wickets left, a ball is a wicket. This reduces the number of balls and wickets left by 1 without changing the number of runs. (This assumes that no runs are made on a ball with a wicket, such as when a high near-six is caught near the boundary and the batsmen have already completed one or more runs.)
+- otherwise, with certain probabilities, which depend on the number of balls and wickets left, a certain number of runs is scored.
+
+## Probability of extra
+
+Estimating the "extra" probability is the easiest, since that doesn't (by hypothesis) depend on anything else:
+
+```{r}
+d %>% summarize(pEx=sum(isExtra)/nrow(d)) %>% select(pEx) -> pExtra
+pExtra
+```
+
+This is about half the corresponding value in @carter2004cricket.
+
+## Probability of wicket
+
+The probability of a wicket is modelled using a logistic model (a probit model in @carter2004cricket); the log-odds of a wicket is modelled as a quadratic function of the number of balls and wickets left.
+
+Thus our first step is to calculate the number of balls and wickets left, and then to remove the rows with extras:
+
+```{r}
+d %>% mutate(ballsLeft=300-totalBalls,
+            wktsLeft=10-wktDown) %>%
+  filter(!isExtra) -> d1
+```
+
+and now we can model:
+
+```{r,wicketModel}
+wModel=glm(isWkt~ballsLeft+wktsLeft+I(ballsLeft^2),data=d1,family="binomial") 
+summary(wModel)
+```
+
+Everything here is strongly significant, as would be expected with so much data. (These are the same explanatory variables as used by @carter2004cricket.)
+
+We can make a table of predicted probability of a ball being a wicket as a function of the number of balls and wickets left:
+
+```{r}
+new=expand.grid(wktsLeft=c(1,5,10),ballsLeft=c(1,100,200,300))
+p=predict(wModel,new,type="response")
+data.frame(new,p)
+```
+
+For a fixed number of balls left, the probability of a wicket is higher if there are fewer wickets left. The pattern for a fixed number of balls left is unclear, but then in practice if there are many balls left, there are unlikely to be few wickets left.
+
+## Modelling the number of runs
+
+@carter2004cricket consider the number of runs on any ball as an ordered response, and model the probit of the probability of landing in each category as a quadratic function of the number of balls and wickets left. We use an ordered logistic model, using the `polr` function from library `MASS`. First, however, we need to remove the wicket balls from the data frame used to estimate the wickets process, and we need to turn the `totalRuns` on each ball into an ordered factor:
+
+```{r}
+d1 %>% mutate(rf=ordered(totalRuns)) %>% 
+  filter(!isWkt) -> d2
+```
+
+and then down to business:
+
+```{r}
+library(MASS)
+```
+
+```{r,rModel}
+rModel=polr(rf~ballsLeft+wktsLeft+I(ballsLeft^2),data=d2)
+```
+
+The summary of the model is not very illuminating, so again we show predictions. In the output below, the number of runs is turned into column names for a data frame by appending an X:
+
+```{r}
+p=predict(rModel,new,type="probs")
+data.frame(new,round(p,3))
+```
+
+For any fixed number of balls left, if there are fewer wickets left, there is a higher chance of a "dot ball" (no runs), and a lower chance of a boundary (4 or 6 runs, in the columns labelled `X4` and `X6`). Also, for a fixed number of wickets left, there is a higher chance of a dot ball when many balls are left and a higher chance of a boundary with few balls left. These accord with intuition.
+
+# Constructing the recursion
+
+Let $F(r; b, w)$ denote the probability of a team scoring $r$ runs or fewer with $b$ balls and $w$ wickets left. There are some boundary cases: if there are no balls or wickets left, then a team scores 0 (more) runs with probability 1. Thus $F(r;0,w)=1, F(r;b,0)=1$ for $r \ge 0$, and (for completeness) $F(r;b,w)=0$ for $r<0$. These form the base cases for a recursion. To evaluate $F(r;b,w)$ in general, consider what might happen on the next ball: an extra, in which case the team needs $r-1$ runs from $b$ balls with $w$ wickets left; a wicket, in which case the team needs $r$ runs from $b-1$ balls with $w-1$ wickets left, or $j$ runs are scored, in which case the team needs $r-j$ runs from $b-1$ balls with $w$ wickets left. Details can be found in @carter2004cricket [page 826]. 
+
+As an example, suppose we wish to find $F(4;3,2)$. We need the probability of an extra, a wicket and each number of runs at this point:
+
+```{r}
+new=data.frame(ballsLeft=3,wktsLeft=2)
+pExtra
+predict(wModel,new,type="response")
+predict(rModel,new,type="probs")
+```
+
+Thus, the probability of an extra is 0.026, the probability of a wicket given a non-extra is 0.126, and the probabilities of $0, 1, 2, \ldots$ runs, given that there was neither an extra nor a wicket, are $0.363, 0.408, 0.080, \ldots$. In detail, therefore, the recursion says that
+\begin{eqnarray*}
+F(4;3,2)&=&0.026 F(3;3,2)+ (1-0.026)(0.126) F(4;2,1)+\\
+&&(1-0.026)(1-0.126)\left[ 0.363 F(4;2,2) + 0.408F(3;2,2)+\right.\\
+&&0.080 F(2;2,2)+0.011 F(1;2,2)+0.116 F(0;2,2)+\\
+&&\left. 0.0003 F(-1;2,2)+0.022F(-2;2,2)\right] \\
+\end{eqnarray*}
+
+We note that $F(-1;2,2)=F(-2;2,2)=0$ (in words, the probability of getting 4 runs or less in 3 balls is 0 if 5 or 6 runs are scored off the first ball). The remaining $F(r;b,w)$ need to be calculated, and this is done using a similar recursion. Note that, for example, $F(3;3,2)$ will also need $F(2;2,2)$ (if one run is scored off the next ball), and thus a naive recursion would do a lot of unnecessary re-calculation. It is important, therefore, to create a look-up table of values already calculated, and to check it before starting on a calculation. In pseudocode, the procedure is therefore this:
+
+```
+bigF=function(r,b,w) {
+  # base cases
+  if (r<0) return 0
+  if (b==0) return 1
+  if (w==0) return 1
+  # lookup table
+  if (r,b,w) in lookup table, return value
+  # else recurse
+  obtain probability of extra PE, wicket PW, and array P[j] each number of runs j this ball
+  sum=0
+  for (j in 0:6) {
+    sum=sum+P[j]*bigF(r-j,b-1,w)
+  }
+  ans=PE*bigF(r-1,b,w)+(1-PE)*PW*bigF(r,b-1,w-1)+(1-PE)*(1-PW)*sum
+  save ans in lookup table
+  return ans
+}
+
+```
+
+Let $F$ be the probability of scoring $r$ runs or less with $b$ balls and $w$ wickets remaining. There are two choices for the data structure for the lookup table. One is a three-dimensional array (dimensions runs, balls and wickets, with the value of the array being $F$), and the other is a data frame, with columns for runs, balls, wickets and $F$. I chose the latter, because of the simplicity of using `dplyr::filter` to see whether a row exists yet. (The notation $F$ is a reminder that this is a *cumulative* probability, that many runs or less.)
+
+We will keep the lookup table as a data frame called `lookupTable`, dimensions runs, balls and wickets left in that order, initialized as empty and kept in an environment called `env` (so that we can access and change it from within a function):
+
+```{r}
+max.runs=400
+max.balls=300
+max.wickets=10
+env=new.env(parent=emptyenv())
+aa=data.frame(rr=integer(),bb=integer(),ww=integer(),F=double())
+env$lookupTable=aa
+str(env$lookupTable)
+```
+
+Then we implement the function outlined in pseudocode above:
+
+```{r,bigF def}
+bigF=function(r,b,w) {
+  # base cases
+  if (r<0) return(0)
+  if (b==0) return(1)
+  if (w==0) return(1)
+  # return value if in lookup table
+  tab=get("lookupTable",envir=env)
+  tab %>% filter(rr==r, bb==b, ww==w) -> x
+  if (nrow(x)>0) return(x[1,4])
+  # recursion
+  new=data.frame(ballsLeft=b,wktsLeft=w)
+  pW=predict(wModel,new,type="response")
+  p=predict(rModel,new,type="probs")
+  pE=as.numeric(pExtra[1,1]) # global variable
+  sum=0
+  for (j in 0:6) {
+    sum=sum+p[j+1]*bigF(r-j,b-1,w)
+  }
+  ans=pE*bigF(r-1,b,w)+(1-pE)*pW*bigF(r,b-1,w-1)+(1-pE)*(1-pW)*sum
+  names(ans)=NULL
+  # lookup table might have changed since earlier, so get again before altering
+  tab=get("lookupTable",envir=env)
+  tab=rbind(tab,data.frame(rr=r,bb=b,ww=w,F=ans))
+  assign("lookupTable",value=tab,envir=env)
+  return(ans)
+}
+```
+
+Let's test it with the example we used above, and at the same time, time it:
+
+```{r,calcbigF}
+system.time(ans <- bigF(4,3,2))
+ans
+```
+
+This result is reasonable, since with only three balls and two wickets left, it is most likely that four runs or fewer will be scored. I had to use the "alternative" arrow-like assignment operator here, because an equals sign inside `system.time` has a different meaning. We will assess the times in a moment.
+
+It would be interesting to see what the lookup table looks like (that is, which values have been calculated). This is a data frame, so can just be displayed, or we can sort by something. I wanted to see the cumulative distribution of runs given a number of balls and wickets remaining:
+
+```{r,showlookuptable}
+env$lookupTable %>% arrange(bb,ww,rr)
+```
+
+Because the lookup table has now been populated, running the same calculation again should be a lot quicker:
+
+```{r,calcbigF2}
+system.time(ans <- bigF(4,3,2))
+ans
+```
+
+And so it is.
+
+# Applications
+
+The  nature of this recursion, with 8 recursive calls to `bigF` inside one original call, means that we threaten to branch wildly and will need to keep a large number of $(r,b,w)$ triples on the stack. This is obviated by calling `bigF` repeatedly with values of $r,b,w$ only a little bigger than those already in the lookup table, taking advantage of the calculations already done (which will be most of the ones we need). For example:
+
+```{r}
+system.time(bigF(10,10,10))
+```
+
+showing, for example, the cumulative distribution of runs with 8 balls and 9 wickets left (as calculated so far):
+
+```{r}
+env$lookupTable %>% filter(bb==8, ww==9) %>% arrange(rr)
+```
+
+
+and then
+
+```{r}
+system.time(bigF(20,15,10))
+```
+
+after which, one can extract the more complete cumulative distribution of runs with 8 balls and 9 wickets left, thus:
+
+```{r}
+env$lookupTable %>% filter(bb==8, ww==9) %>% arrange(rr)
+```
+
+From there, on it goes, in small steps.
