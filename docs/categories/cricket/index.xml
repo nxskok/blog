@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Cricket on Ken&#39;s Blog</title>
+    <link>/categories/cricket/</link>
+    <description>Recent content in Cricket on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 31 May 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/cricket/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Carter and Guthrie</title>
+      <link>/2017/05/31/carter-and-guthrie/</link>
+      <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/31/carter-and-guthrie/</guid>
+      <description>Introduction Carter and Guthrie, in 2004, proposed a method of modelling cricket matches. Their aim was to provide an alternative method of deciding interrupted matches, in the manner of Duckworth and Lewis. What was interesting to me is that they estimate a probability of winning (which is then held fixed over interruptions), and it seemed to me that one could estimate and update the probability of winning as the game progresses, which would be a useful adjunct for spectators.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -12,6 +12,15 @@
     
     
     <item>
+      <title>Carter and Guthrie</title>
+      <link>/2017/05/31/carter-and-guthrie/</link>
+      <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/05/31/carter-and-guthrie/</guid>
+      <description>Introduction Carter and Guthrie, in 2004, proposed a method of modelling cricket matches. Their aim was to provide an alternative method of deciding interrupted matches, in the manner of Duckworth and Lewis. What was interesting to me is that they estimate a probability of winning (which is then held fixed over interruptions), and it seemed to me that one could estimate and update the probability of winning as the game progresses, which would be a useful adjunct for spectators.</description>
+    </item>
+    
+    <item>
       <title>Comments</title>
       <link>/2017/05/31/comments/</link>
       <pubDate>Wed, 31 May 2017 00:00:00 +0000</pubDate>
