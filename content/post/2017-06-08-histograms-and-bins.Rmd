@@ -13,7 +13,8 @@ Most software, when you ask it to draw you a histogram, will choose a number of 
 
 ```{r}
 library(tidyverse)
-soap=read_delim("soap.txt"," ")
+myurl="http://www.utsc.utoronto.ca/~butler/c32/soap.txt"
+soap=read_delim(myurl," ")
 soap
 ```
 
@@ -25,9 +26,9 @@ I've almost forgotten how to make a base R histogram, but I think it goes like t
 hist(soap$scrap)
 ```
 
-This uses eight bins, with a bin width of 50. (I think the focus in base R was to choose a "pretty" bin width, so that the bin boundaries come in nice places.)
+This uses eight bins, with a bin width of 50. (I think the focus in base R was to choose bin boundaries that come in nice places, with the default being to use Sturges' rule (below) to get the number of bins.)
 
-In `ggplot`, you have to specify the number of bins yourself (or the bin width). I was looking in the help for `geom_histogram` to find out why, and I learned that Hadley Wickham is opposed to automatic selection of number of bins. In [the help file](http://ggplot2.tidyverse.org/reference/geom_histogram.html), it says, in the help for `binwidth`:
+In `ggplot`, you have to specify the number of bins yourself (or the bin width). I was looking in the help for `geom_histogram` to find out why, and I learned that Hadley Wickham is opposed to automatic selection of number of bins. In [the help file under `binwidth`](http://ggplot2.tidyverse.org/reference/geom_histogram.html), it says:
 
 >  You should always override this value, exploring multiple widths to find the best to illustrate the stories in your data.
 
@@ -104,19 +105,29 @@ fd=function(x) {
 fd(soap$scrap)
 ```
 
-What `geom_histogram` will let you do is to supply a *function* to `bins` or `binwidth`, so that if you want to use Sturges or Freedman-Diaconis as a default, you can do so:
+What `geom_histogram` claims to let you do is to supply a *function* to `binwidth` (though not `bins`, far as I can tell). I couldn't get this to work:
 
 ```{r}
-ggplot(soap,aes(x=scrap))+geom_histogram(bins=sturges(soap$scrap))
+ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=fd)
+```
+
+I welcome comment on how to do this.
+
+To use Sturges or Freedman-Diaconis as a default, you can do something like this:
+
+```{r}
+k=sturges(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(bins=k)
 ```
 
 or
 
 ```{r}
-ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=fd(soap$scrap))
+h=fd(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=h)
 ```
 
-You can even go a stage further, because these functions are hidden in R:
+You don't even have to write the functions yourself, because these can be found in R (from looking at the help for `hist`):
 
 ```{r}
 nclass.Sturges(soap$scrap)
@@ -125,4 +136,4 @@ nclass.FD(soap$scrap)
 
 Note that this version of Freedman-Diaconis gives you a number of bins rather than a bin width.
 
-Perhaps the moral of this story is that the look of a histogram can be very different depending on the number of bins or the bin width that you choose. So maybe Hadley Wickham was right after all.
+Perhaps the moral of this story is that the look of a histogram can be very different depending on the number of bins or the bin width that you choose. So maybe Hadley Wickham was right after all. But I still think it's good to have a place to start from, and `nclass.Sturges` or `nclass.FD` will do that.

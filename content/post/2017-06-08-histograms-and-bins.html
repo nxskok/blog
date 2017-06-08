@@ -22,7 +22,8 @@ tags:
 <pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
 <pre><code>## filter(): dplyr, stats
 ## lag():    dplyr, stats</code></pre>
-<pre class="r"><code>soap=read_delim(&quot;soap.txt&quot;,&quot; &quot;)</code></pre>
+<pre class="r"><code>myurl=&quot;http://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;
+soap=read_delim(myurl,&quot; &quot;)</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   case = col_integer(),
@@ -49,8 +50,8 @@ tags:
 <p>I’ve almost forgotten how to make a base R histogram, but I think it goes like this:</p>
 <pre class="r"><code>hist(soap$scrap)</code></pre>
 <p><img src="/post/2017-06-08-histograms-and-bins_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
-<p>This uses eight bins, with a bin width of 50. (I think the focus in base R was to choose a “pretty” bin width, so that the bin boundaries come in nice places.)</p>
-<p>In <code>ggplot</code>, you have to specify the number of bins yourself (or the bin width). I was looking in the help for <code>geom_histogram</code> to find out why, and I learned that Hadley Wickham is opposed to automatic selection of number of bins. In <a href="http://ggplot2.tidyverse.org/reference/geom_histogram.html">the help file</a>, it says, in the help for <code>binwidth</code>:</p>
+<p>This uses eight bins, with a bin width of 50. (I think the focus in base R was to choose bin boundaries that come in nice places, with the default being to use Sturges’ rule (below) to get the number of bins.)</p>
+<p>In <code>ggplot</code>, you have to specify the number of bins yourself (or the bin width). I was looking in the help for <code>geom_histogram</code> to find out why, and I learned that Hadley Wickham is opposed to automatic selection of number of bins. In <a href="http://ggplot2.tidyverse.org/reference/geom_histogram.html">the help file under <code>binwidth</code></a>, it says:</p>
 <blockquote>
 <p>You should always override this value, exploring multiple widths to find the best to illustrate the stories in your data.</p>
 </blockquote>
@@ -101,16 +102,24 @@ sturges(soap$scrap)</code></pre>
 
 fd(soap$scrap)</code></pre>
 <pre><code>## [1] 79.66667</code></pre>
-<p>What <code>geom_histogram</code> will let you do is to supply a <em>function</em> to <code>bins</code> or <code>binwidth</code>, so that if you want to use Sturges or Freedman-Diaconis as a default, you can do so:</p>
-<pre class="r"><code>ggplot(soap,aes(x=scrap))+geom_histogram(bins=sturges(soap$scrap))</code></pre>
+<p>What <code>geom_histogram</code> claims to let you do is to supply a <em>function</em> to <code>binwidth</code> (though not <code>bins</code>, far as I can tell). I couldn’t get this to work:</p>
+<pre class="r"><code>ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=fd)</code></pre>
+<pre><code>## Warning: Computation failed in `stat_bin()`:
+## is.numeric(width) is not TRUE</code></pre>
 <p><img src="/post/2017-06-08-histograms-and-bins_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
-<p>or</p>
-<pre class="r"><code>ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=fd(soap$scrap))</code></pre>
+<p>I welcome comment on how to do this.</p>
+<p>To use Sturges or Freedman-Diaconis as a default, you can do something like this:</p>
+<pre class="r"><code>k=sturges(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(bins=k)</code></pre>
 <p><img src="/post/2017-06-08-histograms-and-bins_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-<p>You can even go a stage further, because these functions are hidden in R:</p>
+<p>or</p>
+<pre class="r"><code>h=fd(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=h)</code></pre>
+<p><img src="/post/2017-06-08-histograms-and-bins_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>You don’t even have to write the functions yourself, because these can be found in R (from looking at the help for <code>hist</code>):</p>
 <pre class="r"><code>nclass.Sturges(soap$scrap)</code></pre>
 <pre><code>## [1] 6</code></pre>
 <pre class="r"><code>nclass.FD(soap$scrap)</code></pre>
 <pre><code>## [1] 5</code></pre>
 <p>Note that this version of Freedman-Diaconis gives you a number of bins rather than a bin width.</p>
-<p>Perhaps the moral of this story is that the look of a histogram can be very different depending on the number of bins or the bin width that you choose. So maybe Hadley Wickham was right after all.</p>
+<p>Perhaps the moral of this story is that the look of a histogram can be very different depending on the number of bins or the bin width that you choose. So maybe Hadley Wickham was right after all. But I still think it’s good to have a place to start from, and <code>nclass.Sturges</code> or <code>nclass.FD</code> will do that.</p>
