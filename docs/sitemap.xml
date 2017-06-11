@@ -2,6 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/2017/06/10/heritage-walk-in-kensington-market/</loc>
+    <lastmod>2017-06-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/2017/06/10/monster-chiller-horror-theatre/</loc>
+    <lastmod>2017-06-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2017/06/08/histograms-and-bins/</loc>
     <lastmod>2017-06-08T00:00:00+00:00</lastmod>
   </url>
@@ -176,7 +186,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-06-08T00:00:00+00:00</lastmod>
+    <lastmod>2017-06-10T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -188,6 +198,12 @@
   
   <url>
     <loc>/post/</loc>
+    <lastmod>2017-06-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/r/</loc>
     <lastmod>2017-06-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
@@ -199,7 +215,7 @@
   </url>
   
   <url>
-    <loc>/categories/r/</loc>
+    <loc>/categories/sports/</loc>
     <lastmod>2017-06-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
@@ -207,12 +223,6 @@
   <url>
     <loc>/tags/sports/</loc>
     <lastmod>2017-05-07T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/categories/sports/</loc>
-    <lastmod>2017-06-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -229,8 +239,14 @@
   </url>
   
   <url>
+    <loc>/categories/toronto/</loc>
+    <lastmod>2017-06-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/tags/walking/</loc>
-    <lastmod>2017-05-14T00:00:00+00:00</lastmod>
+    <lastmod>2017-06-10T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
