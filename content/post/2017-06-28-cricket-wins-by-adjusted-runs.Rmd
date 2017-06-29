@@ -63,7 +63,7 @@ tb_odi %>% filter(ww==7, bb==8) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
 
 Median 15, adjusted winning margin is $322+15-321=16$ runs.
 
-and a rather more lopsided one:
+And a rather more lopsided one:
 
 India (193-2) beat South Africa (191) by 8 wickets with 72 balls remaining:
 
@@ -125,7 +125,7 @@ adj_margin(167,169,5,12)
 
 The adjusted winning margin is 20 runs.
 
-To illustrate that adjusted runs can be used to make a "run difference" that is an easier-to-understand version of net run rate, let's look at Group B of the 2017 Champions Trophy, where first and third places were decided by net run rate:
+To illustrate that adjusted runs can be used to make a "run difference" that is an easier-to-understand version of net run rate, let's look at Group B of the 2017 Champions Trophy, where first and third places were decided by net run rate. See [here](http://www.espncricinfo.com/icc-champions-trophy-2017/engine/series/1022345.html) for match details:
 
 - South Africa - Sri Lanka: + 96 runs
 - India - Pakistan: + 124 runs

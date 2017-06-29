@@ -84,7 +84,7 @@ tb_odi %&gt;% head(10)</code></pre>
 ## 1 14  8  7 0.4620756
 ## 2 15  8  7 0.5416272</code></pre>
 <p>Median 15, adjusted winning margin is <span class="math inline">\(322+15-321=16\)</span> runs.</p>
-<p>and a rather more lopsided one:</p>
+<p>And a rather more lopsided one:</p>
 <p>India (193-2) beat South Africa (191) by 8 wickets with 72 balls remaining:</p>
 <pre class="r"><code>tb_odi %&gt;% filter(ww==8, bb==72) %&gt;% arrange(rr) %&gt;% filter(between(F,0.4,0.6))</code></pre>
 <pre><code>##    rr bb ww         F
@@ -131,7 +131,7 @@ tb_odi %&gt;% head(10)</code></pre>
 <pre class="r"><code>adj_margin(167,169,5,12)</code></pre>
 <pre><code>## [1] 20</code></pre>
 <p>The adjusted winning margin is 20 runs.</p>
-<p>To illustrate that adjusted runs can be used to make a “run difference” that is an easier-to-understand version of net run rate, let’s look at Group B of the 2017 Champions Trophy, where first and third places were decided by net run rate:</p>
+<p>To illustrate that adjusted runs can be used to make a “run difference” that is an easier-to-understand version of net run rate, let’s look at Group B of the 2017 Champions Trophy, where first and third places were decided by net run rate. See <a href="http://www.espncricinfo.com/icc-champions-trophy-2017/engine/series/1022345.html">here</a> for match details:</p>
 <ul>
 <li>South Africa - Sri Lanka: + 96 runs</li>
 <li>India - Pakistan: + 124 runs</li>
