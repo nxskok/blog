@@ -70,3 +70,82 @@ India (193-2) beat South Africa (191) by 8 wickets with 72 balls remaining:
 ```{r}
 tb_odi %>% filter(ww==8, bb==72) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
 ```
+
+Median 121 runs, adjusted winning margin $193+121-191=123$ runs.
+
+This, evidently, could be made into a function. The major ingredient is a function to return the median number of runs from the number of wickets and balls left:
+
+```{r}
+median_runs=function(w,b) {
+  if (w==0) return(0)
+  if (b==0) return(0)
+  tb_odi %>% filter(ww==w, bb==b) %>% arrange(rr) %>% 
+    filter(F>0.5) %>% slice(1) %>% pull(rr)
+}
+```
+
+Does that work? Try again with our examples:
+
+```{r}
+median_runs(8,16)
+median_runs(7,8)
+median_runs(8,72)
+```
+
+Check. So now we can calculate the adjusted winning margin from the team scores directly:
+
+```{r}
+adj_margin=function(first_runs,second_runs,second_wickets,balls_left) {
+  m=median_runs(10-second_wickets,balls_left)
+  second_runs+m-first_runs
+}
+```
+
+and to test:
+
+```{r}
+adj_margin(305,308,2,16)
+adj_margin(321,322,3,8)
+adj_margin(191,193,2,72)
+```
+
+A bonus is that this function also works when the first team wins, since the second team is either out of balls or out of wickets. England (310) beat New Zealand (223 all out with 5 overs and 3 balls left) by 87 runs:
+
+```{r}
+adj_margin(310,223,10,5*6+3)
+```
+
+This allows calculation of adjusted winning margin for uninterrupted matches. A simple way of handling matches that were shortened by rain is to use the Duckworth-Lewis adjusted results. If the result given by D-L is a win by runs, that stands; if it is a win by wickets on attaining an adjusted target, we act as if the first team scored one less than the adjusted target. 
+
+To illustrate, from another competition, the Royal London Cup: Nottinghamshire scored 273 in 50 overs, and Worcestershire were set a revised target of 168 from 22 overs, which they reached, scoring 169/5 in 20 overs, winning with 12 balls to spare. We pretend that Nottinghamshire scored 167:
+
+```{r}
+adj_margin(167,169,5,12)
+```
+
+The adjusted winning margin is 20 runs.
+
+To illustrate that adjusted runs can be used to make a "run difference" that is an easier-to-understand version of net run rate, let's look at Group B of the 2017 Champions Trophy, where first and third places were decided by net run rate:
+
+- South Africa - Sri Lanka: + 96 runs
+- India - Pakistan: + 124 runs
+- Pakistan - South Africa: + 19 runs (via D/L which we ignore)
+- India - Sri Lanka: -7 wickets with 8 balls left; -16 runs (calculated earlier)
+- South Africa - India: -8 wickets with 72 balls left; -123 runs (calculated earlier)
+- Sri Lanka - Pakistan: -3 wickets with 31 balls left; -24 runs (below)
+
+```{r}
+adj_margin(236,237,7,31)
+```
+
+The points table with run differences is as below. Note that the run differences add up to zero. India top the table owing to their two big wins and one narrow defeat. 
+
+| Team         | Won | Lost |  Run difference|
+|:-------------|:---:|:----:|---------------:|
+| India        | 2   | 1    | 124-16+123=231 |
+| Pakistan     | 2   | 1    | -124+19+24=-81 |
+| South Africa | 1   | 2    | 96-19-123=-46  |
+| Sri Lanka    | 1   | 2    | -96+16-24=-104 |
+
+
+The rank order is the same as for net run rate, in this case, but in my opinion it is easier to see why the run differences came out as they did.
