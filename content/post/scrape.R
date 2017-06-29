@@ -23,3 +23,11 @@ scores=tibble(t1=m[,4],t2=m[,7],s1=parse_number(m[,5]),s2=parse_number(m[,8]))
 scores
 scores %>% count(t2)
 unique(scores$t2)
+
+# testing pull
+
+d=tibble(x=rnorm(10),y=rnorm(10),z=rnorm(10))
+d
+d$y
+d[["y"]]
+d %>%  select(y)

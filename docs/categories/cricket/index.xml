@@ -6,10 +6,20 @@
     <description>Recent content in Cricket on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 01 Jun 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 28 Jun 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/cricket/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Cricket: wins by adjusted runs</title>
+      <link>/2017/06/28/cricket-wins-by-adjusted-runs/</link>
+      <pubDate>Wed, 28 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/06/28/cricket-wins-by-adjusted-runs/</guid>
+      <description>In cricket, there are two ways to win a one-day game: by runs, if you bat first and score more runs than the other guys, or by wickets, if you bat second and score more runs than the other guys: at the moment where the second team has more runs, the game ends, and the result is given as “won by 6 wickets with 12 balls remaining”, or similar.
+Soccer has a tiebreaker “goal difference”: when two teams have the same number of points, you subtract the goals conceded from the goals scored for each team, and the team with the bigger number is placed higher.</description>
+    </item>
     
     <item>
       <title>Carter and Guthrie</title>

@@ -1,0 +1,72 @@
+---
+title: 'Cricket: wins by adjusted runs'
+author: Ken
+date: '2017-06-28'
+slug: cricket-wins-by-adjusted-runs
+categories:
+  - cricket
+tags: []
+---
+
+In cricket, there are two ways to win a one-day game: by runs, if you bat first and score more runs than the other guys, or by wickets, if you bat second and score more runs than the other guys: at the moment where the second team has more runs, the game ends, and the result is given as "won by 6 wickets with 12 balls remaining", or similar.
+
+Soccer has a tiebreaker "goal difference": when two teams have the same number of points, you subtract the goals conceded from the goals scored for each team, and the team with the bigger number is placed higher. Cricket doesn't have anything like that because wins by runs and wins by wickets are incommensurable, and so cricket has had to resort to ideas like the [net run rate](https://en.wikipedia.org/wiki/Net_run_rate), which is not completely transparent.
+
+In [this post](https://nxskok.github.io/blog/2017/06/01/carter-and-guthrie/) and [this one](https://nxskok.github.io/blog/2017/06/01/carter-and-guthrie-part-2-model-building/), I talked about a cricket modelling procedure due to Carter and Guthrie. This can be used to predict the number of runs that the team batting second would have scored in their remaining overs, had they batted them out, and therefore converts a win by wickets into a win by runs. By converting all results into a win by adjusted runs in this fashion, ties can be broken by the much simpler idea of run difference, which is much easier for spectators to understand.
+
+How to make this work? In my model-building, I created two data frames, one for 50-over matches and one for Twenty20. These contained the probability of scoring $r$ runs or fewer from $b$ balls with $w$ wickets left. Let's take a look at them:
+
+```{r}
+library(tidyverse)
+tb_odi=read_rds("~/odi.rds")
+tb_t20=read_rds("~/t20.rds")
+tb_odi %>% head(10)
+```
+
+The first three columns are numbers of runs, balls and wickets, and the last column is the probability of scoring that many runs or fewer. For example, with one ball and two wickets left, this is the cumulative distribution of the number of runs scored, in a 50-over game:
+
+```{r}
+tb_odi %>% filter(bb==1, ww==2) %>%  arrange(rr) %>% head(10)
+```
+
+In a Twenty20 game, the numbers are (slightly) different, but the idea is the same:
+
+```{r}
+tb_t20 %>% filter(bb==1, ww==2) %>%  arrange(rr) %>% head(10)
+```
+
+Even though only six runs can be scored from one ball, there is a tiny probability of getting eight runs in total, because there could be two no-balls or wides bowled first followed by a six, the no-balls or wides requiring another ball to be bowled. (In practice, a bowler defending an eight-run lead off the last ball would be extra-careful to bowl a fair ball, even at the expense of giving up a boundary, but that's not part of the Carter-Guthrie model.)
+
+Using these numbers (for a 50-over game), if the team batting second is three runs behind before the last ball (with two wickets left), they will lose if they score two runs or less, which happens with probability 0.865, they will tie if they score exactly three, with probability $0.876-0.865=0.011$, and they will win otherwise, with probability $1-0.865-0.011=0.124$. As I mentioned in an earlier post, the probability of the second team winning can be kept track of during the match, so that spectators can know where the second team stands. 
+
+In addition, if an otherwise uninterrupted match is terminated by rain during the second team's innings, the second team can be declared the winner if they have a probability greater than 0.5 of winning the match from the position they are at. In the (admittedly unlikely) event that rain terminates the match with one ball and two wickets left, with the second team needing four runs to win, the first team would be declared the winner because the probability of the second team winning is 0.124, less than 0.5.
+
+Another question that might be asked is "how many runs do you estimate the second team will score off their last ball"? One possibility is to calculate the mean number of runs, which would be done in the standard way from a probability distribution. I think it is better to use the *median* number of runs, because of the intimate connection with the probability of winning being greater or less than 0.5, which will be true if and only if the median number of runs is greater or less than the runs required. (Using the mean invites the logical difficulty that the probability of winning is less than 0.5, but the mean number of runs is greater than the runs required.) From a cumulative distribution such as the ones shown here, the median number of runs is the value of `rr` where the cumulative probability `F` first passes 0.5. In both of the cumulative distributions shown above, the median number of runs is 1.
+
+This suggests a way of estimating how many more runs a team that wins by wickets might have scored, had they batted out their overs: get the cumulative distribution for the number of balls and wickets remaining at the end, find its median, and add that number of runs onto the winning team's total. 
+
+Let's take some examples from the 2017 Champions Trophy, a 50-over competition. I restrict myself to matches uninterrupted by rain (and there was rather a lot of rain):
+
+England (308-2) beat Bangladesh (305-6) by 8 wickets with 16 balls remaining:
+
+```{r}
+tb_odi %>% filter(ww==8, bb==16) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
+```
+
+We estimate that England would have scored a median of 32 runs in the remaining 16 balls (a lot, since they had a lot of wickets left), and therefore the adjusted winning margin is $308+32-305=35$ runs.
+
+Sri Lanka (322-3) beat India (321-6) by 7 wickets with 8 balls remaining:
+
+```{r}
+tb_odi %>% filter(ww==7, bb==8) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
+```
+
+Median 15, adjusted winning margin is $322+15-321=16$ runs.
+
+and a rather more lopsided one:
+
+India (193-2) beat South Africa (191) by 8 wickets with 72 balls remaining:
+
+```{r}
+tb_odi %>% filter(ww==8, bb==72) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
+```
