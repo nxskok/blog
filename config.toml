@@ -3,7 +3,7 @@ publishDir = "docs"
 relativeurls = true
 languageCode = "en-us"
 title = "Ken's Blog"
-theme = "hugo-lithium-theme"
+theme = "tuftesque"
 googleAnalytics = ""
 disqusShortname = "kens-blog-2"
 ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
@@ -31,11 +31,14 @@ ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
     highlightjsTheme = "github"
 
     [params.logo]
-    url = "logo.png"
+    url = "/156-front.jpg"
     width = 50
     height = 50
     alt = "Logo"
-
+    
+    [params.banner]
+    url = "/156-side2.jpg"
+ 
 [taxonomies]
   tag = "tags"
   category = "categories"

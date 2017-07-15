@@ -1,0 +1,46 @@
+---
+title: Tufte-esque
+author: Ken
+date: '2017-07-14'
+slug: tufte-esque
+categories: []
+tags: []
+---
+
+
+
+<p>Playing with a new look, thanks to <a href="http://livefreeordichotomize.com/2017/07/13/introducing-the-tuftesque-blogdown-theme/">this</a>.</p>
+<p>One of the main reasons I’m trying this is <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">the possibility of making side comments on the side</span> (look right).</p>
+<p>Ho ho ho.</p>
+<p>This <span class="newthought">is a new thought</span> apparently.</p>
+<p>The banner on the front page and the logo at the top of each page (on which you click to get back to the front page) are <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Evidently.</span> trains, specifically British Class 156 diesel multiple-unit trains, from which I have seen a lot of Britain.</p>
+<p>Let me just generate a random pointless scatterplot: <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">First generating some pointless data, and before <em>that</em> waiting through the tidyverse’s startup messages.</span></p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<pre class="r"><code>d=tibble(xx=rnorm(100),yy=rnorm(100))
+d</code></pre>
+<pre><code>## # A tibble: 100 x 2
+##            xx         yy
+##         &lt;dbl&gt;      &lt;dbl&gt;
+##  1  0.9926509 -0.9659317
+##  2 -0.3215167  0.5636860
+##  3 -0.4577031 -2.2274024
+##  4  0.0495168 -0.7863670
+##  5  1.4182106 -0.9891459
+##  6 -2.0964501  0.5778579
+##  7  0.7116801 -0.2883248
+##  8 -1.1256143 -0.7107532
+##  9  0.3044245 -0.2939939
+## 10  0.6464043 -0.8893617
+## # ... with 90 more rows</code></pre>
+<pre class="r"><code>g=ggplot(d,aes(x=xx,y=yy))+geom_point()
+g</code></pre>
+<p><img src="/post/2017-07-14-tufte-esque_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
