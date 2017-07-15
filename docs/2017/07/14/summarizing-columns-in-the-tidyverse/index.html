@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>Ken&#39;s Blog - Summarizing columns in the tidyverse</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Ken&#39;s Blog">
+<meta name="generator" content="Hugo 0.20.6" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-92165973-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/07/14/summarizing-columns-in-the-tidyverse/">Summarizing columns in the tidyverse</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jul 14, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;8 min read
+  
+  
+  
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I thought summarizing columns in the <code>tidyverse</code> was kind of clunky, at least until a couple of days ago. Let’s read in some data to illustrate what I thought I had to do. This data comes from the Australian Institute for Sport; it’s body measurements from male and female athletes who play ten different sports.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<pre class="r"><code>options(width=50)
+my_url=&quot;http://www.utsc.utoronto.ca/~butler/c32/ais.txt&quot;
+athletes=read_tsv(my_url)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Sex = col_character(),
+##   Sport = col_character(),
+##   RCC = col_double(),
+##   WCC = col_double(),
+##   Hc = col_double(),
+##   Hg = col_double(),
+##   Ferr = col_integer(),
+##   BMI = col_double(),
+##   SSF = col_double(),
+##   `%Bfat` = col_double(),
+##   LBM = col_double(),
+##   Ht = col_double(),
+##   Wt = col_double()
+## )</code></pre>
+<pre class="r"><code>athletes</code></pre>
+<pre><code>## # A tibble: 202 x 13
+##       Sex   Sport   RCC   WCC    Hc    Hg  Ferr
+##     &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+##  1 female Netball  4.56  13.3  42.2  13.6    20
+##  2 female Netball  4.15   6.0  38.0  12.7    59
+##  3 female Netball  4.16   7.6  37.5  12.3    22
+##  4 female Netball  4.32   6.4  37.7  12.3    30
+##  5 female Netball  4.06   5.8  38.7  12.8    78
+##  6 female Netball  4.12   6.1  36.6  11.8    21
+##  7 female Netball  4.17   5.0  37.4  12.7   109
+##  8 female Netball  3.80   6.6  36.5  12.4   102
+##  9 female Netball  3.96   5.5  36.3  12.4    71
+## 10 female Netball  4.44   9.7  41.4  14.1    64
+## # ... with 192 more rows, and 6 more variables:
+## #   BMI &lt;dbl&gt;, SSF &lt;dbl&gt;, `%Bfat` &lt;dbl&gt;,
+## #   LBM &lt;dbl&gt;, Ht &lt;dbl&gt;, Wt &lt;dbl&gt;</code></pre>
+</div>
+<div id="what-i-thought-i-had-to-do" class="section level2">
+<h2>What I thought I had to do</h2>
+<p>Let’s suppose I want the mean and standard deviation of height and weight. It looked as if I had to do <span class="math inline">\(2 \times 2=4\)</span> different summarizations, like this:</p>
+<pre class="r"><code>athletes %&gt;% summarize(ht_mean=mean(Ht),
+                       ht_sd=sd(Ht),
+                       wt_mean=mean(Wt),
+                       wt_sd=sd(Wt))</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   ht_mean    ht_sd  wt_mean    wt_sd
+##     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 180.104 9.734494 75.00817 13.92557</code></pre>
+<p>That seemed like a lot work, and rather repetitious. Couldn’t I do better? Well, it turned out that I could, but I had some steps to go through first.</p>
+</div>
+<div id="selecting-columns" class="section level2">
+<h2>Selecting columns</h2>
+<p>If you want to just display some columns of a data frame, <code>select</code> is very flexible. You can select columns by number:</p>
+<pre class="r"><code>athletes %&gt;% select(c(2,3))</code></pre>
+<pre><code>## # A tibble: 202 x 2
+##      Sport   RCC
+##      &lt;chr&gt; &lt;dbl&gt;
+##  1 Netball  4.56
+##  2 Netball  4.15
+##  3 Netball  4.16
+##  4 Netball  4.32
+##  5 Netball  4.06
+##  6 Netball  4.12
+##  7 Netball  4.17
+##  8 Netball  3.80
+##  9 Netball  3.96
+## 10 Netball  4.44
+## # ... with 192 more rows</code></pre>
+<p>or by names, <em>without</em> quotes:</p>
+<pre class="r"><code>athletes %&gt;% select(Sport:WCC)</code></pre>
+<pre><code>## # A tibble: 202 x 3
+##      Sport   RCC   WCC
+##      &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 Netball  4.56  13.3
+##  2 Netball  4.15   6.0
+##  3 Netball  4.16   7.6
+##  4 Netball  4.32   6.4
+##  5 Netball  4.06   5.8
+##  6 Netball  4.12   6.1
+##  7 Netball  4.17   5.0
+##  8 Netball  3.80   6.6
+##  9 Netball  3.96   5.5
+## 10 Netball  4.44   9.7
+## # ... with 192 more rows</code></pre>
+<p>But there is more. There’s a whole family of <a href="http://dplyr.tidyverse.org/reference/select_helpers.html">select helpers</a> that let you choose columns whose names start with something:</p>
+<pre class="r"><code>athletes %&gt;% select(starts_with(&quot;s&quot;))</code></pre>
+<pre><code>## # A tibble: 202 x 3
+##       Sex   Sport   SSF
+##     &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt;
+##  1 female Netball  49.0
+##  2 female Netball 110.2
+##  3 female Netball  89.0
+##  4 female Netball  98.3
+##  5 female Netball 122.1
+##  6 female Netball  90.4
+##  7 female Netball 106.9
+##  8 female Netball 156.6
+##  9 female Netball 101.1
+## 10 female Netball 126.4
+## # ... with 192 more rows</code></pre>
+<p>or end with something: <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">These are by default <em>not</em> case sensitive, but there is an option to make them so if you wish.</span></p>
+<pre class="r"><code>athletes %&gt;% select(ends_with(&quot;cc&quot;))</code></pre>
+<pre><code>## # A tibble: 202 x 2
+##      RCC   WCC
+##    &lt;dbl&gt; &lt;dbl&gt;
+##  1  4.56  13.3
+##  2  4.15   6.0
+##  3  4.16   7.6
+##  4  4.32   6.4
+##  5  4.06   5.8
+##  6  4.12   6.1
+##  7  4.17   5.0
+##  8  3.80   6.6
+##  9  3.96   5.5
+## 10  4.44   9.7
+## # ... with 192 more rows</code></pre>
+<p>or that contain something:</p>
+<pre class="r"><code>athletes %&gt;% select(contains(&quot;er&quot;))</code></pre>
+<pre><code>## # A tibble: 202 x 1
+##     Ferr
+##    &lt;int&gt;
+##  1    20
+##  2    59
+##  3    22
+##  4    30
+##  5    78
+##  6    21
+##  7   109
+##  8   102
+##  9    71
+## 10    64
+## # ... with 192 more rows</code></pre>
+<p>or that match a regular expression: <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">In this case, are exactly two characters long with the first one being H.</span></p>
+<pre class="r"><code>athletes %&gt;% select(matches(&quot;^H.$&quot;))</code></pre>
+<pre><code>## # A tibble: 202 x 3
+##       Hc    Hg    Ht
+##    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1  42.2  13.6 176.8
+##  2  38.0  12.7 172.6
+##  3  37.5  12.3 176.0
+##  4  37.7  12.3 169.9
+##  5  38.7  12.8 183.0
+##  6  36.6  11.8 178.2
+##  7  37.4  12.7 177.3
+##  8  36.5  12.4 174.1
+##  9  36.3  12.4 173.6
+## 10  41.4  14.1 173.7
+## # ... with 192 more rows</code></pre>
+<p>You can also do things like selecting some or all of variables with names like <code>x1</code>, <code>x2</code>, <code>x3</code>. There are many possibilities.</p>
+</div>
+<div id="summarizing-the-columns-you-selected" class="section level2">
+<h2>Summarizing the columns you selected</h2>
+<p>So the selection is the first part of the story. The next question is, is there a nice way to summarize, in various different ways, those columns you have selected? There is, and it’s called <code>summarize_at</code>. To go back to our original wish to get mean and SD of height and weight, note that <code>Ht</code> and <code>Wt</code> are the only two two-letter column names that end in T, so a regular expression will get them, and then this: <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Inside summarize_at go two things, a vars inside which is something that will select the columns you want, and a funs inside which go the names of the summaries you want. These have to return single numbers.</span></p>
+<pre class="r"><code>athletes %&gt;% summarize_at(vars(matches(&quot;^.t$&quot;)),
+                          funs(mean,sd))</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   Ht_mean  Wt_mean    Ht_sd    Wt_sd
+##     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 180.104 75.00817 9.734494 13.92557</code></pre>
+<p>And, as you see, we have the two means and the two SDs, without repeating ourselves.</p>
+<p>The only restriction I see here is that if your summary returns more than one number, like a five-number summary:</p>
+<pre class="r"><code>quantile(athletes$Ht)</code></pre>
+<pre><code>##      0%     25%     50%     75%    100% 
+## 148.900 174.000 179.700 186.175 209.400</code></pre>
+<p>then you have to resort to something like <code>map</code> and put the pieces together again:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Like Humpty Dumpty.</span></p>
+<pre class="r"><code>athletes %&gt;% select(matches(&quot;^.t$&quot;)) %&gt;% map(quantile) %&gt;% bind_rows()</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##        Ht      Wt
+##     &lt;dbl&gt;   &lt;dbl&gt;
+## 1 148.900  37.800
+## 2 174.000  66.525
+## 3 179.700  74.400
+## 4 186.175  84.125
+## 5 209.400 123.200</code></pre>
+<p>This selects the height and weight columns, and for each of those, works out the five-number summary, and turns the results back from a list into a data frame. The downside to this is that the “names” attribute of the five-number-summary vectors gets lost, and you have to see that the first row is the minimum, the second row is the first quartile, and so on.</p>
+</div>
+<div id="summarizing-columns-that-have-a-certain-property" class="section level2">
+<h2>Summarizing columns that have a certain property</h2>
+<p>You might want to summarize all the columns that are numeric, or are dates, or something like that. For example, it only makes sense to calculate the mean of a column that is numeric. This kind of thing is done by <code>summarize_if</code>, which is like <code>summarize_at</code> except that the <code>vars</code> slot is replaced by something that will be true for all the columns you want, like this:</p>
+<pre class="r"><code>athletes %&gt;% summarize_if(is.numeric,funs(mean))</code></pre>
+<pre><code>## # A tibble: 1 x 11
+##        RCC      WCC       Hc       Hg     Ferr
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 4.718614 7.108663 43.09158 14.56634 76.87624
+## # ... with 6 more variables: BMI &lt;dbl&gt;,
+## #   SSF &lt;dbl&gt;, `%Bfat` &lt;dbl&gt;, LBM &lt;dbl&gt;,
+## #   Ht &lt;dbl&gt;, Wt &lt;dbl&gt;</code></pre>
+<p>This finds the means of all the numeric columns. You’ll need to pipe this into <code>print</code> to display the means that don’t show here.</p>
+</div>
+<div id="by-groups" class="section level2">
+<h2>By groups</h2>
+<p>The above summaries work for groups as well. To do that, insert a <code>group_by</code> before the <code>summarize_at</code>. For example, the mean and SD of height and weight for male and female athletes separately goes like this:</p>
+<pre class="r"><code>athletes %&gt;% group_by(Sex) %&gt;% 
+  summarize_at(vars(matches(&quot;^.t$&quot;)),
+                    funs(mean,sd))</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##      Sex  Ht_mean  Wt_mean    Ht_sd    Wt_sd
+##    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 female 174.5940 67.34250 8.242203 10.91545
+## 2   male 185.5059 82.52353 7.903487 12.40625</code></pre>
+</div>
+<div id="looking-further" class="section level2">
+<h2>Looking further</h2>
+<p>There are also <code>mutate_at</code> and <code>mutate_if</code>. These do calculations for columns whose names have something in common, or which have a certain property. This can be an efficient way to do “batch” transformations of variables, such as taking the logs of several variables, without the repetitiousness of transforming them one at a time.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2017
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

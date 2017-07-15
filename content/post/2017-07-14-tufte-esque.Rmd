@@ -29,3 +29,4 @@ g=ggplot(d,aes(x=xx,y=yy))+geom_point()
 g
 ```
 
+`r tufte::margin_note("That's a pretty pointless scatterplot.")`
