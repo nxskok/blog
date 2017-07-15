@@ -92,10 +92,12 @@ quantile(athletes$Ht)
 then you have to resort to something like `map` and put the pieces together again:`r tufte::margin_note("Like Humpty Dumpty.")`
 
 ```{r}
-athletes %>% select(matches("^.t$")) %>% map(quantile) %>% bind_rows()
+athletes %>% select(matches("^.t$")) %>% 
+  map(quantile) %>% 
+  bind_rows()
 ```
 
-This selects the height and weight columns, and for each of those, works out the five-number summary, and turns the results back from a list into a data frame. The downside to this is that the "names" attribute of the five-number-summary vectors gets lost, and you have to see that the first row is the minimum, the second row is the first quartile, and so on. 
+This selects the height and weight columns, and for each of those, works out the five-number summary, and turns the assembled results back from a list into a data frame. The downside to this is that the "names" attribute of the five-number-summary vectors gets lost, and you have to see that the first row is the minimum, the second row is the first quartile, and so on. 
 
 ## Summarizing columns that have a certain property
 
@@ -109,7 +111,8 @@ This finds the means of all the numeric columns. You'll need to pipe this into `
 
 ## By groups
 
-The above summaries work for groups as well. To do that, insert a `group_by` before the `summarize_at`. For example, the mean and SD of height and weight for male and female athletes separately goes like this:
+The above summaries work for groups as well. `r tufte::margin_note("Except for the map one. That uses rows of the output data frame for the quantiles, so that rows are not available to use for the groups.")`
+To do that, insert a `group_by` before the `summarize_at`. For example, the mean and SD of height and weight for male and female athletes separately goes like this:
 
 ```{r}
 athletes %>% group_by(Sex) %>% 

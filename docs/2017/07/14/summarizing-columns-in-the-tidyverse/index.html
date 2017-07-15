@@ -278,7 +278,9 @@ athletes=read_tsv(my_url)</code></pre>
 <pre><code>##      0%     25%     50%     75%    100% 
 ## 148.900 174.000 179.700 186.175 209.400</code></pre>
 <p>then you have to resort to something like <code>map</code> and put the pieces together again:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Like Humpty Dumpty.</span></p>
-<pre class="r"><code>athletes %&gt;% select(matches(&quot;^.t$&quot;)) %&gt;% map(quantile) %&gt;% bind_rows()</code></pre>
+<pre class="r"><code>athletes %&gt;% select(matches(&quot;^.t$&quot;)) %&gt;% 
+  map(quantile) %&gt;% 
+  bind_rows()</code></pre>
 <pre><code>## # A tibble: 5 x 2
 ##        Ht      Wt
 ##     &lt;dbl&gt;   &lt;dbl&gt;
@@ -287,7 +289,7 @@ athletes=read_tsv(my_url)</code></pre>
 ## 3 179.700  74.400
 ## 4 186.175  84.125
 ## 5 209.400 123.200</code></pre>
-<p>This selects the height and weight columns, and for each of those, works out the five-number summary, and turns the results back from a list into a data frame. The downside to this is that the “names” attribute of the five-number-summary vectors gets lost, and you have to see that the first row is the minimum, the second row is the first quartile, and so on.</p>
+<p>This selects the height and weight columns, and for each of those, works out the five-number summary, and turns the assembled results back from a list into a data frame. The downside to this is that the “names” attribute of the five-number-summary vectors gets lost, and you have to see that the first row is the minimum, the second row is the first quartile, and so on.</p>
 </div>
 <div id="summarizing-columns-that-have-a-certain-property" class="section level2">
 <h2>Summarizing columns that have a certain property</h2>
@@ -304,7 +306,7 @@ athletes=read_tsv(my_url)</code></pre>
 </div>
 <div id="by-groups" class="section level2">
 <h2>By groups</h2>
-<p>The above summaries work for groups as well. To do that, insert a <code>group_by</code> before the <code>summarize_at</code>. For example, the mean and SD of height and weight for male and female athletes separately goes like this:</p>
+<p>The above summaries work for groups as well. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Except for the map one. That uses rows of the output data frame for the quantiles, so that rows are not available to use for the groups.</span> To do that, insert a <code>group_by</code> before the <code>summarize_at</code>. For example, the mean and SD of height and weight for male and female athletes separately goes like this:</p>
 <pre class="r"><code>athletes %&gt;% group_by(Sex) %&gt;% 
   summarize_at(vars(matches(&quot;^.t$&quot;)),
                     funs(mean,sd))</code></pre>
