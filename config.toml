@@ -31,13 +31,13 @@ ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
     highlightjsTheme = "github"
 
     [params.logo]
-    url = "/156-front.jpg"
+    url = "http://www.utsc.utoronto.ca/~butler/156-front.jpg"
     width = 50
     height = 50
     alt = "Logo"
     
     [params.banner]
-    url = "/156-side2.jpg"
+    url = "http://www.utsc.utoronto.ca/~butler/156-side2.jpg"
  
 [taxonomies]
   tag = "tags"
