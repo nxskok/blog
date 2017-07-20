@@ -6,10 +6,20 @@
     <description>Recent content in Statistics on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 08 Jun 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 20 Jul 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/statistics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Summarizing several models using broom and purrr</title>
+      <link>/2017/07/20/summarizing-several-models-using-broom-and-purrr/</link>
+      <pubDate>Thu, 20 Jul 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/07/20/summarizing-several-models-using-broom-and-purrr/</guid>
+      <description>Introduction broom is supposed to be a powerful way to summarize several models at once, and so it is. The trouble is, the examples show how to fit the same model to different subsets of a data set. I had something different in mind: I had one data set, and three different models on that same data. Could I do something similar there? It wasn’t clear to me how.
+ Illustrative data The data here came from Albright’s book.</description>
+    </item>
     
     <item>
       <title>Histograms and bins</title>

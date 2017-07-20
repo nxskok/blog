@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>Ken&#39;s Blog - Summarizing several models using broom and purrr</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Ken&#39;s Blog">
+<meta name="generator" content="Hugo 0.20.6" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-92165973-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/07/20/summarizing-several-models-using-broom-and-purrr/">Summarizing several models using broom and purrr</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jul 20, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;8 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p><code>broom</code> is supposed to be a powerful way to summarize several models at once, and so it is. The trouble is, the examples show how to fit the <em>same</em> model to different subsets of a data set. I had something different in mind: I had one data set, and three different models on that same data. Could I do something similar there? It wasn’t clear to me how.</p>
+</div>
+<div id="illustrative-data" class="section level2">
+<h2>Illustrative data</h2>
+<p>The data <a href="http://www.utsc.utoronto.ca/~butler/c32/pinetrees.txt">here</a> came from <a href="http://www.jblearning.com/catalog/9781449685348/">Albright’s book</a>. These are observations on the diameter and wood volume of ten pine trees, and the question is whether we can model the volume given the diameter. This is of practical importance, because the volume of wood in a tree represents the financial value of the tree but is hard to measure (until the tree is cut down), while the diameter is easy to measure with a tape measure and a calculation involving <span class="math inline">\(\pi\)</span>.</p>
+<p>Let’s start by examining the data:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<pre class="r"><code>library(broom)
+my_url=&quot;http://www.utsc.utoronto.ca/~butler/c32/pinetrees.txt&quot;
+trees=read_delim(my_url,&quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   diameter = col_integer(),
+##   volume = col_integer()
+## )</code></pre>
+<pre class="r"><code>trees</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    diameter volume
+##       &lt;int&gt;  &lt;int&gt;
+##  1       32    185
+##  2       29    109
+##  3       24     95
+##  4       45    300
+##  5       20     30
+##  6       30    125
+##  7       26     55
+##  8       40    246
+##  9       24     60
+## 10       18     15</code></pre>
+<p>What kind of relationship do we have?</p>
+<pre class="r"><code>ggplot(trees,aes(x=diameter,y=volume))+geom_point()</code></pre>
+<p><img src="../../../../post/2017-07-20-summarizing-several-models-using-broom-and-purrr_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>Upward, strong and apparently linear.</p>
+</div>
+<div id="models" class="section level2">
+<h2>Models</h2>
+<p>So our first model is a straight-line relationship:</p>
+<pre class="r"><code>volume.1=lm(volume~diameter,data=trees)
+summary(volume.1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = volume ~ diameter, data = trees)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -36.497  -9.982   1.751   8.959  28.139 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -191.749     23.954  -8.005 4.35e-05 ***
+## diameter      10.894      0.801  13.600 8.22e-07 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 20.38 on 8 degrees of freedom
+## Multiple R-squared:  0.9585, Adjusted R-squared:  0.9534 
+## F-statistic:   185 on 1 and 8 DF,  p-value: 8.217e-07</code></pre>
+<p>This has a nice high R-squared and (it turns out) reasonably-behaved residuals.</p>
+<p>The problem we run into is that output: it is nice enough for looking at, but it’s not very helpful for doing anything else with. This is where <code>broom</code> comes in: it has (for us) two handy functions <code>glance</code> and <code>tidy</code> that summarize models respectively in one line:</p>
+<pre class="r"><code>glance(volume.1)</code></pre>
+<pre><code>##   r.squared adj.r.squared    sigma statistic     p.value df    logLik
+## 1 0.9585402     0.9533577 20.38484  184.9578 8.21677e-07  2 -43.22158
+##        AIC      BIC deviance df.residual
+## 1 92.44316 93.35092 3324.333           8</code></pre>
+<p>and in a data frame:</p>
+<pre class="r"><code>tidy(volume.1)</code></pre>
+<pre><code>##          term   estimate  std.error statistic     p.value
+## 1 (Intercept) -191.74923 23.9536222  -8.00502 4.34715e-05
+## 2    diameter   10.89407  0.8010394  13.59992 8.21677e-07</code></pre>
+<p>The advantage to this is that extracting any of these values is easy using <code>dplyr</code> tools: we can see what the columns are called, and the <code>term</code> column contains the name of each explanatory variable.</p>
+<p>I couldn’t see any good reason why the relationship had to be linear, except that a linear model appeared to fit well. Could I be a bit more scientific? Well, I could pretend that a tree was shaped like a cone, in which case its volume in terms of its diameter would be</p>
+<p><span class="math display">\[ V = {\pi d^2 h \over 12} \]</span></p>
+<p>The problem now is that we don’t know the height of these trees. If we pretend that the height is constant (which I think is a very shaky assumption), the volume is proportional to the diameter <em>squared</em>. I don’t want to get into the quicksand of models without intercepts, so I’ll do that this way:</p>
+<pre class="r"><code>volume.2=lm(volume~I(diameter^2),data=trees)
+summary(volume.2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = volume ~ I(diameter^2), data = trees)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -29.708  -9.065  -5.722   3.032  40.816 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)   -30.82634   13.82243   -2.23   0.0563 .  
+## I(diameter^2)   0.17091    0.01342   12.74 1.36e-06 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 21.7 on 8 degrees of freedom
+## Multiple R-squared:  0.953,  Adjusted R-squared:  0.9471 
+## F-statistic: 162.2 on 1 and 8 DF,  p-value: 1.359e-06</code></pre>
+<p>This also has a nice high R-squared and well-behaved residuals.</p>
+<p>If you object to my fitting a squared term without including a linear term, well, I can do that too:</p>
+<pre class="r"><code>volume.2a=update(volume.2,.~.+diameter)
+summary(volume.2a)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = volume ~ I(diameter^2) + diameter, data = trees)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -34.118  -8.134  -2.158   3.774  32.231 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept)   -139.31411   96.31433  -1.446    0.191
+## I(diameter^2)    0.05696    0.10102   0.564    0.590
+## diameter         7.30501    6.42057   1.138    0.293
+## 
+## Residual standard error: 21.31 on 7 degrees of freedom
+## Multiple R-squared:  0.9603, Adjusted R-squared:  0.949 
+## F-statistic: 84.75 on 2 and 7 DF,  p-value: 1.242e-05</code></pre>
+<p>This is rather confusing: the high R-squared is accompanied by two non-significant explanatory variables. I think this is because diameter and diameter-squared are highly correlated:</p>
+<pre class="r"><code>with(trees,cor(diameter,I(diameter^2)))</code></pre>
+<pre><code>## [1] 0.9914553</code></pre>
+<p>so what I should do is to centre the diameter values before including them in the regression:</p>
+<pre class="r"><code>trees %&gt;% mutate(diam_c=diameter-mean(diameter)) %&gt;%
+  lm(volume~diam_c+I(diam_c^2),data=.) %&gt;% summary()</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = volume ~ diam_c + I(diam_c^2), data = .)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -34.118  -8.134  -2.158   3.774  32.231 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 118.31154    9.39284  12.596 4.59e-06 ***
+## diam_c       10.58566    1.00034  10.582 1.47e-05 ***
+## I(diam_c^2)   0.05696    0.10102   0.564     0.59    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 21.31 on 7 degrees of freedom
+## Multiple R-squared:  0.9603, Adjusted R-squared:  0.949 
+## F-statistic: 84.75 on 2 and 7 DF,  p-value: 1.242e-05</code></pre>
+<p>This says that adding (centred) diameter-squared has no value over diameter itself, but the linear term is strongly significant. The suggestion here, therefore, is that my assumption of constant tree height was the thing that went wrong.</p>
+<p>So, what to do? In <a href="https://pdfs.semanticscholar.org/5497/3d02d63428e3dfed6645acfdba874ad80822.pdf">this paper</a>, it suggests a power law relationship between volume and diameter, with constant parameters for a particular type of tree:</p>
+<p><span class="math display">\[ V = \alpha_1 d^{\alpha_2} \]</span> This is evidently non-linear, but we can take logs of both sides:</p>
+<p><span class="math display">\[ \ln V = \ln \alpha_1 + \alpha_2 \ln d\]</span> and now we have a linear relationship between the logs of volume and diameter, which a regression will allow us to estimate:</p>
+<pre class="r"><code>volume.3=lm(log(volume)~log(diameter),data=trees)
+summary(volume.3)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = log(volume) ~ log(diameter), data = trees)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.40989 -0.22341  0.01504  0.10459  0.53596 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)    -5.9243     1.1759  -5.038    0.001 ** 
+## log(diameter)   3.1284     0.3527   8.870 2.06e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.3027 on 8 degrees of freedom
+## Multiple R-squared:  0.9077, Adjusted R-squared:  0.8962 
+## F-statistic: 78.68 on 1 and 8 DF,  p-value: 2.061e-05</code></pre>
+<p>By making this transformation, we have moved from constant variance of errors in estimating <span class="math inline">\(V\)</span> to constant variance in estimating <span class="math inline">\(\ln V\)</span>, which has the effect of being constant variance in <em>percentage</em> errors in estimating <span class="math inline">\(V\)</span>. I think this is reasonable: you might be able to estimate a volume to within 10% rather than to within a fixed number of cubic inches, regardless of the size of the tree.</p>
+<p>The estimated power is just over 3.</p>
+</div>
+<div id="summarizing-multiple-models" class="section level2">
+<h2>Summarizing multiple models</h2>
+<p>So now we have three models. How can we use <code>broom</code> methods to put the model summaries side by side? The pseudo-code idea is “for each model, run <code>glance</code> on it, and then glue the one-row data frames together”. This in turn suggests <code>map</code> from <code>purrr</code> followed by <code>bind_rows</code>. But how are we going to create the iteration over the fitted models? I thought, “well, <code>map</code> likes to work on lists, so maybe I can put the models into a list first”:</p>
+<pre class="r"><code>model_list=list(volume.1,volume.2,volume.3)
+map(model_list,glance) %&gt;% bind_rows()</code></pre>
+<pre><code>##   r.squared adj.r.squared      sigma statistic      p.value df     logLik
+## 1 0.9585402     0.9533577 20.3848388 184.95779 8.216770e-07  2 -43.221582
+## 2 0.9530072     0.9471331 21.7024608 162.23895 1.359294e-06  2 -43.847924
+## 3 0.9077109     0.8961748  0.3027174  78.68414 2.061375e-05  2  -1.124113
+##         AIC       BIC     deviance df.residual
+## 1 92.443164 93.350919 3324.3332304           8
+## 2 93.695848 94.603604 3767.9744307           8
+## 3  8.248226  9.155981    0.7331027           8</code></pre>
+<p>and it works! For example, you can run your eyes down the first column to compare R-squared values. I’m not sure how valuable it is to have all the intercepts and slopes side by side in this case, but you can do that in the same way:</p>
+<pre class="r"><code>map(model_list,tidy) %&gt;% bind_rows()</code></pre>
+<pre><code>##            term     estimate   std.error statistic      p.value
+## 1   (Intercept) -191.7492279 23.95362215 -8.005020 4.347150e-05
+## 2      diameter   10.8940704  0.80103937 13.599919 8.216770e-07
+## 3   (Intercept)  -30.8263421 13.82242771 -2.230168 5.628219e-02
+## 4 I(diameter^2)    0.1709085  0.01341794 12.737305 1.359294e-06
+## 5   (Intercept)   -5.9242712  1.17585198 -5.038280 1.003770e-03
+## 6 log(diameter)    3.1283899  0.35267711  8.870408 2.061375e-05</code></pre>
+<p>This would probably benefit from a column naming the model to which each row refers.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2017
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
