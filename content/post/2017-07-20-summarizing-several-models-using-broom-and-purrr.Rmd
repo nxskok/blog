@@ -129,3 +129,23 @@ map(model_list,tidy) %>% bind_rows()
 ```
 
 This would probably benefit from a column naming the model to which each row refers.
+
+## Addendum (2017-07-21)
+
+Aurélien, in the comments (below), suggested using `map_df` instead of `map`. The advantage of this is that it returns a data frame directly, without the need for `bind_rows`. I always forget that this is out there alongside `map_dbl`, `map_chr` and the others. I'm also going to take the other suggestion, which is, instead of making a simple list out of the models, make a *named* list, thus:
+
+```{r}
+model_list=list(linear=volume.1, square=volume.2, power=volume.3)
+map_df(model_list,glance,.id="Model")
+```
+
+Oh yes, *so* much better. The key is the extra argument `.id` in `map_df` that does exactly what I was wondering about: identifying the models. Using the named list means that I don't have to remember which model `volume.1` was: I can give it a mnemonic label and *that* is what will appear in the output. 
+
+I imagine the same idea works for `tidy`:
+
+```{r}
+model_list=list(linear=volume.1, square=volume.2, power=volume.3)
+map_df(model_list,tidy,.id="Model")
+```
+
+It does, and the advantage here is that `tidy` can produce a variable number of rows for each model, but the `Model` column properly labels them, however many there are.

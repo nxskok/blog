@@ -212,3 +212,29 @@ map(model_list,glance) %&gt;% bind_rows()</code></pre>
 ## 6 log(diameter)    3.1283899  0.35267711  8.870408 2.061375e-05</code></pre>
 <p>This would probably benefit from a column naming the model to which each row refers.</p>
 </div>
+<div id="addendum-2017-07-21" class="section level2">
+<h2>Addendum (2017-07-21)</h2>
+<p>Aurélien, in the comments (below), suggested using <code>map_df</code> instead of <code>map</code>. The advantage of this is that it returns a data frame directly, without the need for <code>bind_rows</code>. I always forget that this is out there alongside <code>map_dbl</code>, <code>map_chr</code> and the others. I’m also going to take the other suggestion, which is, instead of making a simple list out of the models, make a <em>named</em> list, thus:</p>
+<pre class="r"><code>model_list=list(linear=volume.1, square=volume.2, power=volume.3)
+map_df(model_list,glance,.id=&quot;Model&quot;)</code></pre>
+<pre><code>##    Model r.squared adj.r.squared      sigma statistic      p.value df
+## 1 linear 0.9585402     0.9533577 20.3848388 184.95779 8.216770e-07  2
+## 2 square 0.9530072     0.9471331 21.7024608 162.23895 1.359294e-06  2
+## 3  power 0.9077109     0.8961748  0.3027174  78.68414 2.061375e-05  2
+##       logLik       AIC       BIC     deviance df.residual
+## 1 -43.221582 92.443164 93.350919 3324.3332304           8
+## 2 -43.847924 93.695848 94.603604 3767.9744307           8
+## 3  -1.124113  8.248226  9.155981    0.7331027           8</code></pre>
+<p>Oh yes, <em>so</em> much better. The key is the extra argument <code>.id</code> in <code>map_df</code> that does exactly what I was wondering about: identifying the models. Using the named list means that I don’t have to remember which model <code>volume.1</code> was: I can give it a mnemonic label and <em>that</em> is what will appear in the output.</p>
+<p>I imagine the same idea works for <code>tidy</code>:</p>
+<pre class="r"><code>model_list=list(linear=volume.1, square=volume.2, power=volume.3)
+map_df(model_list,tidy,.id=&quot;Model&quot;)</code></pre>
+<pre><code>##    Model          term     estimate   std.error statistic      p.value
+## 1 linear   (Intercept) -191.7492279 23.95362215 -8.005020 4.347150e-05
+## 2 linear      diameter   10.8940704  0.80103937 13.599919 8.216770e-07
+## 3 square   (Intercept)  -30.8263421 13.82242771 -2.230168 5.628219e-02
+## 4 square I(diameter^2)    0.1709085  0.01341794 12.737305 1.359294e-06
+## 5  power   (Intercept)   -5.9242712  1.17585198 -5.038280 1.003770e-03
+## 6  power log(diameter)    3.1283899  0.35267711  8.870408 2.061375e-05</code></pre>
+<p>It does, and the advantage here is that <code>tidy</code> can produce a variable number of rows for each model, but the <code>Model</code> column properly labels them, however many there are.</p>
+</div>
