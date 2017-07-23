@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/2017/07/22/how-to-measure-the-height-of-a-tree/</loc>
+    <lastmod>2017-07-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2017/07/20/summarizing-several-models-using-broom-and-purrr/</loc>
     <lastmod>2017-07-20T00:00:00+00:00</lastmod>
   </url>
@@ -205,6 +210,12 @@
   </url>
   
   <url>
+    <loc>/categories/curiosity/</loc>
+    <lastmod>2017-07-22T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/tags/cycling/</loc>
     <lastmod>2017-05-07T00:00:00+00:00</lastmod>
     <priority>0</priority>
@@ -212,7 +223,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-07-20T00:00:00+00:00</lastmod>
+    <lastmod>2017-07-22T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -224,7 +235,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2017-07-20T00:00:00+00:00</lastmod>
+    <lastmod>2017-07-22T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

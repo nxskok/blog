@@ -322,8 +322,7 @@ map_df(model_list,glance,.id=&quot;Model&quot;)</code></pre>
 ## 3  -1.124113  8.248226  9.155981    0.7331027           8</code></pre>
 <p>Oh yes, <em>so</em> much better. The key is the extra argument <code>.id</code> in <code>map_df</code> that does exactly what I was wondering about: identifying the models. Using the named list means that I don’t have to remember which model <code>volume.1</code> was: I can give it a mnemonic label and <em>that</em> is what will appear in the output.</p>
 <p>I imagine the same idea works for <code>tidy</code>:</p>
-<pre class="r"><code>model_list=list(linear=volume.1, square=volume.2, power=volume.3)
-map_df(model_list,tidy,.id=&quot;Model&quot;)</code></pre>
+<pre class="r"><code>map_df(model_list,tidy,.id=&quot;Model&quot;)</code></pre>
 <pre><code>##    Model          term     estimate   std.error statistic      p.value
 ## 1 linear   (Intercept) -191.7492279 23.95362215 -8.005020 4.347150e-05
 ## 2 linear      diameter   10.8940704  0.80103937 13.599919 8.216770e-07

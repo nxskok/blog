@@ -1,0 +1,90 @@
+---
+title: How To Measure The Height of a Tree
+author: Ken
+date: '2017-07-22'
+slug: how-to-measure-the-height-of-a-tree
+categories:
+  - curiosity
+tags: []
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In a previous post, I was trying to estimate the volume of wood in a tree from its diameter, and I noted that it would be an advantage to know the height of the tree: for example, we could pretend the tree was cone-shaped, or use a power-law-type relationship in which we estimate the best powers of diameter and height to use to estimate volume.</p>
+<p>Which made me wonder, how <em>do</em> you measure the height of a tree anyway? <a href="https://gabrielhemery.com/2011/05/15/how-to-calculate-tree-height-using-a-smartphone/">This</a> made a lot of sense (and taught me how to use a clinometer app, of which more later). <a href="https://en.wikipedia.org/wiki/Tree_height_measurement">This</a> contained more detail, including a second method that I want to talk about. In addition, I learned about using Tikz to draw a nice diagram.</p>
+</div>
+<div id="a-tree-and-a-human-diagrammatically" class="section level2">
+<h2>A tree and a human, diagrammatically</h2>
+<p>Here is an idealized tree (on the right) with an idealized human (on the left) trying to measure it.</p>
+<div class="figure">
+<img src="/tree.png" />
+
+</div>
+<p>I made this in Tikz (in a <span class="math inline">\(\LaTeX\)</span> document).</p>
+<p>I came up with the letters E and F to represent the human’s Eye and Foot, and that seemed to leave the letters A, B and C to denote the top of the tree, the tree trunk at eye level, and the base of the tree. <span class="math inline">\(k\)</span> denotes the distance from the ground to the human’s eye level, presumed known, <span class="math inline">\(d\)</span> the distance from the human’s feet to the base of the tree, and <span class="math inline">\(h\)</span> the height of the tree above eye level. Thus, the height of the tree is <span class="math inline">\(h+k\)</span>.</p>
+<p>This is my (clumsy) Tikz code. I can do a lot better with the angles, but the rest of it I’m more or less happy with:</p>
+<pre><code>\begin{tikzpicture}[scale=2]
+  \draw (0,0) -- (0,1);
+  \draw (3,0) -- (3,6);
+  \draw (0,0) -- (3,0);
+  \draw (0,1) -- (3,0);
+  \draw (0,1) -- (3,6);
+  \draw (0,1) -- (3,1);
+  % vertices
+  \node[left] at (0,1) {E};
+  \node[left] at (0,0) {F};
+  \node[right] at (3,6) {A};
+  \node[right] at (3,1) {B};
+  \node[right] at (3,0) {C};
+  % line lengths
+  \node[below] at (1.5,0) {$d$};
+  \node[above] at (1.5,1) {$d$};
+  \node[right] at (0,0.5) {$k$};
+  \node[left] at (3,0.5) {$k$};
+  \node[right] at (3,3.5) {$h$};
+  % angles
+  \node[above right] at (0.1,1) {$\theta$};
+  \node[below right] at (0.5,1.05) {$\phi$};
+\end{tikzpicture}</code></pre>
+<p>The right way to handle this is to include this (this is <span class="math inline">\(\LaTeX\)</span>) in my R Markdown document and let Blogdown handle the processing of it. I couldn’t get this to work, though, and I couldn’t be bothered to find a clever way to get the diagram into a file, so I made a <code>.pdf</code> out of the LaTeX and screen-grabbed it to get rid of anything extraneous. Then I inserted it as an image.</p>
+</div>
+<div id="measuring" class="section level2">
+<h2>Measuring</h2>
+<p>Typically, the height <span class="math inline">\(k\)</span> will be known (the “standard” value appears to be 1.73 metres). The distance <span class="math inline">\(d\)</span> can be measured with a sufficiently long tape measure (or, if you know your stride length, it can be measured by pacing it out).</p>
+<p>That leaves the measurement of the angles <span class="math inline">\(\theta\)</span> (and maybe <span class="math inline">\(\phi\)</span>). There are various devices, going under the general name of “clinometer”, which will do that. As is often the way, these were in the past expensive things that only professionals had, but now you can get a free smartphone app that will do the same job. Mine is called “Clinometer and bubble level” (for Android). If you lay the phone flat, it functions as a spirit level, while if you hold it at an angle it measures the angle of inclination. I learned <a href="https://gabrielhemery.com/2011/05/15/how-to-calculate-tree-height-using-a-smartphone/">here</a> that you have to sight along the long side of your phone. My app has a “lock” button: press that first, then aim at the top of the tree, hold steady for long enough, and it will beep and lock the angle at which you were looking so that you can record it afterwards.</p>
+<p>More modern technology is <a href="http://www.stanleytools.com/products/hand-tools/measuring-layout/laser-tape-measure">laser distance measurers</a>. These ones are intended for use in construction. The idea is that you fire a laser at something solid (like a wall), and the measurer finds the time for the laser to get to the object and back to you. Based on the known speed of the laser, this gives the distance, accurately. This makes it much easier to measure the size of a room, and thus to estimate things like how much paint will be required to paint it. The same technology can be used to measure the distance from an observer to the top and the base of a tree, distances EA and EC on my diagram.</p>
+</div>
+<div id="the-tangent-method" class="section level2">
+<h2>The tangent method</h2>
+<p>The traditional way of estimating tree heights involves measuring the angle <span class="math inline">\(\theta\)</span> using a clinometer, measuring <span class="math inline">\(d\)</span> using a tape measure (or by pacing), and then doing some trigonometry. Since triangle ABE is right-angled, this means that <span class="math inline">\(\tan \theta=h/d\)</span>. Thus we can find <span class="math inline">\(h\)</span> in terms of the known quantities as <span class="math inline">\(h=d \tan \theta\)</span>. For example, if <span class="math inline">\(d=10m\)</span> and <span class="math inline">\(\theta=51^o\)</span>, then the height of the tree is, in metres (using the “customary” value for <span class="math inline">\(k\)</span>):</p>
+<pre class="r"><code>10*tan(51*pi/180)+1.73</code></pre>
+<pre><code>## [1] 14.07897</code></pre>
+<p>Qualitatively, you are looking “more up than out” at the tree, so the tree is taller than your distance away from it.</p>
+<p>There is an even simpler calculation if the angle is exactly 45 degrees, since then the tangent is 1, and the distance to the base of the tree is equal to its height above your eyes.</p>
+<p>When I was about 9 or 10 years old, my school was next to an old church with a tall tower. The school apparently owned a very analog clinometer (made out of plastic), and my teacher borrowed the long tape measure (normally used for measuring javelin throws), and the whole class went to measure the height of the tower. I think we did the 45-degree thing, because we were measuring a long way across the churchyard. And then we had to wind the tape back into its leather case using the metal turning handle.</p>
+<p>A variation on the tangent method is to measure the angle <span class="math inline">\(\phi\)</span> using the clinometer as well. This will typically be a small angle. But since <span class="math inline">\(\tan \phi= k/d\)</span> and <span class="math inline">\(k\)</span> is known, this enables us to find <span class="math inline">\(d\)</span> without a tape measure as <span class="math inline">\(d=k/ \tan \phi\)</span>. (Since <span class="math inline">\(\phi\)</span> is small, <span class="math inline">\(\tan \phi\)</span> is also small, and <span class="math inline">\(\phi\)</span> needs to be measured accurately to determine <span class="math inline">\(d\)</span> with any accuracy.)</p>
+<p>For example, I observed a streetlight on campus. The angle up to its top was <span class="math inline">\(10.3^o\)</span>, and down to its base was <span class="math inline">\(1.3^o\)</span>. How tall was the streetlight?</p>
+<p>First we determine <span class="math inline">\(d\)</span> as</p>
+<pre class="r"><code>(d=1.73/tan(1.3*pi/180))</code></pre>
+<pre><code>## [1] 76.23438</code></pre>
+<p>and then we use this value of <span class="math inline">\(d\)</span> to find <span class="math inline">\(h\)</span> and thus the height of the whole streetlight:</p>
+<pre class="r"><code>d*tan(10.3*pi/180)+1.73</code></pre>
+<pre><code>## [1] 15.58413</code></pre>
+<p>This seems reasonable.</p>
+</div>
+<div id="the-sine-method" class="section level2">
+<h2>The sine method</h2>
+<p>If you can measure the distances EC and EA with a laser distance measurer, and use your clinometer to measure angles <span class="math inline">\(\theta\)</span> and <span class="math inline">\(\phi\)</span>, you don’t need to worry about <span class="math inline">\(d\)</span> at all. You can even work out your own personal value of <span class="math inline">\(k\)</span>. Let <span class="math inline">\(c\)</span> denote the distance EC and <span class="math inline">\(a\)</span> the distance EA. Then <span class="math display">\[\sin \phi = k/c,\]</span> so that <span class="math display">\[k=c \sin\phi\]</span> and likewise <span class="math display">\[ \sin \theta=h/a\]</span> so that <span class="math display">\[ h=a \sin\theta.\]</span> This gives the height of the tree as <span class="math display">\[a\sin\theta+ c\sin\phi.\]</span></p>
+<p>For example, the distance to the base of a tree is measured as 50.0m at a downward angle of <span class="math inline">\(2^o\)</span>; the distance to the top of the tree is measured as 85.0m at an upward angle of <span class="math inline">\(65^o\)</span>. Then the eye height is</p>
+<pre class="r"><code>(k=50*sin(2*pi/180))</code></pre>
+<pre><code>## [1] 1.744975</code></pre>
+<p>and the height above the eyes is</p>
+<pre class="r"><code>(h=85*sin(65*pi/180))</code></pre>
+<pre><code>## [1] 77.03616</code></pre>
+<p>giving a total tree height of</p>
+<pre class="r"><code>k+h</code></pre>
+<pre><code>## [1] 78.78114</code></pre>
+<p>No measuring required, even of your own height!</p>
+</div>

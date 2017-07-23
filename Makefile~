@@ -1,0 +1,5 @@
+tikztest.pdf: tikztest.tex
+	pdflatex tikztest
+
+show: tikztest.pdf
+	evince tikztest.pdf

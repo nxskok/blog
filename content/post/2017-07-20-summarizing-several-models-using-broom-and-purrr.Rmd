@@ -144,8 +144,8 @@ Oh yes, *so* much better. The key is the extra argument `.id` in `map_df` that d
 I imagine the same idea works for `tidy`:
 
 ```{r}
-model_list=list(linear=volume.1, square=volume.2, power=volume.3)
 map_df(model_list,tidy,.id="Model")
 ```
 
 It does, and the advantage here is that `tidy` can produce a variable number of rows for each model, but the `Model` column properly labels them, however many there are.
+
