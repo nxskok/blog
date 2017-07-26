@@ -1,0 +1,11 @@
+x y group
+10 13 red
+11 14 red
+12 17 red
+13 17 red
+14 18 red
+9 8 blue
+10.5 7 blue
+11.5 8.5 blue
+12.5 9.5 blue
+15 13 blue

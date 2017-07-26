@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>/2017/07/25/a-brief-foray-into-list-columns/</loc>
+    <lastmod>2017-07-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2017/07/22/how-to-measure-the-height-of-a-tree/</loc>
     <lastmod>2017-07-22T00:00:00+00:00</lastmod>
   </url>
@@ -188,7 +193,7 @@
   
   <url>
     <loc>/tags/#rstats/</loc>
-    <lastmod>2017-07-20T00:00:00+00:00</lastmod>
+    <lastmod>2017-07-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -223,7 +228,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-07-22T00:00:00+00:00</lastmod>
+    <lastmod>2017-07-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -235,13 +240,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2017-07-22T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/categories/r/</loc>
-    <lastmod>2017-06-08T00:00:00+00:00</lastmod>
+    <lastmod>2017-07-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -252,8 +251,8 @@
   </url>
   
   <url>
-    <loc>/categories/sports/</loc>
-    <lastmod>2017-06-08T00:00:00+00:00</lastmod>
+    <loc>/categories/r/</loc>
+    <lastmod>2017-07-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -264,14 +263,20 @@
   </url>
   
   <url>
+    <loc>/categories/sports/</loc>
+    <lastmod>2017-06-08T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/categories/statistics/</loc>
-    <lastmod>2017-07-20T00:00:00+00:00</lastmod>
+    <lastmod>2017-07-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/</loc>
-    <lastmod>2017-07-20T00:00:00+00:00</lastmod>
+    <lastmod>2017-07-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

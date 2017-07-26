@@ -6,10 +6,22 @@
     <description>Recent content in Statistics on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 20 Jul 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 25 Jul 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/statistics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>A brief foray into list-columns</title>
+      <link>/2017/07/25/a-brief-foray-into-list-columns/</link>
+      <pubDate>Tue, 25 Jul 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/07/25/a-brief-foray-into-list-columns/</guid>
+      <description>Introduction Let’s suppose we are trying to find the median of a bunch of binomial distributions. ⊕This is a simplified version of an actual problem I had, but that one fails for some unconnected (and thus far unknown) reason, so I don’t want to show you that.
+To be specific, let’s suppose we have these values of \(n\):
+n=c(10,15,20) and these values of \(p\):
+p=c(0.25,0.3,0.42) We’ll need the tidyverse, as usual:</description>
+    </item>
     
     <item>
       <title>Summarizing several models using broom and purrr</title>

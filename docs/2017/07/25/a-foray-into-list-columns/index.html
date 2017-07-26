@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>Ken&#39;s Blog - A foray into list-columns</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Ken&#39;s Blog">
+<meta name="generator" content="Hugo 0.20.6" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-92165973-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/07/25/a-foray-into-list-columns/">A foray into list-columns</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jul 25, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;8 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Let’s suppose we are trying to find the <em>median</em> of a bunch of binomial distributions. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This is a simplified version of an actual problem I had, but that fails for some unconnected reason, so I don’t want to show you that.</span></p>
+<p>To be specific, let’s suppose we have these values of <span class="math inline">\(n\)</span>:</p>
+<pre class="r"><code>n=c(10,15,20)</code></pre>
+<p>and these values of <span class="math inline">\(p\)</span>:</p>
+<pre class="r"><code>p=c(0.25,0.3,0.45)</code></pre>
+<p>We’ll need the tidyverse, as usual:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+</div>
+<div id="finding-the-mean-rather-than-the-median" class="section level2">
+<h2>Finding the mean rather than the median</h2>
+<p>If it were the mean we wanted, we could just use the fact that the mean is <span class="math inline">\(np\)</span> and do this:</p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% 
+  mutate(mean=n*p)</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##       n     p  mean
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1    10  0.25   2.5
+## 2    15  0.30   4.5
+## 3    20  0.45   9.0</code></pre>
+<p>and then we would be done.</p>
+</div>
+<div id="finding-the-median" class="section level2">
+<h2>Finding the median</h2>
+<p>The median is more difficult, though, because it doesn’t have a nice formula. The only way to get hold of it is to look at the whole probability distribution. The mathematical definition of the median of a random variable <span class="math inline">\(X\)</span> is a value <span class="math inline">\(m\)</span> such that <span class="math inline">\(P(X \le m) \ge 0.5\)</span> and <span class="math inline">\(P(X \ge m) \ge 0.5\)</span>. The way this definition works suggests that looking at the cumulative distribution would be a good idea.</p>
+<p>There are three steps that we need to think about:</p>
+<ol style="list-style-type: decimal">
+<li>getting a data frame of values and cumulative probabilities for a particular <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span></li>
+<li>getting the median from that data frame.</li>
+<li>putting these two together to get the medians from all of the values of <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>.</li>
+</ol>
+<p>For the first step, we need to use <code>pbinom</code>, but we’ll need to embellish it a bit. Here’s how it works, for a binomial with <span class="math inline">\(n=4\)</span> and <span class="math inline">\(p=0.3\)</span>:</p>
+<pre class="r"><code>pbinom(0:4,4,0.3)</code></pre>
+<pre><code>## [1] 0.2401 0.6517 0.9163 0.9919 1.0000</code></pre>
+<p>These are the probabilities of 0, 1, 2, 3, 4 successes or less, so let’s make a function that takes an input (scalar) <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> and produces said data frame:</p>
+<pre class="r"><code>binom_table=function(n,p) {
+  x=0:n
+  tibble(x=x,prob=pbinom(x,n,p))
+}</code></pre>
+<p>and test it:</p>
+<pre class="r"><code>dd=binom_table(4,0.3)
+dd</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##       x   prob
+##   &lt;int&gt;  &lt;dbl&gt;
+## 1     0 0.2401
+## 2     1 0.6517
+## 3     2 0.9163
+## 4     3 0.9919
+## 5     4 1.0000</code></pre>
+<p>That looks all right.</p>
+<p>Now, how to find the median from this? The definition actually encompasses two cases. The difficult one is where the probability of being less than or equal to a value is <em>exactly</em> 0.5:</p>
+<pre class="r"><code>binom_table(3,0.5)</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##       x  prob
+##   &lt;int&gt; &lt;dbl&gt;
+## 1     0 0.125
+## 2     1 0.500
+## 3     2 0.875
+## 4     3 1.000</code></pre>
+<p><span class="math inline">\(P(X \le 1)=0.5 \ge 0.5\)</span> and <span class="math inline">\(P(X \ge 1)=1-P(X \le 0)=0.875 \ge 0.5\)</span>, so 1 could be the median. But if we check 2: <span class="math inline">\(P(X \le 2)=0.875 \ge 0.5\)</span> and <span class="math inline">\(P(X \ge 2)=1-P(X \le 1)=0.5 \ge 0.5\)</span>, so 2 could be the median as well: the median is not unique.</p>
+<p>I’m going to ignore this difficult case, and hope that I can confine myself to the easy one. Let’s go back to <span class="math inline">\(n=4, p=0.3\)</span>:</p>
+<pre class="r"><code>dd</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##       x   prob
+##   &lt;int&gt;  &lt;dbl&gt;
+## 1     0 0.2401
+## 2     1 0.6517
+## 3     2 0.9163
+## 4     3 0.9919
+## 5     4 1.0000</code></pre>
+<p><span class="math inline">\(P(X \le 1)=0.6517 \ge 0.5\)</span> and <span class="math inline">\(P(X \ge 1)=1-P(X \le 0)=0.7599 \ge 0.5\)</span>, so 1 is the median.<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">And is the unique median, as you can tell by checking the other values.</span> Another way to look, which is easier, is to ask “what is the first value of <span class="math inline">\(x\)</span> for which <span class="math inline">\(P(X \le x) \ge 0.5\)</span>?” This will get the median where it is unique and one of the possible median values otherwise, which I think we can call good.</p>
+<p>This we can get from a data frame like <code>dd</code> by doing a <code>filter</code> to pick out all the rows with <code>prob</code> at least 0.5, followed by a <code>slice(1)</code> to pick out the first row on which it happens, then a <code>pull</code> to extract the value of <code>x</code> going with that first probability at least 0.5:</p>
+<pre class="r"><code>dist_median=function(d) {
+  d %&gt;% filter(prob&gt;=0.5) %&gt;% slice(1) %&gt;% pull(x)
+}</code></pre>
+<p>For our examples that gives</p>
+<pre class="r"><code>dist_median(dd)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<p>and</p>
+<pre class="r"><code>binom_table(3,0.5) %&gt;% dist_median()</code></pre>
+<pre><code>## [1] 1</code></pre>
+<p>This gives the unique right answer in the first case and one of the right answers in the second. So I’m calling that good.</p>
+</div>
+<div id="putting-it-all-together" class="section level2">
+<h2>Putting it all together</h2>
+<p>So now we can calculate a probability distribution from (scalar) values for <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>, and we can calculate a median from that probability distribution. But we have three <span class="math inline">\(n\)</span>’s:</p>
+<pre class="r"><code>n</code></pre>
+<pre><code>## [1] 10 15 20</code></pre>
+<p>and three <span class="math inline">\(p\)</span>’s, in parallel:</p>
+<pre class="r"><code>p</code></pre>
+<pre><code>## [1] 0.25 0.30 0.45</code></pre>
+<p>Can we find the medians for all three distributions in one shot? “For each” in the <code>tidyverse</code> suggests one of the flavours of <code>map</code>: “for each <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> in parallel, run <code>binom_table</code> for that <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>, and then gather up the results into one data frame”. This is one way to do that:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">It’s map2 because it’s for each of <span class="math inline">\(n\)</span> <em>and</em> <span class="math inline">\(p\)</span> in parallel, rather than something like all possible combinations of <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>.</span></p>
+<pre class="r"><code>map2(n,p,binom_table)</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 11 x 2
+##        x       prob
+##    &lt;int&gt;      &lt;dbl&gt;
+##  1     0 0.05631351
+##  2     1 0.24402523
+##  3     2 0.52559280
+##  4     3 0.77587509
+##  5     4 0.92187309
+##  6     5 0.98027229
+##  7     6 0.99649429
+##  8     7 0.99958420
+##  9     8 0.99997044
+## 10     9 0.99999905
+## 11    10 1.00000000
+## 
+## [[2]]
+## # A tibble: 16 x 2
+##        x        prob
+##    &lt;int&gt;       &lt;dbl&gt;
+##  1     0 0.004747562
+##  2     1 0.035267600
+##  3     2 0.126827715
+##  4     3 0.296867928
+##  5     4 0.515491059
+##  6     5 0.721621440
+##  7     6 0.868857427
+##  8     7 0.949987460
+##  9     8 0.984757474
+## 10     9 0.996347479
+## 11    10 0.999327766
+## 12    11 0.999908341
+## 13    12 0.999991281
+## 14    13 0.999999483
+## 15    14 0.999999986
+## 16    15 1.000000000
+## 
+## [[3]]
+## # A tibble: 21 x 2
+##        x         prob
+##    &lt;int&gt;        &lt;dbl&gt;
+##  1     0 6.415844e-06
+##  2     1 1.114024e-04
+##  3     2 9.274341e-04
+##  4     3 4.933408e-03
+##  5     4 1.886327e-02
+##  6     5 5.533419e-02
+##  7     6 1.299338e-01
+##  8     7 2.520059e-01
+##  9     8 4.143062e-01
+## 10     9 5.913612e-01
+## # ... with 11 more rows</code></pre>
+<p>which produces a list, or we can glue all the results together into a data frame:</p>
+<pre class="r"><code>map2(n,p,binom_table) %&gt;% bind_rows(.id=&quot;which&quot;) %&gt;% 
+  print(n=20)</code></pre>
+<pre><code>## # A tibble: 48 x 3
+##    which     x        prob
+##    &lt;chr&gt; &lt;int&gt;       &lt;dbl&gt;
+##  1     1     0 0.056313515
+##  2     1     1 0.244025230
+##  3     1     2 0.525592804
+##  4     1     3 0.775875092
+##  5     1     4 0.921873093
+##  6     1     5 0.980272293
+##  7     1     6 0.996494293
+##  8     1     7 0.999584198
+##  9     1     8 0.999970436
+## 10     1     9 0.999999046
+## 11     1    10 1.000000000
+## 12     2     0 0.004747562
+## 13     2     1 0.035267600
+## 14     2     2 0.126827715
+## 15     2     3 0.296867928
+## 16     2     4 0.515491059
+## 17     2     5 0.721621440
+## 18     2     6 0.868857427
+## 19     2     7 0.949987460
+## 20     2     8 0.984757474
+## # ... with 28 more rows</code></pre>
+<p>This is not bad, but you might ask yourself what would happen if you put the <code>map2</code> into a <code>mutate</code>:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Expecting it to fail.</span></p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% mutate(dist=map2(n,p,binom_table))</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##       n     p              dist
+##   &lt;dbl&gt; &lt;dbl&gt;            &lt;list&gt;
+## 1    10  0.25 &lt;tibble [11 x 2]&gt;
+## 2    15  0.30 &lt;tibble [16 x 2]&gt;
+## 3    20  0.45 &lt;tibble [21 x 2]&gt;</code></pre>
+<p>This came out with unexpected eloquence. The <code>dist</code> column is really a list, but the elements of <code>dist</code>, which are actually data frames, are displayed as entries in the column where you would expect to see numbers. This also maintains the connection of which probability distribution data frame goes with which <span class="math inline">\((n,p)\)</span> pair. <code>dist</code> is known in the trade as a “list-column”.</p>
+<p>So now we can try for something even more elegant. Can we work out the median for each one of those probability distributions? We have a function <code>dist_median</code> that will produce the median, as a number, from a distribution as a data frame, and now we want to run it for each of the distributions in the list-column. Since the median is a single number, we give <code>map_dbl</code> a shot:</p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% mutate(dist=map2(n,p,binom_table)) %&gt;% 
+  mutate(median=map_dbl(dist,dist_median))</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##       n     p              dist median
+##   &lt;dbl&gt; &lt;dbl&gt;            &lt;list&gt;  &lt;dbl&gt;
+## 1    10  0.25 &lt;tibble [11 x 2]&gt;      2
+## 2    15  0.30 &lt;tibble [16 x 2]&gt;      4
+## 3    20  0.45 &lt;tibble [21 x 2]&gt;      9</code></pre>
+<p>and, lo and behold, it works! We can even calculate the means as well and compare them with the medians:</p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% mutate(dist=map2(n,p,binom_table)) %&gt;% 
+  mutate(median=map_dbl(dist,dist_median)) %&gt;%
+  mutate(mean=n*p)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##       n     p              dist median  mean
+##   &lt;dbl&gt; &lt;dbl&gt;            &lt;list&gt;  &lt;dbl&gt; &lt;dbl&gt;
+## 1    10  0.25 &lt;tibble [11 x 2]&gt;      2   2.5
+## 2    15  0.30 &lt;tibble [16 x 2]&gt;      4   4.5
+## 3    20  0.45 &lt;tibble [21 x 2]&gt;      9   9.0</code></pre>
+<p>For all three of these distributions, <span class="math inline">\(p&lt;0.5\)</span>, so they are all right-skewed, and therefore we’d expect the mean to be at least as big as the median. Where the mean is not a round number, the mean <em>is</em> bigger than the median.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2017
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
