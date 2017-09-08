@@ -1,0 +1,93 @@
+---
+title: Safely, possibly
+author: Ken
+date: '2017-09-07'
+slug: safely-possibly
+categories:
+  - R
+tags: []
+---
+
+## Introduction
+
+You know how, when you're reading documentation, you nod sagely as you read some part, but when you come back to it later, you realize that *you really don't understand it at all*. This happened to me with the `purrr` documentation. I mean, I could manage `map` and some of its variants, but when it came down to it, I really had no clue about `safely` and `possibly`. Until today, when I actually had a reason to study them. Hence, this post.
+
+## Downloading web pages with `rvest`
+
+Let's load a couple of packages first:
+
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+
+The package `rvest` is a very nice way to download and extract information from web pages. It goes like this:
+
+```{r}
+url1="http://www.utsc.utoronto.ca/~butler/c32/assignments/index.html"
+read_html(url1) %>% html_nodes("li") %>% html_text()
+```
+
+This takes one of my course web pages, parses the HTML, and searches it for "list items", extracting the text from each one. Since this is an assignment page for one of my courses, these are the descriptions of the assignments I've put up so far for my students.
+
+Let's make a function to do this for any URL:
+
+```{r}
+read_text=function(url) {
+  read_html(url) %>% html_nodes("li") %>% html_text()
+}
+```
+
+and check that it works:
+
+```{r}
+read_text(url1)
+```
+
+It does.
+
+## Getting the list items from several pages
+
+Let's set up some more URLs and get the list items from each of them:
+
+```{r}
+url2="http://www.utsc.utoronto.ca/~butler/assignments/index.html"
+url3="http://www.utsc.utoronto.ca/~butler/c32/oldexams/index.html"
+```
+
+The `tidyverse`-approved way to do this is to make a list out of the things you want to iterate over (the URLs), and pass that into `map` along with the function that you want to run for each of them. That looks like this:
+
+```{r,error=TRUE}
+url_list=list(url1,url2,url3)
+map(url_list,read_text)
+```
+
+This ought to produce a list of three vectors of list-item texts. But it doesn't. The reason for that is that there is no page at `url2`, so that when `read_html` tried to get the HTML, it failed. Because of the error, the whole `map` call failed, and we didn't get anything, even though two of our three URLs would have produced some output. The same thing would happen if the web page existed, but we couldn't connect to it for some reason.
+
+Imagine encountering this when you were trying to extract something from a hundred web pages, and the 99th one failed, leaving you with nothing.
+
+## Returning something else on error
+
+Some languages (including R itself) have a `try-catch` mechanism that enables you to run something, and if it produces an error, to intercept that error and return something else. The advantage to this is that the code keeps running if there's an error, and produces the rest of the output that you were expecting.
+
+The `purrr` way of doing this uses either of two "adverbs" `possibly` and `safely`. The idea is that you use these to create "safe" versions of your function where any errors get intercepted, and then pass the "safe" function into `map`. Like this:
+
+```{r}
+read_text_possibly=possibly(read_text,otherwise="This page could not be accessed")
+map(url_list,read_text_possibly)
+```
+
+The input to `possibly` is a function you want to intercept errors in, along with an obligatory second argument `otherwise` that says what value to return if the original function returns an error; in this case, it's a semi-informative message.
+We see the first and third URLs exist and have list items in them (the last one being my old exam page), but the second one doesn't.
+
+The other adverb `safely` uses the same idea, but the output looks a bit different:
+
+```{r}
+read_text_safely=safely(read_text)
+map(url_list,read_text_safely)
+```
+
+You would use this variation if you care about what the error message is, not just that there is one. Using `safely` gets you two-item lists for each run of the function. Each inner list has an item `result`, which is the actual result returned from the function, if any. My second result is `NULL`, showing that the function had an error when run on `url2`. I could have supplied an `otherwise` in `safely` to return something else; unlike with `possibly`, the `otherwise` is optional with `safely`. The second inner-list item is called `error` and is the actual error message returned. This is `NULL` if no error, but in trying to access a web page that didn't exist, we got an HTTP 404 error. This would enable us to distinguish a page that does not exist from a page that we were unable to connect to (which might produce a "403 Forbidden" or a "429 Too Many Requests" or something like that).
+
+In my application, all I wanted to do was skip the web page access if there was an error, rather than doing any sort of diagnosis (I knew the page existed, so the problem was that I couldn't connect to it), so `possibly` was certainly what I needed.
