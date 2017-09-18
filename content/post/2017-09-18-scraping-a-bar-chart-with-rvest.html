@@ -221,7 +221,8 @@ html</code></pre>
 ## 
 ## [[46]]
 ## [1] &quot;x&quot;      &quot;y&quot;      &quot;height&quot; &quot;width&quot;  &quot;fill&quot;</code></pre>
-<p>The last six are different in that they have a <code>fill</code> attribute. I think these are the legends on the Manhattan, run rate and worm graphs. This gets in the way rather, because if all the <code>rect</code>s had the same collection of names, we could more easily build a data frame out of the values. So we have to go around the houses: first find which <code>rect</code>s have a <code>fill</code> attribute, select all the others, and then make a data frame of those:</p>
+<p>The last six are different in that they have a <code>fill</code> attribute. I think these are the legends on the Manhattan, run rate and worm graphs.<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Another way of doing this is to search for the g-containers for each subgraph, which in retrospect might have been better.</span></p>
+<p>This gets in the way rather, because if all the <code>rect</code>s had the same collection of names, we could more easily build a data frame out of the values. So we have to go around the houses: first find which <code>rect</code>s have a <code>fill</code> attribute, select all the others, and then make a data frame of those:</p>
 <pre class="r"><code>html %&gt;% html_nodes(&quot;rect&quot;) %&gt;% 
   html_attr(&quot;fill&quot;) -&gt; has_fill
 has_fill</code></pre>
