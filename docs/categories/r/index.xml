@@ -6,10 +6,20 @@
     <description>Recent content in R on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 07 Sep 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 18 Sep 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Scraping Manhattan with rvest</title>
+      <link>/2017/09/18/scraping-a-bar-chart-with-rvest/</link>
+      <pubDate>Mon, 18 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/09/18/scraping-a-bar-chart-with-rvest/</guid>
+      <description>Introduction In cricket, a Manhattan chart records how many runs a team score in each over (and how many wickets fall). An example is here (scroll down to find it). Is it possible to extract the numbers of runs and wickets for each team from this graph?
+The answer turns out to be “yes”, because this graph is an SVG graphic, and the data used to create it is embedded in the HTML code, so it is “simply” a matter of pulling it out.</description>
+    </item>
     
     <item>
       <title>Safely, possibly</title>
