@@ -99,7 +99,7 @@
 <section><div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>In cricket, a Manhattan chart records how many runs a team score in each over (and how many wickets fall). An example is <a href="http://www.espncricinfo.com/series/10719/statistics/1031665/England-vs-West-Indies-Only-T20I-west-indies-in-england-t20i-match">here</a> (scroll down to find it). Is it possible to extract the numbers of runs and wickets for each team from this graph?</p>
-<p>The answer turns out to be “yes”, because this graph is an SVG graphic, and the data used to create it is embedded in the HTML code, so it is “simply” a matter of pulling it out. I downloaded a copy of the file first and saved it in <code>stats.html</code>. (This appears to be necessary because the document may not have finished loading when we start to scrape it.)</p>
+<p>The answer turns out to be “yes”, because this graph is an SVG graphic, and the data used to create it is embedded in the HTML code, so it is “simply” a matter of pulling it out. I downloaded a copy of the file first and saved it in <code>stats.html</code>. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This appears to be necessary because the document may not have finished loading when we start to scrape it.</span></p>
 <p>It’s called a Manhattan chart because it resembles the Manhattan skyline. One of the other charts here is called “the worm”.</p>
 </div>
 <div id="getting-the-html" class="section level2">
