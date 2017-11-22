@@ -80,7 +80,7 @@
   
   
   &nbsp;<i class="fa fa-clock-o"></i>
-    &nbsp;11 min read
+    &nbsp;12 min read
   
   
   
@@ -110,7 +110,7 @@
 <img src="../../../../Screenshot_2017-11-20_16-00-33.png" />
 
 </div>
-<p>This is not the journey planner itself, but gives a station departure board for the next hour. This is what I wanted to play with. Required input is a place such as <code>Paignton</code> that goes into the Bahnhof/Haltestelle box (you can get the form in English too, but I like the German one better). The date and time default to the current date and time (in local time to the station whose departures you want to see), but you can change them if you wish.</p>
+<p>This is not the journey planner itself, but gives a station departure board for the next hour. That is what I wanted to play with. Required input is a place such as <code>Paignton</code> that goes into the Bahnhof/Haltestelle box (you can get the form in English too, but I like the German one better). The date and time default to the current date and time (in local time to the station whose departures you want to see), but you can change them if you wish.</p>
 <div class="figure">
 <img src="../../../../Screenshot_2017-11-20_16-02-29.png" />
 
@@ -133,14 +133,14 @@
 <li>Fill in the values you want</li>
 <li>Submit the form</li>
 </ul>
-<p>which seems ludicrously simple when you say it like that. Here it is in code for our query above:</p>
+<p>which seems ludicrously simple when you say it like that. Here it is in code for a query like the one above. (It’s the same trains on a different day because I wanted to catch and deal with a problem.)</p>
 <pre class="r"><code>  library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.0 ──</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.0 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
 ## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
 ## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
 ## ✔ readr   1.1.1     ✔ forcats 0.2.0</code></pre>
-<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>  library(rvest)</code></pre>
@@ -159,7 +159,7 @@
   form_filled = form_blank[[2]] %&gt;%
     set_values(
       &quot;input&quot; = &quot;Paignton&quot;,
-      &quot;date&quot; = &quot;20.11.17&quot;,
+      &quot;date&quot; = &quot;22.11.17&quot;,
       &quot;time&quot; = &quot;19:58&quot;) 
   submitted = submit_form(html,form_filled)</code></pre>
 <pre><code>## Submitting with &#39;start&#39;</code></pre>
@@ -185,26 +185,26 @@
 <pre class="r"><code>  submitted %&gt;% html_nodes(&quot;td&quot;) %&gt;% 
     html_nodes(&quot;a&quot;) %&gt;% html_attr(&quot;href&quot;) -&gt; hrefs
   hrefs</code></pre>
-<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=15082&amp;rt=1&amp;input=Paignton%237001811&amp;boardType=dep&amp;time=19:58%2D60&amp;productsFilter=1111111111111111&amp;&amp;&amp;date=20.11.17&amp;selectDate=&amp;maxJourneys=&amp;rtMode=&amp;start=yes&quot; 
-## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/918795/385557/558870/26830/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                           
-## [3] &quot;/bin/traininfo.exe/dn/918795/385557/558870/26830/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                                                       
+<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=15082&amp;rt=1&amp;input=Paignton%237001811&amp;boardType=dep&amp;time=19:58%2D60&amp;productsFilter=1111111111111111&amp;&amp;&amp;date=22.11.17&amp;selectDate=&amp;maxJourneys=&amp;rtMode=&amp;start=yes&quot; 
+## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                          
+## [3] &quot;/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                                                      
 ## [4] &quot;/bin/bhftafel.exe/dn?input=Birmingham New Street%237000222&amp;boardType=dep&amp;time=23:43&amp;productsFilter=1111111111111111&amp;&quot;                                                                                             
-## [5] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/782943/312621/358848/81557/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                           
-## [6] &quot;/bin/traininfo.exe/dn/782943/312621/358848/81557/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                                                       
+## [5] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                          
+## [6] &quot;/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                                                      
 ## [7] &quot;/bin/bhftafel.exe/dn?input=Exmouth%237000821&amp;boardType=dep&amp;time=22:03&amp;productsFilter=1111111111111111&amp;&quot;                                                                                                           
-## [8] &quot;http://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=15082&amp;rt=1&amp;input=Paignton%237001811&amp;boardType=dep&amp;time=19:58%2B60&amp;productsFilter=1111111111111111&amp;&amp;&amp;date=20.11.17&amp;&amp;selectDate=&amp;maxJourneys=&amp;rtMode=&amp;start=yes&quot;</code></pre>
+## [8] &quot;http://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=15082&amp;rt=1&amp;input=Paignton%237001811&amp;boardType=dep&amp;time=19:58%2B60&amp;productsFilter=1111111111111111&amp;&amp;&amp;date=22.11.17&amp;&amp;selectDate=&amp;maxJourneys=&amp;rtMode=&amp;start=yes&quot;</code></pre>
 <p>There should be only two, but there are a lot more than that. I want trains, so the things I want have <code>traininfo</code> in them, and it’ll be much more convenient if I can grab the ones that are actual URLs, rather than being relative to some root that I’d have to figure out. Some <code>stringr</code> ideas help here. <code>str_detect</code> returns TRUE or FALSE according to whether the pattern matches or not:</p>
 <pre class="r"><code>  hrefs %&gt;% str_detect(&quot;^http:&quot;) -&gt; https
   hrefs %&gt;% str_detect(&quot;traininfo&quot;) -&gt; trains
   v = hrefs[trains &amp; https]
   v</code></pre>
-<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/918795/385557/558870/26830/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;
-## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/782943/312621/358848/81557/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;</code></pre>
+<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;
+## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;</code></pre>
 <p>Out of the <code>href</code>s, I determine which ones start with <code>http:</code> and which ones contain <code>traininfo</code> in them somewhere. Then I use some very base R work to pull out the ones I want. Or I guess I could have made a <code>tibble</code>:</p>
 <pre class="r"><code>tibble(hrefs,https,trains) %&gt;% 
   filter(trains,https) %&gt;% pull(hrefs)</code></pre>
-<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/918795/385557/558870/26830/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;
-## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/782943/312621/358848/81557/80?ld=15082&amp;rt=1&amp;date=20.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;</code></pre>
+<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;
+## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;</code></pre>
 </div>
 <div id="getting-arrivals-and-departures" class="section level3">
 <h3>Getting arrivals and departures</h3>
@@ -212,36 +212,74 @@
 <pre class="r"><code>  html=read_html(v[1])
   html %&gt;% html_table() </code></pre>
 <pre><code>## [[1]]
-##    Bahnhof / Haltestelle  Ankunft  Abfahrt Gleis Aktuelles
-## 1               Paignton          ab 20:14    NA        NA
-## 2                Torquay an 20:18 ab 20:20    NA        NA
-## 3           Newton Abbot an 20:30 ab 20:31    NA        NA
-## 4      Exeter St. Davids an 20:50 ab 20:52    NA        NA
-## 5       Tiverton Parkway an 21:04 ab 21:05    NA        NA
-## 6                Taunton an 21:18 ab 21:19    NA        NA
-## 7   Bristol Temple Meads an 21:52 ab 22:00    NA        NA
-## 8        Bristol Parkway an 22:08 ab 22:10    NA        NA
-## 9         Cheltenham Spa an 22:41 ab 22:42    NA        NA
-## 10 Birmingham New Street an 23:43             NA        NA
+##               Bahnhof / Haltestelle                          Ankunft
+## 1  Zeitpunkt der Anfrage: 20:58 Uhr Zeitpunkt der Anfrage: 20:58 Uhr
+## 2                          Paignton                                 
+## 3                           Torquay                         an 20:18
+## 4                      Newton Abbot                         an 20:30
+## 5                 Exeter St. Davids                         an 20:50
+## 6                  Tiverton Parkway                         an 21:04
+## 7                           Taunton                         an 21:18
+## 8              Bristol Temple Meads                         an 21:52
+## 9                   Bristol Parkway                         an 22:08
+## 10                   Cheltenham Spa                         an 22:41
+## 11            Birmingham New Street                         an 23:43
+##                             Abfahrt                            Gleis
+## 1  Zeitpunkt der Anfrage: 20:58 Uhr Zeitpunkt der Anfrage: 20:58 Uhr
+## 2                          ab 20:14                                 
+## 3                          ab 20:20                                 
+## 4                          ab 20:31                                 
+## 5                          ab 20:52                                 
+## 6                          ab 21:05                                 
+## 7                          ab 21:19                                 
+## 8                          ab 22:00                                 
+## 9                          ab 22:10                                 
+## 10                         ab 22:42                                 
+## 11                                                                  
+##                           Aktuelles
+## 1  Zeitpunkt der Anfrage: 20:58 Uhr
+## 2                                  
+## 3                                  
+## 4                                  
+## 5                                  
+## 6                                  
+## 7                                  
+## 8                                  
+## 9                                  
+## 10                                 
+## 11                                 
 ## 
 ## [[2]]
 ##              X1                                             X2
-## 1 Verkehrstage: nicht täglich, 20. Nov bis 8. Dez 2017 Mo - Fr
+## 1 Verkehrstage: nicht täglich, 22. Nov bis 8. Dez 2017 Mo - Fr
 ## 2  Bemerkungen:                Reservierung möglich\nSitzwagen</code></pre>
 <p>A list of two tables, of which we want the first, and of that, only the first three columns (not the ones with the platform number or actual times):</p>
 <pre class="r"><code>  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
     select(1:3)</code></pre>
-<pre><code>##    Bahnhof / Haltestelle  Ankunft  Abfahrt
-## 1               Paignton          ab 20:14
-## 2                Torquay an 20:18 ab 20:20
-## 3           Newton Abbot an 20:30 ab 20:31
-## 4      Exeter St. Davids an 20:50 ab 20:52
-## 5       Tiverton Parkway an 21:04 ab 21:05
-## 6                Taunton an 21:18 ab 21:19
-## 7   Bristol Temple Meads an 21:52 ab 22:00
-## 8        Bristol Parkway an 22:08 ab 22:10
-## 9         Cheltenham Spa an 22:41 ab 22:42
-## 10 Birmingham New Street an 23:43</code></pre>
+<pre><code>##               Bahnhof / Haltestelle                          Ankunft
+## 1  Zeitpunkt der Anfrage: 20:58 Uhr Zeitpunkt der Anfrage: 20:58 Uhr
+## 2                          Paignton                                 
+## 3                           Torquay                         an 20:18
+## 4                      Newton Abbot                         an 20:30
+## 5                 Exeter St. Davids                         an 20:50
+## 6                  Tiverton Parkway                         an 21:04
+## 7                           Taunton                         an 21:18
+## 8              Bristol Temple Meads                         an 21:52
+## 9                   Bristol Parkway                         an 22:08
+## 10                   Cheltenham Spa                         an 22:41
+## 11            Birmingham New Street                         an 23:43
+##                             Abfahrt
+## 1  Zeitpunkt der Anfrage: 20:58 Uhr
+## 2                          ab 20:14
+## 3                          ab 20:20
+## 4                          ab 20:31
+## 5                          ab 20:52
+## 6                          ab 21:05
+## 7                          ab 21:19
+## 8                          ab 22:00
+## 9                          ab 22:10
+## 10                         ab 22:42
+## 11</code></pre>
 <p>This is ugly because of that “Zeitpunkt der Anfrage” stuff, which was the time of the query, and has nothing to do with the train at all. Let’s get rid of that. It appears in every column, so we can search in any column to find it. Let’s search for things in the <code>Abfahrt</code> column that start with <code>Zeitpunkt</code>:</p>
 <pre class="r"><code>  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
     select(1:3) %&gt;% 

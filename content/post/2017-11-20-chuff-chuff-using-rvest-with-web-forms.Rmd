@@ -25,7 +25,7 @@ Here is where this discussion starts:
 
 ![](/Screenshot_2017-11-20_16-00-33.png)
 
-This is not the journey planner itself, but gives a station departure board for the next hour. This is what I wanted to play with. Required input is a place such as `Paignton` that goes into the Bahnhof/Haltestelle box (you can get the form in English too, but I like the German one better). The date and time default to the current date and time (in local time to the station whose departures you want to see), but you can change them if you wish.
+This is not the journey planner itself, but gives a station departure board for the next hour. That is what I wanted to play with. Required input is a place such as `Paignton` that goes into the Bahnhof/Haltestelle box (you can get the form in English too, but I like the German one better). The date and time default to the current date and time (in local time to the station whose departures you want to see), but you can change them if you wish.
 
 ![](/Screenshot_2017-11-20_16-02-29.png)
 
@@ -48,7 +48,7 @@ I figured that `rvest` could probably handle forms, but I didn't know how. The s
 - Fill in the values you want
 - Submit the form
 
-which seems ludicrously simple when you say it like that. Here it is in code for our query above:
+which seems ludicrously simple when you say it like that. Here it is in code for a query like the one above. (It's the same trains on a different day because I wanted to catch and deal with a problem.)
 
 ```{r}
   library(tidyverse)
@@ -59,7 +59,7 @@ which seems ludicrously simple when you say it like that. Here it is in code for
   form_filled = form_blank[[2]] %>%
     set_values(
       "input" = "Paignton",
-      "date" = "20.11.17",
+      "date" = "22.11.17",
       "time" = "19:58") 
   submitted = submit_form(html,form_filled)
 ```
