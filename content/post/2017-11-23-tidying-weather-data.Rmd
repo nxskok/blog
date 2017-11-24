@@ -91,6 +91,18 @@ weather3 %>% count(is.na(temperature))
 
 About 10,000 missing ones.
 
+## A pretty picture
+
+I can't really do a blog post without at least one pretty picture. I talked about time trends earlier, so:
+
+```{r}
+weather3 %>% 
+  filter(date>="1981-01-01") %>% 
+  ggplot(aes(x=date,y=temperature))+geom_line()
+```
+
+There's an awful lot of seasonal variation, and too much missing data, but just maybe there are not as many really cold days as there used to be.
+
 ## "What I actually want"
 
 This came across my desk today, and the person who brought it to me had some additional things she wanted to do with the data, which I realized were all easy to do with `filter`:
@@ -103,7 +115,7 @@ So, we got to work:
 
 ```{r}
 weather3 %>% 
-  filter(year(date) >= 1981, year(date) <= 2010) %>% 
+  filter(between(year(date),1981,2010)) %>% 
   filter(month(date) >=10) %>% 
   filter(!is.na(temperature)) -> weather4
 weather4
