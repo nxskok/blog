@@ -23,7 +23,7 @@ weather=read_csv("BR 1905-2016.csv")
 weather
 ```
 
-This says. for example, that on the January 2nd, 1905, the mean temperature was -24.2. (Look in the `d2` column of the first row.) This is convenient if you want to look at the data: for example, if you have this in a spreadsheet, you can look at the whole of 1905 in a rectangle with 12 rows and 31 columns. But it is not very convenient for any actual analysis, because the temperatures are scattered over 31 columns. For example, what if you wanted to check the temperatures for time trends?
+This says, for example, that on January 2nd, 1905, the mean temperature was -24.2. (Look in the `d2` column of the first row.) This is convenient if you want to look at the data: for example, if you have this in a spreadsheet, you can look at the whole of 1905 in a rectangle with 12 rows and 31 columns. But it is not very convenient for any actual analysis, because the temperatures are scattered over 31 columns. For example, what if you wanted to check the temperatures for time trends?
 
 ## Tidying the data
 
