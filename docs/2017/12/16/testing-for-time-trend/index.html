@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>Ken&#39;s Blog - Testing for time trend</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Ken&#39;s Blog">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/12/16/testing-for-time-trend/">Testing for time trend</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken </span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Dec 16, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;13 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/environmental_science">environmental_science</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>One of the things my environmental science colleagues spend much of their time doing is assessing whether something is changing over time. Most commonly, the depressing conclusion from one of their investigations is “climate change”. One of the studies I was part of concerned temporal trends in sea ice in Hudson Bay. We will see some of that data later on.</p>
+<p>There are two major tools that environmental scientists typically use to assess trend:</p>
+<ul>
+<li>the Mann-Kendall correlation, which is the Kendall correlation of the series with time. The advantage of using the nonparametric Kendall correlation is that climate-type data often has outliers and other strangeness that would affect the Pearson correlation (which assumes normality). This comes naturally with a test that the Mann-Kendall correlation is zero; if this null hypothesis is rejected, we infer a trend, up or down.</li>
+<li>the Theil-Sen slope. This is the <em>median</em> of the pair-wise slopes between all the (pairs of) observations in the series. This, like the Mann-Kendall correlation, is nonparametric, and because of the use of the median, is not unduly affected by outliers. In the presence of a significant Mann-Kendall correlation, the Theil-Sen slope is used as a descriptive statistic, to allow the reader to assess the rate of change, given that there is one.</li>
+</ul>
+<p>The null distribution of the Mann-Kendall statistic is well known, and there is no difficulty with the test. Or at least there wouldn’t be if the series had no autocorrelation. Natural series often have positive autocorrelation (that is, if one value is above the mean, the next value is also more likely to be above the mean).</p>
+<p>The impatient among you may like to jump ahead to the pictures, or the Jenny Bryan-inspired <code>group_by</code> and <code>do</code> below that.</p>
+</div>
+<div id="adjusting-the-mann-kendall-test-to-account-for-autocorrelation" class="section level2">
+<h2>Adjusting the Mann-Kendall test to account for autocorrelation</h2>
+<p>Unfortunately, in a series with positive autocorrelation, the P-value of the Mann-Kendall test, calculated the standard way, is <em>too low</em>: it rejects the Mann-Kendall correlation being zero more often than it should, and thus will falsely declare there to be a time trend, when there is none, more often than it should.</p>
+<p>Hamed and Rao wrote a paper <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">in Journal of Hydrology vol. 204 (1998), pages 182–196.</span> in which they propose an adjustment to the Mann-Kendall test. This takes the form of obtaining an “adjusted sample size” to account for the autocorrelation (the adjusted sample size is smaller when the autocorrelation is positive); the P-value for the Mann-Kendall test is calculated as if the sample size were the adjusted value (rather than the actual sample size). The calculation produces a sample size ratio, which is 1 if no adjustment is needed, greater than 1 in the case of positive autocorrelation (so the effective sample size is smaller), and less than one in the presence of negative autocorrelation.</p>
+<p>This has been implemented in a hard-to-find and no-longer-maintained package called <code>fume</code>, which also seems to have trouble with long series. I decided to re-implement the Hamed-Rao correction in a bare-bones way (that didn’t calculate anything unnecessary), which is in a package <code>mkac</code> on <a href="https://github.com/nxskok/mkac">GitHub</a>. This package can be installed in R the usual way, via <code>devtools::install_github</code>.</p>
+</div>
+<div id="examples-using-simulated-data" class="section level2">
+<h2>Examples using simulated data</h2>
+<p>First, the packages we need:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
+## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
+## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
+## ✔ readr   1.1.1     ✔ forcats 0.2.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(mkac)</code></pre>
+<p>I generated some random series, using <code>set.seed</code> to make them reproducible. The first series is of independent observations (so there should be no autocorrelation) with an actual trend, so that Mann-Kendall should reject:</p>
+<pre class="r"><code>set.seed(457299)
+z=rnorm(100)
+x=z+0.02*(1:100)</code></pre>
+<p><code>mkac</code> includes a function <code>ts_plot</code> that plots a time series with the points joined by lines and with a smooth trend. It has an optional second argument, which is the time as stored in another variable, but defaults to 1 through the length of the series:</p>
+<pre class="r"><code>ts_plot(x)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39;</code></pre>
+<p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>The upward trend is apparent. The lack of autocorrelation shows up in successive observations sometimes being on the same side of the smooth trend and sometimes on opposite sides. Time series aficionados would look at an <code>acf</code> plot (the AutoCorrelation Function):</p>
+<pre class="r"><code>acf(x)</code></pre>
+<p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>The thing to look for in the ACF is spikes at lags greater than zero that go further beyond the blue dotted lines than you would expect by chance. A few of them creep beyond significance, but nothing there appears more than chance.</p>
+<p>The function in <code>mkac</code> that tests for trend is called <code>kendall_Z_adjusted</code>:</p>
+<pre class="r"><code>kendall_Z_adjusted(x)</code></pre>
+<pre><code>## $z
+## [1] 4.17532
+## 
+## $z_star
+## [1] 4.17532
+## 
+## $ratio
+## [1] 1
+## 
+## $P_value
+## [1] 2.975678e-05
+## 
+## $P_value_adj
+## [1] 2.975678e-05</code></pre>
+<p>This produces five things. The one to look at first is the third one, called <code>ratio</code>. Here this is 1, meaning that no adjustment for autocorrelation is needed (as we might have guessed). The (Mann-)Kendall correlation has an approximate normal distribution under the null hypothesis of no trend. The value <code>z</code> at the top is the unadjusted test statistic and the value <code>z_star</code> is the adjusted one. There was no adjustment here, so these are the same. At the bottom are the unadjusted and adjusted P-values; these are also the same and strongly significant, so there really is a trend. In practice, you would look at the bottom P-value, but I show both because you might want to know what any autocorrelation did to the P-value.</p>
+<p>Having found a trend here, we might want to know how big it is. <code>mkac</code> has a function <code>theil_sen_slope</code> for this purpose:</p>
+<pre class="r"><code>theil_sen_slope(x)</code></pre>
+<pre><code>## [1] 0.01650752</code></pre>
+<p>An increase in the series of 0.0165 per unit time step. We simulated the series to have an increase of 0.02 per time step, so this is not bad.</p>
+<p>Our second example is a series generated to have autocorrelation:</p>
+<pre class="r"><code>set.seed(457298)
+xx=arima.sim(list(ar=0.8),100) </code></pre>
+<p>Let’s look at a plot:</p>
+<pre class="r"><code>ts_plot(xx)</code></pre>
+<pre><code>## Don&#39;t know how to automatically pick scale for object of type ts. Defaulting to continuous.</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39;</code></pre>
+<p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>This is autocorrelated: if it’s above the smooth trend, it’s more likely than not to stay there, and likewise below. We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:</p>
+<pre class="r"><code>pacf(xx)</code></pre>
+<p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>The big spike is at lag 1, so we infer that we have an AR(1) series, which is what we generated.</p>
+<p>This series was generated with <em>no trend</em>. What does the Mann-Kendall test say?</p>
+<pre class="r"><code>kendall_Z_adjusted(xx)</code></pre>
+<pre><code>## $z
+## [1] -3.978764
+## 
+## $z_star
+## [1] -1.710086
+## 
+## $ratio
+## [1] 5.413277
+## 
+## $P_value
+## [1] 6.927445e-05
+## 
+## $P_value_adj
+## [1] 0.08724989</code></pre>
+<p>If we had not done the adjustment for autocorrelation, we would have mistakenly concluded that there <em>was</em> a trend, with a very small P-value. But by looking at the adjusted P-value of 0.087, we correctly conclude that there is no trend (at significance level 0.05). The big difference lies in the <code>ratio</code>: the autocorrelation was so strong that we had an “effective sample size” more than 5 times smaller than the actual sample size. The test statistic was more than <span class="math inline">\(\sqrt{5} \simeq 2\)</span> times smaller, leading to a big change in P-value.</p>
+<p>If you look at the time plot of the series, it looks like a downward trend (at least after the first few observations), which is probably what the unadjusted test was reacting to, but in fact the trend is <em>all</em> because of the autocorrelation, so it was vitally important to adjust for the autocorrelation before concluding anything.</p>
+<p>Having concluded that there was no trend, we should <em>not</em> look at the Theil-Sen slope here, it being, by implication, not significantly different from zero.</p>
+</div>
+<div id="ice-free-in-hudson-bay-some-real-data" class="section level2">
+<h2>Ice-free in Hudson Bay: some real data</h2>
+<p>Hudson Bay, in northern Canada, is a large inland sea. It freezes over in the winter and thaws in the spring. Gagnon and Gough<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">in Arctic vol. 58 (2005), pages 370–382.</span> studied time trends of ice breakup and freezeup at 36 locations across Hudson Bay. This work was extended by Slawomir Kowal<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">in Theoretical and Applied Climatology vol. 127 (2017) pages 753–760</span>, whose data I borrow here. Kowal also studied the “ice-free period”, the time each year that a location in Hudson Bay has no ice, between spring thaw and winter freeze. An increase in ice-free period over time means that the thaw is getting earlier and/or the freezeup is getting later in the year. This would be indicative of climate change. The data cover 40 years (from 1971–2010) at each of 36 locations. There are some missing data.</p>
+<p>The data came to me as a <code>.csv</code> with the values separated by semicolons and the missing values indicated by <code>.</code>, SAS-style. This meant that I needed to use <code>read_csv2</code> from <code>readr</code> and handle the missing values properly:</p>
+<pre class="r"><code>icefree=read_csv2(&quot;/home/ken/icefree.csv&quot;,na=&quot;.&quot;)</code></pre>
+<pre><code>## Using &#39;,&#39; as decimal and &#39;.&#39; as grouping mark. Use read_delim() for more control.</code></pre>
+<pre><code>## Warning: Missing column names filled in: &#39;X1&#39; [1]</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_integer()
+## )</code></pre>
+<pre><code>## See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code>icefree</code></pre>
+<pre><code>## # A tibble: 41 x 37
+##       X1   `1`   `2`   `3`   `4`   `5`   `6`   `7`   `8`   `9`  `10`  `11`
+##    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;
+##  1  1971    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+##  2  1972   140    NA   117   105    NA    98   112    NA   126   112    98
+##  3  1973    NA    NA    NA    NA    NA    NA    NA    NA    NA   133    NA
+##  4  1974    NA   134    NA   120   127   105   120   127    NA   113   112
+##  5  1975    NA    NA    NA   126    NA   126    NA    NA    NA   154   133
+##  6  1976   147   147   154   119   133   147   133   147   147   126   140
+##  7  1977    NA    NA    NA    NA    NA    NA    NA    NA    NA   175   154
+##  8  1978   168   147   154   133   133   140   119   133   154   119   105
+##  9  1979   168   182   140   126   154   126   140   140   133   161   147
+## 10  1980   175   182   175   126   126   126   133   133   189   119   126
+## # ... with 31 more rows, and 25 more variables: `12` &lt;int&gt;, `13` &lt;int&gt;,
+## #   `14` &lt;int&gt;, `15` &lt;int&gt;, `16` &lt;int&gt;, `17` &lt;int&gt;, `18` &lt;int&gt;,
+## #   `19` &lt;int&gt;, `20` &lt;int&gt;, `21` &lt;int&gt;, `22` &lt;int&gt;, `23` &lt;int&gt;,
+## #   `24` &lt;int&gt;, `25` &lt;int&gt;, `26` &lt;int&gt;, `27` &lt;int&gt;, `28` &lt;int&gt;,
+## #   `29` &lt;int&gt;, `30` &lt;int&gt;, `31` &lt;int&gt;, `32` &lt;int&gt;, `33` &lt;int&gt;,
+## #   `34` &lt;int&gt;, `35` &lt;int&gt;, `36` &lt;int&gt;</code></pre>
+<p>The locations are in numbered columns. Because of the way the <code>readr</code> functions work, these are not converted into “legal” column names (by affixing an <code>X</code>), so we would need to refer to them with backticks. The first column, <code>X1</code>, is the year. The data values are in days.</p>
+<p>Since there are 36 columns that are all numbers of days, the data frame is not tidy. We should <code>gather</code> together the columns for the different locations, thus, and turn the text locations into numeric ones:</p>
+<pre class="r"><code>icefree_2 &lt;- icefree %&gt;% gather(location,days,-1) %&gt;% 
+  rename(year=X1) %&gt;% 
+  mutate(location=as.numeric(location))
+icefree_2</code></pre>
+<pre><code>## # A tibble: 1,476 x 3
+##     year location  days
+##    &lt;int&gt;    &lt;dbl&gt; &lt;int&gt;
+##  1  1971        1    NA
+##  2  1972        1   140
+##  3  1973        1    NA
+##  4  1974        1    NA
+##  5  1975        1    NA
+##  6  1976        1   147
+##  7  1977        1    NA
+##  8  1978        1   168
+##  9  1979        1   168
+## 10  1980        1   175
+## # ... with 1,466 more rows</code></pre>
+<p>There are now lots of rows, since we have location 1 for all the years, then location 2 for all the years, and so on.</p>
+<p>Just how many missing values do we have at each location? The <code>tidyverse</code> way to find out is to write a little function to count the number of missings in some column <code>x</code>, thus:</p>
+<pre class="r"><code>nmiss=function(x) {
+  sum(is.na(x))
+}</code></pre>
+<p>and then use it in a group-by and summarize. <code>knitr::kable</code> produces a nicely-formatted table:</p>
+<pre class="r"><code>icefree_2 %&gt;% group_by(location) %&gt;% 
+  summarize(missing=nmiss(days)) %&gt;% 
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">location</th>
+<th align="right">missing</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">12</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">16</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">13</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">10</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">12</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="right">15</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">11</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+<td align="right">14</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">17</td>
+<td align="right">8</td>
+</tr>
+<tr class="even">
+<td align="right">18</td>
+<td align="right">9</td>
+</tr>
+<tr class="odd">
+<td align="right">19</td>
+<td align="right">13</td>
+</tr>
+<tr class="even">
+<td align="right">20</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">21</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">22</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">23</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="right">24</td>
+<td align="right">10</td>
+</tr>
+<tr class="odd">
+<td align="right">25</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">26</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="right">27</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">28</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="right">29</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="right">30</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="right">31</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="right">32</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="right">33</td>
+<td align="right">4</td>
+</tr>
+<tr class="even">
+<td align="right">34</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="right">35</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">36</td>
+<td align="right">6</td>
+</tr>
+</tbody>
+</table>
+<p>There are rather a lot of missings. Let’s start with location 35 that has fewest missings:</p>
+<pre class="r"><code>y &lt;- icefree_2 %&gt;% filter(location==35)
+y</code></pre>
+<pre><code>## # A tibble: 41 x 3
+##     year location  days
+##    &lt;int&gt;    &lt;dbl&gt; &lt;int&gt;
+##  1  1971       35    NA
+##  2  1972       35   126
+##  3  1973       35   154
+##  4  1974       35    91
+##  5  1975       35   140
+##  6  1976       35   147
+##  7  1977       35   168
+##  8  1978       35   119
+##  9  1979       35   119
+## 10  1980       35   147
+## # ... with 31 more rows</code></pre>
+<p>First, let’s plot against time. <code>ts_plot</code> has an optional second argument that is the actual time, year here:</p>
+<pre class="r"><code>with(y,ts_plot(days,year))</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39;</code></pre>
+<pre><code>## Warning: Removed 1 rows containing non-finite values (stat_smooth).</code></pre>
+<pre><code>## Warning: Removed 1 rows containing missing values (geom_path).</code></pre>
+<p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>There is no special evidence of autocorrelation here: sometimes it stays one side of the trend, sometimes it jumps across. But there is definitely a trend. If we test this for trend, the adjustment for autocorrelation should be small, and the trend should be real:</p>
+<pre class="r"><code>kendall_Z_adjusted(y$days)</code></pre>
+<pre><code>## $z
+## [1] 3.996305
+## 
+## $z_star
+## [1] 3.996305
+## 
+## $ratio
+## [1] 1
+## 
+## $P_value
+## [1] 6.433887e-05
+## 
+## $P_value_adj
+## [1] 6.433887e-05</code></pre>
+<p>There is definitely a trend there, and no autocorrelation worth bothering with at all. We would next think about finding the Theil-Sen slope, which will be thrown off by the one missing value:</p>
+<pre class="r"><code>theil_sen_slope(y$days)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<p>and that tells me I have to remove the missing values from the input first. That, unfortunately, will throw off the years, because one of them will be missing too, and that should be figured in the input. This means that I have to rewrite the Theil-Sen slope function to accept a time as input. Later.</p>
+<p>Here’s how to look at the sample-size ratio and unadjusted and adjusted P-values for all the locations. The technique is <code>group_by</code> and <code>do</code>, gleaned from <a href="http://stat545.com/block023_dplyr-do.html" class="uri">http://stat545.com/block023_dplyr-do.html</a>. The idea is that the <code>group_by</code> implicitly creates mini-data-frames one for each location, and the <code>do</code> runs <code>kendall_Z_adjusted</code> on each of these. This creates a thing called a list-column (<code>test</code>), from which we then extract via the <code>mutates</code> the things we want:</p>
+<pre class="r"><code>icefree_2 %&gt;% group_by(location) %&gt;% 
+  do(test=kendall_Z_adjusted(.$days)) %&gt;%
+  mutate(ratio=test$ratio,pval=test$P_value,padj=test$P_value_adj) %&gt;% 
+  select(-test) %&gt;% 
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">location</th>
+<th align="right">ratio</th>
+<th align="right">pval</th>
+<th align="right">padj</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1.0000000</td>
+<td align="right">0.1651076</td>
+<td align="right">0.1651076</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">0.3210231</td>
+<td align="right">0.1286611</td>
+<td align="right">0.0073256</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0043815</td>
+<td align="right">0.0043815</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0043586</td>
+<td align="right">0.0043586</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0219197</td>
+<td align="right">0.0219197</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="right">0.8520634</td>
+<td align="right">0.0073505</td>
+<td align="right">0.0036852</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">0.2753018</td>
+<td align="right">0.0237888</td>
+<td align="right">0.0000165</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0046190</td>
+<td align="right">0.0046190</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="right">1.0000000</td>
+<td align="right">0.2609625</td>
+<td align="right">0.2609625</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0020581</td>
+<td align="right">0.0020581</td>
+</tr>
+<tr class="odd">
+<td align="right">11</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0968465</td>
+<td align="right">0.0968465</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0126099</td>
+<td align="right">0.0126099</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0001251</td>
+<td align="right">0.0001251</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+<td align="right">0.7385787</td>
+<td align="right">0.0606248</td>
+<td align="right">0.0290239</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0005299</td>
+<td align="right">0.0005299</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0048528</td>
+<td align="right">0.0048528</td>
+</tr>
+<tr class="odd">
+<td align="right">17</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0013397</td>
+<td align="right">0.0013397</td>
+</tr>
+<tr class="even">
+<td align="right">18</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0082107</td>
+<td align="right">0.0082107</td>
+</tr>
+<tr class="odd">
+<td align="right">19</td>
+<td align="right">1.0000000</td>
+<td align="right">0.1139875</td>
+<td align="right">0.1139875</td>
+</tr>
+<tr class="even">
+<td align="right">20</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0001567</td>
+<td align="right">0.0001567</td>
+</tr>
+<tr class="odd">
+<td align="right">21</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0069747</td>
+<td align="right">0.0069747</td>
+</tr>
+<tr class="even">
+<td align="right">22</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0031771</td>
+<td align="right">0.0031771</td>
+</tr>
+<tr class="odd">
+<td align="right">23</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0024256</td>
+<td align="right">0.0024256</td>
+</tr>
+<tr class="even">
+<td align="right">24</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0137212</td>
+<td align="right">0.0137212</td>
+</tr>
+<tr class="odd">
+<td align="right">25</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0000674</td>
+<td align="right">0.0000674</td>
+</tr>
+<tr class="even">
+<td align="right">26</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0001496</td>
+<td align="right">0.0001496</td>
+</tr>
+<tr class="odd">
+<td align="right">27</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0026180</td>
+<td align="right">0.0026180</td>
+</tr>
+<tr class="even">
+<td align="right">28</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0198572</td>
+<td align="right">0.0198572</td>
+</tr>
+<tr class="odd">
+<td align="right">29</td>
+<td align="right">1.4844678</td>
+<td align="right">0.0274234</td>
+<td align="right">0.0702759</td>
+</tr>
+<tr class="even">
+<td align="right">30</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0002356</td>
+<td align="right">0.0002356</td>
+</tr>
+<tr class="odd">
+<td align="right">31</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0002665</td>
+<td align="right">0.0002665</td>
+</tr>
+<tr class="even">
+<td align="right">32</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0018992</td>
+<td align="right">0.0018992</td>
+</tr>
+<tr class="odd">
+<td align="right">33</td>
+<td align="right">0.8028708</td>
+<td align="right">0.0000111</td>
+<td align="right">0.0000009</td>
+</tr>
+<tr class="even">
+<td align="right">34</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0000316</td>
+<td align="right">0.0000316</td>
+</tr>
+<tr class="odd">
+<td align="right">35</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0000643</td>
+<td align="right">0.0000643</td>
+</tr>
+<tr class="even">
+<td align="right">36</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0034391</td>
+<td align="right">0.0034391</td>
+</tr>
+</tbody>
+</table>
+<p>Location 29 has a little positive autocorrelation. It isn’t large, but it’s enough to turn an apparently significant trend into a non-significant one.</p>
+<p>On the other hand, location 2 has a very negative autocorrelation. This turns a non-significant trend into a strongly significant one.</p>
+<p>Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot that might be too small to see:</p>
+<pre class="r"><code>ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39;</code></pre>
+<pre><code>## Warning: Removed 290 rows containing non-finite values (stat_smooth).</code></pre>
+<pre><code>## Warning: Removed 290 rows containing missing values (geom_point).</code></pre>
+<p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>That’s a whole lot of upward trends, that the test ensures us are not just chance.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2017
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

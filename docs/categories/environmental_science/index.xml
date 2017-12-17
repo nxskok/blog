@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Environmental_science on Ken&#39;s Blog</title>
+    <link>/categories/environmental_science/</link>
+    <description>Recent content in Environmental_science on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 16 Dec 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/environmental_science/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Testing for time trend</title>
+      <link>/2017/12/16/testing-for-time-trend/</link>
+      <pubDate>Sat, 16 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/16/testing-for-time-trend/</guid>
+      <description>Introduction One of the things my environmental science colleagues spend much of their time doing is assessing whether something is changing over time. Most commonly, the depressing conclusion from one of their investigations is “climate change”. One of the studies I was part of concerned temporal trends in sea ice in Hudson Bay. We will see some of that data later on.
+There are two major tools that environmental scientists typically use to assess trend:</description>
+    </item>
+    
+  </channel>
+</rss>

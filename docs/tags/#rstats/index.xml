@@ -6,10 +6,20 @@
     <description>Recent content in #Rstats on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 20 Nov 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 16 Dec 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/#rstats/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Testing for time trend</title>
+      <link>/2017/12/16/testing-for-time-trend/</link>
+      <pubDate>Sat, 16 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/16/testing-for-time-trend/</guid>
+      <description>Introduction One of the things my environmental science colleagues spend much of their time doing is assessing whether something is changing over time. Most commonly, the depressing conclusion from one of their investigations is “climate change”. One of the studies I was part of concerned temporal trends in sea ice in Hudson Bay. We will see some of that data later on.
+There are two major tools that environmental scientists typically use to assess trend:</description>
+    </item>
     
     <item>
       <title>Chuff chuff: using rvest with web forms</title>

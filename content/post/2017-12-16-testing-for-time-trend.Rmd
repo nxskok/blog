@@ -1,0 +1,205 @@
+---
+title: Testing for time trend
+author: 'Ken '
+date: '2017-12-16'
+slug: testing-for-time-trend
+categories:
+  - environmental_science
+tags:
+  - '#rstats'
+---
+
+## Introduction
+
+One of the things my environmental science colleagues spend much of their time doing is assessing whether something is changing over time. Most commonly, the depressing conclusion from one of their investigations is "climate change". One of the studies I was part of concerned temporal trends in sea ice in Hudson Bay. We will see some of that data later on.
+
+There are two major tools that environmental scientists typically use to assess trend:
+
+- the Mann-Kendall correlation, which is the Kendall correlation of the series with time. The advantage of using the nonparametric Kendall correlation is that climate-type data often has outliers and other strangeness that would affect the Pearson correlation (which assumes normality). This comes naturally with a test that the Mann-Kendall correlation is zero; if this null hypothesis is rejected, we infer a trend, up or down.
+- the Theil-Sen slope. This is the *median* of the pair-wise slopes between all the (pairs of) observations in the series. This, like the Mann-Kendall correlation, is nonparametric, and because of the use of the median, is not unduly affected by outliers. In the presence of a significant Mann-Kendall correlation, the Theil-Sen slope is used as a descriptive statistic, to allow the reader to assess the rate of change, given that there is one.
+
+The null distribution of the Mann-Kendall statistic is well known, and there is no difficulty with the test. Or at least there wouldn't be if the series had no autocorrelation. Natural series often have positive autocorrelation (that is, if one value is above the mean, the next value is also more likely to be above the mean).
+
+The impatient among you may like to jump ahead to the pictures, or the Jenny Bryan-inspired `group_by` and `do` below that.
+
+## Adjusting the Mann-Kendall test to account for autocorrelation
+
+Unfortunately, in a series with positive autocorrelation, the P-value of the Mann-Kendall test, calculated the standard way, is *too low*: it rejects the Mann-Kendall correlation being zero more often than it should, and thus will falsely declare there to be a time trend, when there is none, more often than it should.
+
+Hamed and Rao wrote a paper
+`r tufte::margin_note("in Journal of Hydrology vol. 204 (1998), pages 182--196.")` 
+in which they propose an adjustment to the Mann-Kendall test. This takes the form of obtaining an "adjusted sample size" to account for the autocorrelation (the adjusted sample size is smaller when the autocorrelation is positive); the P-value for the Mann-Kendall test is calculated as if the sample size were the adjusted value (rather than the actual sample size). 
+The calculation produces a sample size ratio, which is 1 if no adjustment is needed, greater than 1 in the case of positive autocorrelation (so the effective sample size is smaller), and less than one in the presence of negative autocorrelation. 
+
+This has been implemented in a hard-to-find and no-longer-maintained package called `fume`, which also seems to have trouble with long series. I decided to re-implement the Hamed-Rao correction in a bare-bones way (that didn't calculate anything unnecessary), which is in a package `mkac` on [GitHub](https://github.com/nxskok/mkac). This package can be installed in R the usual way, via `devtools::install_github`. 
+
+## Examples using simulated data
+
+First, the packages we need:
+
+```{r}
+library(tidyverse)
+library(mkac)
+```
+
+I generated some random series, using `set.seed` to make them reproducible. The first series is of independent observations (so there should be no autocorrelation) with an actual trend, so that Mann-Kendall should reject:
+
+```{r}
+set.seed(457299)
+z=rnorm(100)
+x=z+0.02*(1:100)
+```
+
+`mkac` includes a function `ts_plot` that plots a time series with the points joined by lines and with a smooth trend. It has an optional second argument, which is the time as stored in another variable, but defaults to 1 through the length of the series:
+
+```{r}
+ts_plot(x)
+```
+
+The upward trend is apparent. The lack of autocorrelation shows up in successive observations sometimes being on the same side of the smooth trend and sometimes on opposite sides. Time series aficionados would look at an `acf` plot (the AutoCorrelation Function):
+
+```{r}
+acf(x)
+```
+
+The thing to look for in the ACF is spikes at lags greater than zero that go further beyond the blue dotted lines than you would expect by chance. A few of them creep beyond significance, but nothing there appears more than chance.
+
+The function in `mkac` that tests for trend is called `kendall_Z_adjusted`:
+
+```{r}
+kendall_Z_adjusted(x)
+```
+
+This produces five things. The one to look at first is the third one, called `ratio`. Here this is 1, meaning that no adjustment for autocorrelation is needed (as we might have guessed). The (Mann-)Kendall correlation has an approximate normal distribution under the null hypothesis of no trend. The value `z` at the top is the unadjusted test statistic and the value `z_star` is the adjusted one. There was no adjustment here, so these are the same. At the bottom are the unadjusted and adjusted P-values; these are also the same and strongly significant, so there really is a trend. In practice, you would look at the bottom P-value, but I show both because you might want to know what any autocorrelation did to the P-value.
+
+Having found a trend here, we might want to know how big it is. `mkac` has a function `theil_sen_slope` for this purpose:
+
+```{r}
+theil_sen_slope(x)
+```
+
+An increase in the series of 0.0165 per unit time step. We simulated the series to have an increase of 0.02 per time step, so this is not bad.
+
+
+Our second example is a series generated to have autocorrelation:
+
+```{r}
+set.seed(457298)
+xx=arima.sim(list(ar=0.8),100) 
+```
+
+Let's look at a plot:
+
+```{r}
+ts_plot(xx)
+```
+
+This is autocorrelated: if it's above the smooth trend, it's more likely than not to stay there, and likewise below. We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:
+
+```{r}
+pacf(xx)
+```
+
+The big spike is at lag 1, so we infer that we have an AR(1) series, which is what we generated.
+
+This series was generated with *no trend*. What does the Mann-Kendall test say?
+
+```{r}
+kendall_Z_adjusted(xx)
+```
+
+If we had not done the adjustment for autocorrelation, we would have mistakenly concluded that there *was* a trend, with a very small P-value. But by looking at the adjusted P-value of 0.087, we correctly conclude that there is no trend (at significance level 0.05). The big difference lies in the `ratio`: the autocorrelation was so strong that we had an "effective sample size" more than 5 times smaller than the actual sample size. The test statistic was more than $\sqrt{5} \simeq 2$ times smaller, leading to a big change in P-value.
+
+If you look at the time plot of the series, it looks like a downward trend (at least after the first few observations), which is probably what the unadjusted test was reacting to, but in fact the trend is *all* because of the autocorrelation, so it was vitally important to adjust for the autocorrelation before concluding anything.
+
+Having concluded that there was no trend, we should *not* look at the Theil-Sen slope here, it being, by implication, not significantly different from zero.
+
+## Ice-free in Hudson Bay: some real data
+
+Hudson Bay, in northern Canada, is a large inland sea. It freezes over in the winter and thaws in the spring. Gagnon and Gough`r tufte::margin_note("in Arctic vol. 58 (2005), pages 370--382.")` studied time trends of ice breakup and freezeup at 36 locations across Hudson Bay. This work was extended by Slawomir Kowal`r tufte::margin_note("in Theoretical and Applied Climatology vol. 127 (2017) pages 753--760")`, whose data I borrow here. Kowal also studied the "ice-free period", the time each year that a location in Hudson Bay has no ice, between spring thaw and winter freeze. An increase in ice-free period over time means that the thaw is getting earlier and/or the freezeup is getting later in the year. This would be indicative of climate change. The data cover 40 years (from 1971--2010) at each of 36 locations. There are some missing data.
+
+The data came to me as a `.csv` with the values separated by semicolons and the missing values indicated by `.`, SAS-style. This meant that I needed to use `read_csv2` from `readr` and handle the missing values properly:
+
+```{r}
+icefree=read_csv2("/home/ken/icefree.csv",na=".")
+icefree
+```
+
+The locations are in numbered columns. Because of the way the `readr` functions work, these are not converted into "legal" column names (by affixing an `X`), so  we would need to refer to them with backticks. The first column, `X1`, is the year. The data values are in days.
+
+Since there are 36 columns that are all numbers of days, the data frame is not tidy. We should `gather` together the columns for the different locations, thus, and turn the text locations into numeric ones:
+
+```{r}
+icefree_2 <- icefree %>% gather(location,days,-1) %>% 
+  rename(year=X1) %>% 
+  mutate(location=as.numeric(location))
+icefree_2
+```
+
+There are now lots of rows, since we have location 1 for all the years, then location 2 for all the years, and so on.
+
+Just how many missing values do we have at each location? The `tidyverse` way to find out is to write a little function to count the number of missings in some column `x`, thus:
+
+```{r}
+nmiss=function(x) {
+  sum(is.na(x))
+}
+```
+
+and then use it in a group-by and summarize. `knitr::kable` produces a nicely-formatted table:
+
+```{r}
+icefree_2 %>% group_by(location) %>% 
+  summarize(missing=nmiss(days)) %>% 
+  knitr::kable()
+```
+
+There are rather a lot of missings. Let's start with location 35 that has fewest missings:
+
+```{r}
+y <- icefree_2 %>% filter(location==35)
+y
+```
+
+First, let's plot against time. `ts_plot` has an optional second argument that is the actual time, year here:
+
+```{r}
+with(y,ts_plot(days,year))
+```
+
+There is no special evidence of autocorrelation here: sometimes it stays one side of the trend, sometimes it jumps across. But there is definitely a trend. If we test this for trend, the adjustment for autocorrelation should be small, and the trend should be real:
+
+```{r}
+kendall_Z_adjusted(y$days)
+```
+
+There is definitely a trend there, and no autocorrelation worth bothering with at all. We would next think about finding the Theil-Sen slope, which will be thrown off by the one missing value:
+
+```{r}
+theil_sen_slope(y$days)
+```
+
+and that tells me I have to remove the missing values from the input first. That, unfortunately, will throw off the years, because one of them will be missing too, and that should be figured in the input. This means that I have to rewrite the Theil-Sen slope function to accept a time as input. Later.
+
+Here's how to look at the sample-size ratio and unadjusted and adjusted P-values for all the locations. The technique is `group_by` and `do`, gleaned from http://stat545.com/block023_dplyr-do.html. The idea is that the `group_by` implicitly creates mini-data-frames one for each location, and the `do` runs `kendall_Z_adjusted` on each of these. This creates a thing called a list-column (`test`), from which we then extract via the `mutates` the things we want:
+
+```{r}
+icefree_2 %>% group_by(location) %>% 
+  do(test=kendall_Z_adjusted(.$days)) %>%
+  mutate(ratio=test$ratio,pval=test$P_value,padj=test$P_value_adj) %>% 
+  select(-test) %>% 
+  knitr::kable()
+```
+
+Location 29 has a little positive autocorrelation. 
+It isn't large, but it's enough to turn an apparently significant trend into a non-significant one.
+
+On the other hand, location 2 has a very negative autocorrelation. This turns a non-significant trend into a strongly significant one.
+
+Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot that might be too small to see:
+
+```{r}
+ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location)
+```
+
+That's a whole lot of upward trends, that the test ensures us are not just chance.
