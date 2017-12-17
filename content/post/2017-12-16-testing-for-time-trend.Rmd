@@ -94,7 +94,8 @@ Let's look at a plot:
 ts_plot(xx)
 ```
 
-This is autocorrelated: if it's above the smooth trend, it's more likely than not to stay there, and likewise below. We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:
+This is autocorrelated: if it's above the smooth trend, it's more likely than not to stay there, and likewise below. Note the long "excursions" above and below the trend.
+We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:
 
 ```{r}
 pacf(xx)
@@ -151,7 +152,7 @@ and then use it in a group-by and summarize. `knitr::kable` produces a nicely-fo
 ```{r}
 icefree_2 %>% group_by(location) %>% 
   summarize(missing=nmiss(days)) %>% 
-  knitr::kable()
+  knitr::kable(align="rr")
 ```
 
 There are rather a lot of missings. Let's start with location 35 that has fewest missings:
@@ -188,7 +189,7 @@ icefree_2 %>% group_by(location) %>%
   do(test=kendall_Z_adjusted(.$days)) %>%
   mutate(ratio=test$ratio,pval=test$P_value,padj=test$P_value_adj) %>% 
   select(-test) %>% 
-  knitr::kable()
+  knitr::kable(align="rrrr")
 ```
 
 Location 29 has a little positive autocorrelation. 
@@ -196,10 +197,10 @@ It isn't large, but it's enough to turn an apparently significant trend into a n
 
 On the other hand, location 2 has a very negative autocorrelation. This turns a non-significant trend into a strongly significant one.
 
-Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot that might be too small to see:
+Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot:
 
 ```{r}
-ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location)
+ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location,ncol=3)
 ```
 
 That's a whole lot of upward trends, that the test ensures us are not just chance.

@@ -167,7 +167,7 @@ xx=arima.sim(list(ar=0.8),100) </code></pre>
 <pre><code>## Don&#39;t know how to automatically pick scale for object of type ts. Defaulting to continuous.</code></pre>
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39;</code></pre>
 <p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<p>This is autocorrelated: if it’s above the smooth trend, it’s more likely than not to stay there, and likewise below. We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:</p>
+<p>This is autocorrelated: if it’s above the smooth trend, it’s more likely than not to stay there, and likewise below. Note the long “excursions” above and below the trend. We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:</p>
 <pre class="r"><code>pacf(xx)</code></pre>
 <p><img src="../../../../post/2017-12-16-testing-for-time-trend_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>The big spike is at lag 1, so we infer that we have an AR(1) series, which is what we generated.</p>
@@ -251,7 +251,7 @@ icefree_2</code></pre>
 <p>and then use it in a group-by and summarize. <code>knitr::kable</code> produces a nicely-formatted table:</p>
 <pre class="r"><code>icefree_2 %&gt;% group_by(location) %&gt;% 
   summarize(missing=nmiss(days)) %&gt;% 
-  knitr::kable()</code></pre>
+  knitr::kable(align=&quot;rr&quot;)</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -454,7 +454,7 @@ y</code></pre>
   do(test=kendall_Z_adjusted(.$days)) %&gt;%
   mutate(ratio=test$ratio,pval=test$P_value,padj=test$P_value_adj) %&gt;% 
   select(-test) %&gt;% 
-  knitr::kable()</code></pre>
+  knitr::kable(align=&quot;rrrr&quot;)</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -685,8 +685,8 @@ y</code></pre>
 </table>
 <p>Location 29 has a little positive autocorrelation. It isn’t large, but it’s enough to turn an apparently significant trend into a non-significant one.</p>
 <p>On the other hand, location 2 has a very negative autocorrelation. This turns a non-significant trend into a strongly significant one.</p>
-<p>Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot that might be too small to see:</p>
-<pre class="r"><code>ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location)</code></pre>
+<p>Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot:</p>
+<pre class="r"><code>ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location,ncol=3)</code></pre>
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39;</code></pre>
 <pre><code>## Warning: Removed 290 rows containing non-finite values (stat_smooth).</code></pre>
 <pre><code>## Warning: Removed 290 rows containing missing values (geom_point).</code></pre>
