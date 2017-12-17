@@ -686,7 +686,7 @@ y</code></pre>
 <p>Location 29 has a little positive autocorrelation. It isn’t large, but it’s enough to turn an apparently significant trend into a non-significant one.</p>
 <p>On the other hand, location 2 has a very negative autocorrelation. This turns a non-significant trend into a strongly significant one.</p>
 <p>Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot:</p>
-<pre class="r"><code>ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location,ncol=3)</code></pre>
+<pre class="r"><code>ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location,scales=&quot;free&quot;)</code></pre>
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39;</code></pre>
 <pre><code>## Warning: Removed 290 rows containing non-finite values (stat_smooth).</code></pre>
 <pre><code>## Warning: Removed 290 rows containing missing values (geom_point).</code></pre>
