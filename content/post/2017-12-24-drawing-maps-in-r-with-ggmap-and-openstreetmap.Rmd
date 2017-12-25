@@ -100,7 +100,7 @@ sarnia = st %>% mutate(lookup=str_c(stations," ON")) %>%
 sarnia
 ```
 
-The process is that we first make a `data.frame` with one column, the names of the stations. (A `tibble` doesn't seem to work.) These names are duplicated elsewhere in the world, so to be sure we get the right ones, we create a column `lookup` he with "ON" added to the end of each name. Then we geocode *these*. When used in a pipeline, `mutate_geocode` takes a column to geocode. By default it uses Google to geocode, but by specifying this `source` you can use the [Data Science Toolkit](http://www.datasciencetoolkit.org/), which is open, instead. 
+The process is that we first make a `data.frame` with one column, the names of the stations. (A `tibble` doesn't seem to work.) These names are duplicated elsewhere in the world, so to be sure we get the right ones, we create a column `lookup`  with "ON" added to the end of each name. Then we geocode *these*. When used in a pipeline, `mutate_geocode` takes a column to geocode. By default it uses Google to geocode, but by specifying this `source` you can use the [Data Science Toolkit](http://www.datasciencetoolkit.org/), which is open, instead. 
 
 The other route, to Windsor, goes the same way:`r tufte::margin_note("Well, it doesn't *literally* go the same way, but you see what I mean.")` 
 
