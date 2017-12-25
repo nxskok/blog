@@ -143,4 +143,4 @@ autoplot(ontario3) + geom_point(data=via,aes(x=lon,y=lat,colour=route)) +
 
 Once again, something to plot the map, and the usual `geom_point` etc to add points to the map.
 
-For labelling points on a `ggplot` I like `geom_text_repel` from package `ggrepel`. This labels points in such a way that they don't overplot each other
+For labelling points on a `ggplot` I like `geom_text_repel` from package `ggrepel`. This labels points in such a way that they don't overplot each other. On the second (smaller) map, I made the label text smaller, by putting a `size` *outside* the `aes` (this is easy to forget).

@@ -163,6 +163,6 @@ windsor</code></pre>
   geom_text_repel(data=via,aes(x=lon,y=lat,label=stations,colour=route),size=2)</code></pre>
 <p><img src="/post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Once again, something to plot the map, and the usual <code>geom_point</code> etc to add points to the map.</p>
-<p>For labelling points on a <code>ggplot</code> I like <code>geom_text_repel</code> from package <code>ggrepel</code>. This labels points in such a way that they don’t overplot each other</p>
+<p>For labelling points on a <code>ggplot</code> I like <code>geom_text_repel</code> from package <code>ggrepel</code>. This labels points in such a way that they don’t overplot each other. On the second (smaller) map, I made the label text smaller, by putting a <code>size</code> <em>outside</em> the <code>aes</code> (this is easy to forget).</p>
 </div>
 </div>
