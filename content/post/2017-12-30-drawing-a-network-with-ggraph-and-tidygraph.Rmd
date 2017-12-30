@@ -34,7 +34,7 @@ My aim is to treat the stations as nodes in a graph and rail lines between them 
 
 ## Reading in the data and storing as a graph
 
-I had to think about how I wanted to represent the network. If these had been plane flights, I would have had a starting point and an ending point for each one. But trains, especially local trains, stop at a long list of places one after the other. For example, a train from Bradford (Forster Square) to Ilkley will travel between Bradford, Frizinghall, Shipley, Baildon, Guiseley, etc., to Ben Rhydding and Ilkley. I decided to list all the stations on one route in a long list, on per line, with an `NA` at the end to indicate the end of one line and the beginning of another. The input file (part) looks like this:
+I had to think about how I wanted to represent the network. If these had been plane flights, I would have had a starting point and an ending point for each one. But trains, especially local trains, stop at a long list of places one after the other. For example, a train from Bradford (Forster Square) to Ilkley will travel between Bradford, Frizinghall, Shipley, Baildon, Guiseley, etc., to Ben Rhydding and Ilkley. I decided to list all the stations on one route in a long list, one per line, with an `NA` at the end to indicate the end of one line and the beginning of another. The input file (part) looks like this:
 
 ```{bash}
 head --lines=20 yorkshire.txt
