@@ -1,0 +1,153 @@
+---
+title: Drawing a network with "ggraph" and "tidygraph"
+author: Ken
+date: '2017-12-30'
+slug: drawing-a-network-with-ggraph-and-tidygraph
+categories:
+  - R trains
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+## Introduction
+
+[Thomas Lin Pedersen](https://github.com/thomasp85) is the author of a lot of packages, including two that deal with graphs (in the sense of networks), `tidygraph` for storing and handling graphs, and `ggraph` for drawing them, `ggplot`-style. I have a feeling I will be spending a lot of time with `tidygraph`, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.
+
+Packages:
+
+```{r}
+library(tidyverse)
+library(tidygraph)
+library(ggraph)
+```
+
+
+## Example: the West Yorkshire train network
+
+[West Yorkshire](https://en.wikipedia.org/wiki/West_Yorkshire) is a metropolitan county of northern England, containing the city of Leeds. It has a considerable local rail network, as shown below:
+
+![](/Rail-network-map.pdf)
+
+
+My aim is to treat the stations as nodes in a graph and rail lines between them as edges, and see how I succeed and fail in reproducing this map.
+
+## Reading in the data and storing as a graph
+
+I had to think about how I wanted to represent the network. If these had been plane flights, I would have had a starting point and an ending point for each one. But trains, especially local trains, stop at a long list of places one after the other. For example, a train from Bradford (Forster Square) to Ilkley will travel between Bradford, Frizinghall, Shipley, Baildon, Guiseley, etc., to Ben Rhydding and Ilkley. I decided to list all the stations on one route in a long list, on per line, with an `NA` at the end to indicate the end of one line and the beginning of another. The input file (part) looks like this:
+
+```{bash}
+head --lines=20 yorkshire.txt
+```
+
+In actuality, Bradford and Wakefield have two stations and Pontefract has three, but I treated each place as having only one station to simplify things. (The rail network around Wakefield Kirkgate is complicated, with one line passing under another without being connected.)
+
+To read this in, I treat it as a one-column .csv, since some of the stations have spaces inside their names:
+
+```{r}
+yorks=read_csv("yorkshire.txt")
+yorks %>% print(n=20)
+```
+
+Now, how to connect each station with the next one on the list? I realized that the `lag` function would do exactly this:
+
+```{r}
+yorks %>% mutate(station2=lag(station)) %>% 
+  print(n=20)
+```
+
+and now the rows of this data frame will be the edges of my graph. Separating the routes with `NA` was an accidentally-smart thing to do, since if I remove all the rows with `NA` in them, I will get only the genuine edges I want for my graph:
+
+```{r}
+yorks2 = yorks %>% 
+  mutate(station2=lag(station)) %>% 
+  filter(!is.na(station),!is.na(station2)) %>% 
+  print(n=20)
+```
+
+(something I discovered the other day: if you put a `print` on the end of a pipeline, it prints the result *even if you have saved it in a variable*.)
+
+`tidygraph` has a function for turning a data frame structured like this, with edges as rows, into an actual tidy graph:
+
+```{r}
+yorks_g <- as_tbl_graph(yorks2)
+yorks_g
+```
+
+The nodes and edges are shown separately, with the nodes numbered (those numbers are used in the edges).
+
+## Extracting the nodes and edges
+
+`tidygraph` uses the same pipeline ideas as the `tidyverse`, but extra care is required because a tidy graph object has both nodes and edges in it. An extra verb `activate` lets you specify which one you would like to be "primary" (but you can also access the other one). Piping the output of `activate` into `as_tibble` lets you save the nodes or edges as a data frame, separately:
+
+```{r}
+nodes = yorks_g %>% 
+  activate(nodes) %>% 
+  as_tibble() %>% 
+  mutate(node_number=row_number()) %>%
+  print(n=10)
+```
+
+```{r}
+edges = yorks_g %>% 
+  activate(edges) %>% 
+  as_tibble() %>% print(n=10)
+```
+
+I saved the node numbers as well as names into the nodes data frame. This lets me look up the *names* of the nodes referred to in the edges, to convince myself that I have something sensible:
+
+```{r}
+edges %>% 
+  left_join(nodes,by=c("from"="node_number")) %>% 
+  left_join(nodes,by=c("to"="node_number")) %>% 
+  print(n=20)
+```
+
+This is what I started with.
+
+## Drawing the graph
+
+Thomas Lin Pedersen also wrote the package `ggraph` which allows `ggplot`-style plotting of graphs. For our example, this was my ultimate aim: I wanted to see how well the connection information enabled us to reproduce the map above.
+
+Graphs can be plotted in many different ways. For this graph, I know there is a representation in two dimensions, since the stations are scattered across the 2D-space of West Yorkshire. In `ggraph`, this is controlled by the `layout` parameter of the `ggraph` command.  The Kamada-Kawai method tries to plot neighbouring nodes a constant distance apart, and chooses their locations as if they are connected by unit-length springs. I find this works well here. In addition, I want to draw the edges (as lines), draw the nodes (as points), and label the nodes by which station they are. These are accomplished by `geom_edge_link`, `geom_node_point` and `geom_node_text`. Additional notes: the `alpha=0.3` draws the edges partly transparent, so that the station names stand out; the use of `repel=T` "repels" the station names away from the points they represent so that you can see them (in the manner of `geom_text_repel`):
+
+```{r}
+ggraph(yorks_g,layout="kk")+
+  geom_edge_link(colour="blue",alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)
+```
+
+This seems to do a nice job of reproducing the topology in a clear fashion with no overlaps where there shouldn't be any. (I tried this using the separate stations, Westgate and Kirkgate, in Wakefield, and the display was a lot more confusing.) It doesn't get compass directions right (it seems to have west and east reversed), but we had no right to expect that it would. 
+
+Another plausible layout is the one called `lgl`. How does that work here? We leave everything else the same:
+
+```{r}
+ggraph(yorks_g,layout="lgl")+
+  geom_edge_link(colour="blue",alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)
+```
+
+This is much less pleasing, especially in the middle. Can I make it try more iterations than the default 150?
+
+```{r}
+ggraph(yorks_g,layout="lgl",maxiter=400)+
+  geom_edge_link(colour="blue",alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)
+```
+
+This is a lot better, but still has some unnecessary crossings.
+
+
+One more try: the GEM "force-directed" layout:
+
+```{r}
+ggraph(yorks_g,layout="gem")+
+  geom_edge_link(colour="blue",alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)
+```
+
+This is better, but I like the `kk` one the best.
