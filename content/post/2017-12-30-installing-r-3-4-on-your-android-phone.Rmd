@@ -123,6 +123,6 @@ apt-get -t jessie-backports install r-base-core
 
 only this time we have to say "get R from here", "here" meaning the new repository that we just added. 
 
-It seems to be necessary to install `r-base-core` first. This takes some time.
+It seems to be necessary to install `r-base-core` first. This takes some time, but it seems to do something.
 
 ## more coming later
