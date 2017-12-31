@@ -125,4 +125,6 @@ only this time we have to say "get R from here", "here" meaning the new reposito
 
 It seems to be necessary to install `r-base-core` first. This takes some time, but it seems to do something.
 
+You may feel inclined to make another cup of tea at this point.
+
 ## more coming later
