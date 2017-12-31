@@ -21,6 +21,16 @@
     </item>
     
     <item>
+      <title>Installing R 3.4 on your Android phone</title>
+      <link>/2017/12/30/installing-r-3-4-on-your-android-phone/</link>
+      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/30/installing-r-3-4-on-your-android-phone/</guid>
+      <description>Introduction David Selby, on his blog, explains how to get R up and running on your Android phone (and, by way of proof, wrote the blog post concerned on his phone). Unfortunately, however, he was only able to install R 3.1.1, which means that some of the latest tidyverse goodies are not available. Can we do better? It is possible. Maybe.
+ Installation on the Android phone We begin by installing two Android apps, which can both be found on Google Play.</description>
+    </item>
+    
+    <item>
       <title>Drawing maps in R with &#34;ggmap&#34; and &#34;OpenStreetMap&#34;</title>
       <link>/2017/12/24/drawing-maps-in-r-with-ggmap-and-openstreetmap/</link>
       <pubDate>Sun, 24 Dec 2017 00:00:00 +0000</pubDate>

@@ -1,0 +1,93 @@
+---
+title: Installing R 3.4 on your Android phone
+author: Ken
+date: '2017-12-30'
+slug: installing-r-3-4-on-your-android-phone
+categories:
+  - R
+tags:
+  - '#rstats'
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>David Selby, on his <a href="http://selbydavid.com/2017/12/29/r-android/">blog</a>, explains how to get R up and running on your Android phone (and, by way of proof, wrote the blog post concerned on his phone). Unfortunately, however, he was only able to install R 3.1.1, which means that some of the latest <code>tidyverse</code> goodies are not available. Can we do better? It is possible. Maybe.</p>
+</div>
+<div id="installation-on-the-android-phone" class="section level2">
+<h2>Installation on the Android phone</h2>
+<p>We begin by installing two Android apps, which can both be found on Google Play.</p>
+<p>First, a keyboard that will work nicely for programming called the Hacker’s Keyboard. When this is opened for the first time, you are invited to do two things: one, make it available as an input method (move the grey slider to the right, at which point it becomes coloured), and two, set the input method to be this keyboard. (This is easy to change back and forth, if you are otherwise a fan of SwiftKey as I am.)</p>
+<p>Second, Gnu Root Debian. This is a Linux operating system. R will be run from here, and anything else that will run under Linux will run here (at least in principle). Despite its name, it doesn’t need root access to your phone; the “root” refers to the Linux user that we will be running under. Install it from the store, and then tap Open, at which point it will do a considerable amount more installation involving copying files. When it is done, you’ll see something like this:</p>
+<div class="figure">
+<img src="/debian1.png" />
+
+</div>
+<p>The last line is a command prompt, at which you are invited to type something to make something happen. Usually on Linux systems the last character of the prompt is a <code>$</code>; when it is a <code>#</code> like this, it is a reminder that you are <code>root</code> or “superuser”, meaning that you can do anything to your Linux installation including destroying it completely. But we are going to be more careful.</p>
+<p>There is no keyboard here, but if you tap the screen, you will get your currently-running keyboard. The hacker’s keyboard works best in landscape mode (unless you have tiny fingers or a stylus), and looks like this:</p>
+<div class="figure">
+<img src="/debian2.png" />
+
+</div>
+<p>There isn’t much room above (about 5 lines of text), but at least this way you can use the keyboard most effectively.</p>
+<p>When you have a keyboard open, you can switch between them by pulling down from the top left, tapping on Change Keyboard, and selecting the one you want.</p>
+</div>
+<div id="more-setup" class="section level2">
+<h2>More setup</h2>
+<p>Linux programs come in so-called “packages”. There may have been updates since GNU Root Debian found its way to Google Play, which we need to check first. This is a two-step process. Run these two lines, waiting for each one to finish (and for you to get the prompt back) before you run the next:</p>
+<pre class="bash"><code>apt-get update
+apt-get upgrade</code></pre>
+<p>Pro tip: for the second one, press the up-arrow on the keyboard, which recalls the previous command, and edit it (using backspace to delete), rather than typing the whole thing again. On the second one, it will warn you that it needs to get a certain amount of stuff in files, and that it will need to take more disk space when it is done. Let it do that by typing <code>y</code>. (Uppercase/lowercase matters in general in Linux, but apparently not here.) This may take some time. David Selby and I recommend that you make a cup of tea at this point.</p>
+<p>Linux experts (of Debian or Ubuntu distributions) will be used to typing <code>sudo</code> here. That is because with Linux-on-a-computer you are typically doing your own work as a “user”, and you have to temporarily become “superuser” to install stuff (which is what the <code>sudo</code> does). Here, you are “superuser” already, so you leave off the <code>sudo</code>.</p>
+</div>
+<div id="installing-a-text-editor" class="section level2">
+<h2>Installing a text editor</h2>
+<p>We are going to need a text editor to do some file editing with. I am going to use <code>nano</code>, which is a very lightweight Linux text editor. If you prefer, you can use an Android editor. David Selby recommends <a href="https://play.google.com/store/apps/details?id=com.rhmsoft.edit">Quickedit</a>. But then you have to work out how files on your Android phone and on the Debian system within your Android phone match up. This confused me, so I prefer to work in one place.</p>
+<p>The way you install something on Debian Linux is to type <code>apt-get install &lt;whatever&gt;</code> at the command line. So, tap on the screen if you have no keyboard, and then type</p>
+<pre class="bash"><code>apt-get install nano</code></pre>
+<p>and then press the Enter on Hacker’s Keyboard.</p>
+<p>To test it, you can run it with, say, <code>nano x</code>. You’ll see a small amount of editing space above your keyboard, as here:</p>
+<div class="figure">
+<img src="/debian3.png" />
+
+</div>
+<p>Type some text into the editor window, and then use one of the hints at the bottom of the window to do something with it. The up-arrow means “control”, so for example control-O will save your text (into a file whose default name is the <code>x</code> on the <code>nano x</code> line). Control-X will close and save. You can decide not to save the file, or save it under a different name. After you’ve saved it, at the command line you can type</p>
+<pre class="bash"><code>cat x</code></pre>
+<p>and you should see the text that you saved into the file <code>x</code>.</p>
+</div>
+<div id="why-we-need-an-editor" class="section level2">
+<h2>Why we need an editor</h2>
+<p>If you follow <a href="http://selbydavid.com/2017/12/29/r-android/">David Selby’s instructions</a> to install R, unfortunately what you’ll get is R 3.1.1, not very close to the latest one. The places that Linux distributions keep stuff can have old versions of software, since they don’t get updated very often. Linux distributions also have things called “backports” which contain more recent versions of stuff, but you have to tell <code>apt-get</code> where to find them. The procedure is <a href="https://cran.r-project.org/bin/linux/debian/">described here</a>. The version of Debian Linux that we just installed on our phone is called <code>jessie</code>, so what we have to do is to edit the file called <code>/etc/apt/sources.list</code>, and tell our Debian where to look for an up-to-date version of R. This is done by opening the file in <code>nano</code>:</p>
+<pre class="bash"><code>nano /etc/apt/sources.list</code></pre>
+<p>and adding the line shown at the end of the file. Here’s how mine looks at the start:</p>
+<div class="figure">
+<img src="/debian4.png" />
+
+</div>
+<p>and here’s how it looks at the end, with the new line added at the bottom:</p>
+<div class="figure">
+<img src="/debian5.png" />
+
+</div>
+<p>Be careful to get the spaces and slashes in the right places. Save the file.</p>
+<p>Now run this line again. This makes sure that Debian now looks for the up-to-date version of R:</p>
+<pre class="bash"><code>apt-get update</code></pre>
+<p>The only problem is that this gives an error, a “GPG error” saying that “the public key is not available”. This means that <code>update</code> cannot verify that this site is what it says it is. Make a note of the key after <code>NO_PUBKEY</code> at the end of the error message. For me it was FCAE2A0E115C3D8A. (This is a hex number, in base 16, containing digits 0 through 9 and letters A-F.) So, to tell Debian that this is the right key, type at the command line</p>
+<pre class="bash"><code>apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FCAE2A0E115C3D8A
+apt-get update</code></pre>
+<p>That should be the same key as the one in the error message, which ought to be the same as that.</p>
+<p>If you get the first line right, you’ll get some lines back with <code>gpg:</code> on the front that tell you who the public key belongs to, and finishing by telling you that one key was processed and imported. Then the <code>apt-get update</code> will run without error, so you follow it with</p>
+<pre class="bash"><code>apt-get upgrade</code></pre>
+<p>just to be safe, and it tells you there’s nothing to upgrade.</p>
+</div>
+<div id="installing-r" class="section level2">
+<h2>Installing R</h2>
+<p>Now we almost follow David Selby’s instructions to install R:</p>
+<pre class="bash"><code>apt-get -t jessie-backports install r-base-core</code></pre>
+<p>only this time we have to say “get R from here”, “here” meaning the new repository that we just added.</p>
+<p>It seems to be necessary to install <code>r-base-core</code> first. This takes some time.</p>
+</div>
+<div id="more-coming-later" class="section level2">
+<h2>more coming later</h2>
+</div>
