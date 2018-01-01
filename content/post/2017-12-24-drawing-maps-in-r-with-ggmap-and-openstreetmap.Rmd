@@ -1,7 +1,7 @@
 ---
 title: Drawing maps in R with "ggmap" and "OpenStreetMap"
 author: Ken
-date: '2017-12-24'
+date: '2017-12-24' 
 slug: drawing-maps-in-r-with-ggmap-and-openstreetmap
 categories:
   - maps
@@ -65,7 +65,8 @@ autoplot(ontario2)
 I find that the `ggplot` display is less clear.
 
 The second of these shows that we have a different coordinate system now. According to 
-[this site](http://blog.fellstat.com/?cat=15), this is a "special Mercator projection", and the way to put longitude and latitude on the axes is this:
+[this site](http://blog.fellstat.com/?cat=15), this is a "special Mercator projection",
+`r tufte::margin_note("Of which more later.")` and the way to put longitude and latitude on the axes is this:
 
 ```{r}
 ontario3=openproj(ontario2)
@@ -78,7 +79,7 @@ But now the aspect ratio is messed up, since east-west is exaggerated. I think t
 cos(43*pi/180)
 ```
 
-`openproj` will accept a variety of projections according to the `proj4` standard [here](http://proj4.org/). I need the right one that will display longitude and latitude on a good scale, but I don't know which one to use. I welcome any feedback on that, in the comments below. Or tips on how to convert latitude and longitude into this scale, which would actually be better. 
+I figured out what to do about this, which you'll see below.
 
 ## Adding points to a map
 
@@ -122,7 +123,8 @@ via
 
 ### Adding the points to the map
 
-Starting with the `ggmap` map: we first use `ggmap` to plot the map itself, and then we add points and lines to it in the usual way. The only problem is that we would normally specify the data frame and default aesthetics on the `ggplot` command, and there isn't one, so we have to specify them on the how-to-plot lines. Also, we seem to need to repeat them, since they appear not to get inherited. (I think they only get inherited from a `ggplot`.)
+Starting with the `ggmap` map: we first use `ggmap` to plot the map itself, and then we add points and lines to it in the usual way. The only problem is that we would normally specify the data frame and default aesthetics on the `ggplot` command, and there isn't one, so we have to specify them on the how-to-plot lines. Also, we seem to need to repeat them, since they appear not to get inherited. 
+`r tufte::margin_note("I think they only get inherited from a ggplot.")`
 
 ```{r}
 ggmap(ontario) +
@@ -144,3 +146,42 @@ autoplot(ontario3) + geom_point(data=via,aes(x=lon,y=lat,colour=route)) +
 Once again, something to plot the map, and the usual `geom_point` etc to add points to the map.
 
 For labelling points on a `ggplot` I like `geom_text_repel` from package `ggrepel`. This labels points in such a way that they don't overplot each other. On the second (smaller) map, I made the label text smaller, by putting a `size` *outside* the `aes` (this is easy to forget).
+
+## Plotting points on an OpenStreetMap map with the proper aspect ratio
+
+I  mentioned above that the OpenStreetMap map with latitudes and longitudes is enlarged horizontally (because a latitude and longitude degree do not represent the same distance). I figure there are two approaches, of which we have seen the first:`r tufte::margin_note("This section added January 1, 2018.")`
+
+- plot the map with latitude and longitude coordinates and plot the points on that scale
+- plot the map with the original coordinates, and convert the points to that scale before plotting them.
+
+The second way preserves the aspect ratio of the map, but is a little fiddly otherwise. The function, in OpenStreetMap, is `projectMercator`. This takes a vector of latitudes and of longitudes, and returns a two-column `matrix` with columns called `x` and `y`. To add these to our plot, we have to re-constitute a data frame with the right things in it:
+
+```{r}
+mercator=projectMercator(via$lat,via$lon)
+mercator
+```
+
+If you compare this with the axis scales on `ontario2`, you'll see that these are the right kind of numbers. 
+
+
+Now we make a data frame with those points and the place names in it:`r tufte::margin_note("I can't help thinking that Via Mercator ought to be a street in Florence or somewhere.")`
+
+```{r}
+via_mercator = mercator %>% as.data.frame() %>% 
+  mutate(place=via$stations,
+         route=via$route)
+via_mercator
+```
+
+and then add *these* points to the map:
+
+```{r}
+autoplot(ontario2)+
+  geom_point(data=via_mercator,aes(x=x,y=y,colour=route))+
+  geom_line(data=via_mercator,aes(x=x,y=y,colour=route))+
+  geom_text_repel(data=via_mercator,aes(x=x,y=y,label=place,colour=route))+
+  scale_x_continuous(breaks=NULL)+
+  scale_y_continuous(breaks=NULL)
+```
+
+The axis scales are now more or less meaningless (unless you have experience with reading this scale), so I got rid of them (the last two lines of the code).

@@ -127,4 +127,6 @@ It seems to be necessary to install `r-base-core` first. This takes some time, b
 
 You may feel inclined to make another cup of tea at this point.
 
-## more coming later
+## conclusion
+
+This is as far as I got. I tried finding a `.deb` file that I could compile from source, but there isn't an Debian-ARM one that I could find. So the current limit is R-base-core, 3.3.1. But that, as my grandmother used to say, is better than a kick in the pants.

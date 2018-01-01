@@ -80,7 +80,7 @@
   
   
   &nbsp;<i class="fa fa-clock-o"></i>
-    &nbsp;8 min read
+    &nbsp;10 min read
   
   
   
@@ -101,12 +101,12 @@
 <p>I have long been interested in drawing maps, and when I discovered how to do it in R, I have tried to add it to my statistical repertoire, including drawing things on maps. There are two packages that can be used to obtain maps and draw on them, <code>ggmap</code> which is based on Google Maps, and <code>OpenStreetMap</code> which is based on Open Street Maps (surprisingly enough). They have overlapping capabilities, which we will explore here.</p>
 <p>First, our packages:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
-<pre><code>## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
-## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
-## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
-## ✔ readr   1.1.1     ✔ forcats 0.2.0</code></pre>
-<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.3.4          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.7.2          ✔ stringr 1.2.0     
+## ✔ readr   1.1.1          ✔ forcats 0.2.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(ggrepel)
@@ -141,14 +141,14 @@ library(OpenStreetMap)</code></pre>
 <pre class="r"><code>autoplot(ontario2)</code></pre>
 <p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>I find that the <code>ggplot</code> display is less clear.</p>
-<p>The second of these shows that we have a different coordinate system now. According to <a href="http://blog.fellstat.com/?cat=15">this site</a>, this is a “special Mercator projection”, and the way to put longitude and latitude on the axes is this:</p>
+<p>The second of these shows that we have a different coordinate system now. According to <a href="http://blog.fellstat.com/?cat=15">this site</a>, this is a “special Mercator projection”, <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Of which more later.</span> and the way to put longitude and latitude on the axes is this:</p>
 <pre class="r"><code>ontario3=openproj(ontario2)
 autoplot(ontario3)</code></pre>
 <p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <p>But now the aspect ratio is messed up, since east-west is exaggerated. I think this is because one degree is the same on this map whether it is longitude or latitude. One latitude degree is always 60 nautical miles, but one degree of longitude is only 60 nautical miles at the equator, and at this latitude it is smaller by a factor of</p>
 <pre class="r"><code>cos(43*pi/180)</code></pre>
 <pre><code>## [1] 0.7313537</code></pre>
-<p><code>openproj</code> will accept a variety of projections according to the <code>proj4</code> standard <a href="http://proj4.org/">here</a>. I need the right one that will display longitude and latitude on a good scale, but I don’t know which one to use. I welcome any feedback on that, in the comments below. Or tips on how to convert latitude and longitude into this scale, which would actually be better.</p>
+<p>I figured out what to do about this, which you’ll see below.</p>
 </div>
 <div id="adding-points-to-a-map" class="section level2">
 <h2>Adding points to a map</h2>
@@ -231,7 +231,7 @@ windsor</code></pre>
 </div>
 <div id="adding-the-points-to-the-map" class="section level3">
 <h3>Adding the points to the map</h3>
-<p>Starting with the <code>ggmap</code> map: we first use <code>ggmap</code> to plot the map itself, and then we add points and lines to it in the usual way. The only problem is that we would normally specify the data frame and default aesthetics on the <code>ggplot</code> command, and there isn’t one, so we have to specify them on the how-to-plot lines. Also, we seem to need to repeat them, since they appear not to get inherited. (I think they only get inherited from a <code>ggplot</code>.)</p>
+<p>Starting with the <code>ggmap</code> map: we first use <code>ggmap</code> to plot the map itself, and then we add points and lines to it in the usual way. The only problem is that we would normally specify the data frame and default aesthetics on the <code>ggplot</code> command, and there isn’t one, so we have to specify them on the how-to-plot lines. Also, we seem to need to repeat them, since they appear not to get inherited. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I think they only get inherited from a ggplot.</span></p>
 <pre class="r"><code>ggmap(ontario) +
   geom_point(data=via,aes(x=lon,y=lat,colour=route)) +
   geom_line(data=via,aes(x=lon,y=lat,colour=route)) +
@@ -249,6 +249,82 @@ windsor</code></pre>
 <p>Once again, something to plot the map, and the usual <code>geom_point</code> etc to add points to the map.</p>
 <p>For labelling points on a <code>ggplot</code> I like <code>geom_text_repel</code> from package <code>ggrepel</code>. This labels points in such a way that they don’t overplot each other. On the second (smaller) map, I made the label text smaller, by putting a <code>size</code> <em>outside</em> the <code>aes</code> (this is easy to forget).</p>
 </div>
+</div>
+<div id="plotting-points-on-an-openstreetmap-map-with-the-proper-aspect-ratio" class="section level2">
+<h2>Plotting points on an OpenStreetMap map with the proper aspect ratio</h2>
+<p>I mentioned above that the OpenStreetMap map with latitudes and longitudes is enlarged horizontally (because a latitude and longitude degree do not represent the same distance). I figure there are two approaches, of which we have seen the first:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This section added January 1, 2018.</span></p>
+<ul>
+<li>plot the map with latitude and longitude coordinates and plot the points on that scale</li>
+<li>plot the map with the original coordinates, and convert the points to that scale before plotting them.</li>
+</ul>
+<p>The second way preserves the aspect ratio of the map, but is a little fiddly otherwise. The function, in OpenStreetMap, is <code>projectMercator</code>. This takes a vector of latitudes and of longitudes, and returns a two-column <code>matrix</code> with columns called <code>x</code> and <code>y</code>. To add these to our plot, we have to re-constitute a data frame with the right things in it:</p>
+<pre class="r"><code>mercator=projectMercator(via$lat,via$lon)
+mercator</code></pre>
+<pre><code>##           x       y
+## 1  -8840582 5419150
+## 2  -8865730 5422309
+## 3  -8879547 5416579
+## 4  -8896246 5411455
+## 5  -8933352 5396081
+## 6  -8962466 5376943
+## 7  -9011282 5367969
+## 8  -9031689 5350116
+## 9  -9042821 5309444
+## 10 -9086155 5305140
+## 11 -9141168 5304377
+## 12 -9173179 5308724
+## 13 -8840582 5419150
+## 14 -8870262 5380736
+## 15 -8888820 5357764
+## 16 -8935210 5332299
+## 17 -8989015 5332297
+## 18 -9003857 5317056
+## 19 -9042821 5309444
+## 20 -9096637 5274010
+## 21 -9148786 5222932
+## 22 -9241359 5206037</code></pre>
+<p>If you compare this with the axis scales on <code>ontario2</code>, you’ll see that these are the right kind of numbers.</p>
+<p>Now we make a data frame with those points and the place names in it:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I can’t help thinking that Via Mercator ought to be a street in Florence or somewhere.</span></p>
+<pre class="r"><code>via_mercator = mercator %&gt;% as.data.frame() %&gt;% 
+  mutate(place=via$stations,
+         route=via$route)
+via_mercator</code></pre>
+<pre><code>##           x       y      place   route
+## 1  -8840582 5419150    Toronto  Sarnia
+## 2  -8865730 5422309     Malton  Sarnia
+## 3  -8879547 5416579   Brampton  Sarnia
+## 4  -8896246 5411455 Georgetown  Sarnia
+## 5  -8933352 5396081     Guelph  Sarnia
+## 6  -8962466 5376943  Kitchener  Sarnia
+## 7  -9011282 5367969  Stratford  Sarnia
+## 8  -9031689 5350116  St Mary&#39;s  Sarnia
+## 9  -9042821 5309444     London  Sarnia
+## 10 -9086155 5305140  Strathroy  Sarnia
+## 11 -9141168 5304377    Wyoming  Sarnia
+## 12 -9173179 5308724     Sarnia  Sarnia
+## 13 -8840582 5419150    Toronto Windsor
+## 14 -8870262 5380736   Oakville Windsor
+## 15 -8888820 5357764  Aldershot Windsor
+## 16 -8935210 5332299  Brantford Windsor
+## 17 -8989015 5332297  Woodstock Windsor
+## 18 -9003857 5317056  Ingersoll Windsor
+## 19 -9042821 5309444     London Windsor
+## 20 -9096637 5274010    Glencoe Windsor
+## 21 -9148786 5222932    Chatham Windsor
+## 22 -9241359 5206037    Windsor Windsor</code></pre>
+<p>and then add <em>these</em> points to the map:</p>
+<pre class="r"><code>autoplot(ontario2)+
+  geom_point(data=via_mercator,aes(x=x,y=y,colour=route))+
+  geom_line(data=via_mercator,aes(x=x,y=y,colour=route))+
+  geom_text_repel(data=via_mercator,aes(x=x,y=y,label=place,colour=route))+
+  scale_x_continuous(breaks=NULL)+
+  scale_y_continuous(breaks=NULL)</code></pre>
+<pre><code>## Scale for &#39;x&#39; is already present. Adding another scale for &#39;x&#39;, which
+## will replace the existing scale.</code></pre>
+<pre><code>## Scale for &#39;y&#39; is already present. Adding another scale for &#39;y&#39;, which
+## will replace the existing scale.</code></pre>
+<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>The axis scales are now more or less meaningless (unless you have experience with reading this scale), so I got rid of them (the last two lines of the code).</p>
 </div>
 </section>
 <section>
@@ -280,7 +356,7 @@ s.setAttribute('data-timestamp', +new Date());
 	<div class="copyright">
 	<p>
     
-      &copy; 2017
+      &copy; 2018
     .
     All rights reserved.
     
