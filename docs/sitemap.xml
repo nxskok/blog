@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/2018/01/20/displaying-grouped-bar-charts-in-ggplot/</loc>
+    <lastmod>2018-01-20T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</loc>
     <lastmod>2017-12-30T00:00:00+00:00</lastmod>
   </url>
@@ -252,7 +257,7 @@
   
   <url>
     <loc>/tags/#tidyverse/</loc>
-    <lastmod>2017-12-30T00:00:00+00:00</lastmod>
+    <lastmod>2018-01-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -293,7 +298,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2017-12-30T00:00:00+00:00</lastmod>
+    <lastmod>2018-01-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -311,13 +316,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2017-12-30T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/categories/r/</loc>
-    <lastmod>2017-12-30T00:00:00+00:00</lastmod>
+    <lastmod>2018-01-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -328,20 +327,26 @@
   </url>
   
   <url>
+    <loc>/categories/r/</loc>
+    <lastmod>2018-01-20T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/categories/r-trains/</loc>
     <lastmod>2017-12-30T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/categories/sports/</loc>
-    <lastmod>2017-06-08T00:00:00+00:00</lastmod>
+    <loc>/tags/sports/</loc>
+    <lastmod>2017-05-07T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/tags/sports/</loc>
-    <lastmod>2017-05-07T00:00:00+00:00</lastmod>
+    <loc>/categories/sports/</loc>
+    <lastmod>2017-06-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
