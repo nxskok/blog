@@ -1,0 +1,75 @@
+---
+title: Tidy simple effects in analysis of variance
+author: Ken
+date: '2018-01-30'
+slug: tidy-simple-effects-in-analysis-of-variance
+categories:
+  - R
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+## Introduction
+
+In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about "the effect of factor A", but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an **interaction**. Understanding interactions can be difficult. One way to do it is via "simple effects", where you look at the levels of one factor individually and assess the effect of the other factor.
+
+Let's think about an example. In an experiment, monkeys were asked to solve "oddity problems", in which they were presented with sets of three objects, one of which was different from the others. If they correctly identified the odd object, they were rewarded with food. Some of the monkeys had been food-deprived before the experiment; they were believed to be "highly motivated" to find the odd object (and get fed). In addition, each monkey received a drug, one of X, Y and a placebo (labelled "control"). Four monkeys were in each combination of motivation (high or low) and the three drugs. The response variable was a `score` based on the number of problems a monkey got wrong, so that a lower score is better. Our question is what effects the drugs have on the score, and is that effect different depending how motivated a monkey is?
+
+## Packages
+
+We need these two. `broom` will be used later to produce some easy-to-handle output:
+
+```{r}
+library(tidyverse)
+library(broom)
+```
+
+## Exploratory analysis
+
+Let's read in and check the data:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/oddity.csv"
+monkeys=read_csv(my_url)
+monkeys
+```
+
+24 monkeys, for each a motivation level, a drug and a score, in tidy format.
+
+An appropriate visual is a grouped boxplot. One of the explanatory variables is the `x` of the boxplot, and the other one is entered as `fill`, thus:
+
+```{r}
+ggplot(monkeys,aes(y=score,x=motivation,fill=drug))+geom_boxplot()
+```
+
+The `fill` fills the boxes with the different colours; using `colour` instead outlines the boxes in different colours. 
+
+The story to get from this is that for the high-motivation monkeys, there isn't much difference between the drugs, but for low-motivation monkeys, there is a big difference; the score is a lot better (lower) for the placebo than for either of the genuine drugs, and drug Y is worse than X. This suggests that the effect of drug depends on how motivated the monkey is: an interaction.
+
+Another way of visualizing this is to use an "interaction plot": a plot of mean response by group combination, as below. First we find means by group combination, and then we plot them:
+
+```{r}
+monkeys %>% 
+  group_by(motivation,drug) %>% 
+  summarize(s_mean=mean(score)) %>% 
+  ggplot(aes(y=s_mean,x=motivation,colour=drug,group=drug))+
+    geom_point()+geom_line()
+```
+
+This is like a stripped-down version of the grouped boxplot. The idea is that you look at the lines, and ask whether they are (at least approximately) parallel. Here it seems that they are not, which would imply an interaction. (The interaction plot doesn't tell you anything about variability, so it is possible to be deceived).
+
+## The analysis of variance
+
+With the previous pictures in mind, we should run an analysis of variance with interaction, expecting it to be significant:
+
+```{r}
+score.1=aov(score~motivation*drug,data=monkeys)
+summary(score.1)
+```
+
+At $\alpha=0.05$, the interaction is indeed significant. We need to understand what kind of interaction we have , and not go to interpreting the main effects `motivation` and `drug`, because those do not have a consistent effect that we will be able to understand.
+
+## Simple effects
+
+One way of understanding a significant interaction is to condition on the level of one variable and look for the effect of the other. Here we will condition on motivation, and look separately for an 

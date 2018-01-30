@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 20 Jan 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 30 Jan 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tidy simple effects in analysis of variance</title>
+      <link>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</link>
+      <pubDate>Tue, 30 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</guid>
+      <description>Introduction In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an interaction.</description>
+    </item>
     
     <item>
       <title>Displaying grouped bar charts in ggplot</title>
@@ -412,6 +421,16 @@ This is the side of the S wing that nobody sees; it has the concrete brutalism o
       
       <guid>/1/01/01/</guid>
       <description>Only T20I (D/N), West Indies tour of England at Chester-le-Street, Sep 16 2017 | Match Statistics | ESPNCricinfo { &#34;@context&#34;: &#34;http://schema.org&#34;, &#34;@type&#34;: &#34;WebSite&#34;, &#34;name&#34;: &#34;ESPNcricinfo&#34;, &#34;url&#34;: &#34;http://www.espncricinfo.com/&#34; }  Only T20I (D/N), West Indies tour of England at Chester-le-Street, Sep 16 2017 | Match Summary | ESPNCricinfo    -- ;(function(){ function rc(a){for(var b=a+&#34;=&#34;,c=document.cookie.split(&#34;;&#34;),d=0;d0&amp;&amp;(h-=1)}),c.on(&#34;internal-error&#34;,function(t){i(&#34;ierr&#34;,[t,(new Date).getTime(),!0])})},{}],3:[function(t,e,n){t(&#34;loader&#34;).features.ins=!0},{}],4:[function(t,e,n){function r(){N++,S=y.hash,this[u]=Date.now()}function o(){N--,y.hash!==S&amp;&amp;i(0,!0);var t=Date.now();this[l]=~~this[l]+t-this[u],this[h]=t}function i(t,e){x.emit(&#34;newURL&#34;,[&#34;&#34;+y,e])}function a(t,e){t.on(e,function(){this[e]=Date.now()})}var c=&#34;-start&#34;,s=&#34;-end&#34;,f=&#34;-body&#34;,u=&#34;fn&#34;+c,h=&#34;fn&#34;+s,p=&#34;cb&#34;+c,d=&#34;cb&#34;+s,l=&#34;jsTime&#34;,m=&#34;fetch&#34;,v=&#34;addEventListener&#34;,w=window,y=w.location;if(w[v]){var g=t(9),b=t(10),x=t(8),E=t(6),T=t(12),O=t(7),P=t(13),R=t(&#34;ee&#34;),D=R.get(&#34;tracer&#34;);t(14),t(&#34;loader&#34;).features.spa=!0;var S,M=w[v],N=0;R.on(u,r),R.on(p,r),R.on(h,o),R.on(d,o),R.buffer([u,h,&#34;xhr-done&#34;,&#34;xhr-resolved&#34;]),E.buffer([u]),T.buffer([&#34;setTimeout&#34;+s,&#34;clearTimeout&#34;+c,u]),P.buffer([u,&#34;new-xhr&#34;,&#34;open-xhr&#34;+c]),O.buffer([m+c,m+&#34;-done&#34;,m+f+c,m+f+s]),x.buffer([&#34;newURL&#34;]),g.buffer([u]),b.buffer([&#34;propagate&#34;,p,d,&#34;executor-err&#34;,&#34;resolve&#34;+c]),D.buffer([u,&#34;no-&#34;+u]),a(P,&#34;open-xhr&#34;+c),a(R,&#34;xhr-resolved&#34;),a(R,&#34;xhr-done&#34;),a(O,m+c),a(O,m+&#34;-done&#34;),x.on(&#34;pushState-end&#34;,i),x.on(&#34;replaceState-end&#34;,i),M(&#34;hashchange&#34;,i,!0),M(&#34;load&#34;,i,!0),M(&#34;popstate&#34;,function(){i(0,N1)},!0)}},{}],5:[function(t,e,n){function r(t){}if(window.performance&amp;&amp;window.performance.timing&amp;&amp;window.performance.getEntriesByType){var o=t(&#34;ee&#34;),i=t(&#34;handle&#34;),a=t(12),c=t(11),s=&#34;learResourceTimings&#34;,f=&#34;addEventListener&#34;,u=&#34;resourcetimingbufferfull&#34;,h=&#34;bstResource&#34;,p=&#34;resource&#34;,d=&#34;-start&#34;,l=&#34;-end&#34;,m=&#34;fn&#34;+d,v=&#34;fn&#34;+l,w=&#34;bstTimer&#34;,y=&#34;pushState&#34;;t(&#34;loader&#34;).features.stn=!0,t(8);var g=NREUM.o.EV;o.on(m,function(t,e){var n=t[0];n instanceof g&amp;&amp;(this.</description>
+    </item>
+    
+    <item>
+      <title>Toronto subway connections</title>
+      <link>/1/01/01/toronto-subway-connections/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/1/01/01/toronto-subway-connections/</guid>
+      <description>Introduction Toronto’s subway network consists of four lines, as shown here. The shape of the network is somewhat iconic, with one line going across, and one down and up in a U-shape.
+Let’s suppose that all I have is a list of the stations on each line. How could I represent the structure of the network, how could I draw it, and how would my image match up to reality? Let’s find out.</description>
     </item>
     
   </channel>

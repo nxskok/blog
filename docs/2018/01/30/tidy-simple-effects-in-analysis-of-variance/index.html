@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>Ken&#39;s Blog - Tidy simple effects in analysis of variance</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Ken&#39;s Blog">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/01/30/tidy-simple-effects-in-analysis-of-variance/">Tidy simple effects in analysis of variance</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jan 30, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;4 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an <strong>interaction</strong>. Understanding interactions can be difficult. One way to do it is via “simple effects”, where you look at the levels of one factor individually and assess the effect of the other factor.</p>
+<p>Let’s think about an example. In an experiment, monkeys were asked to solve “oddity problems”, in which they were presented with sets of three objects, one of which was different from the others. If they correctly identified the odd object, they were rewarded with food. Some of the monkeys had been food-deprived before the experiment; they were believed to be “highly motivated” to find the odd object (and get fed). In addition, each monkey received a drug, one of X, Y and a placebo (labelled “control”). Four monkeys were in each combination of motivation (high or low) and the three drugs. The response variable was a <code>score</code> based on the number of problems a monkey got wrong, so that a lower score is better. Our question is what effects the drugs have on the score, and is that effect different depending how motivated a monkey is?</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<p>We need these two. <code>broom</code> will be used later to produce some easy-to-handle output:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.7.2          ✔ stringr 1.2.0     
+## ✔ readr   1.1.1          ✔ forcats 0.2.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(broom)</code></pre>
+</div>
+<div id="exploratory-analysis" class="section level2">
+<h2>Exploratory analysis</h2>
+<p>Let’s read in and check the data:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/d29/oddity.csv&quot;
+monkeys=read_csv(my_url)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   motivation = col_character(),
+##   drug = col_character(),
+##   score = col_integer()
+## )</code></pre>
+<pre class="r"><code>monkeys</code></pre>
+<pre><code>## # A tibble: 24 x 3
+##    motivation drug    score
+##    &lt;chr&gt;      &lt;chr&gt;   &lt;int&gt;
+##  1 low        control     1
+##  2 low        control     4
+##  3 low        control     0
+##  4 low        control     7
+##  5 low        X          13
+##  6 low        X           5
+##  7 low        X           7
+##  8 low        X          15
+##  9 low        Y           9
+## 10 low        Y          16
+## # ... with 14 more rows</code></pre>
+<p>24 monkeys, for each a motivation level, a drug and a score, in tidy format.</p>
+<p>An appropriate visual is a grouped boxplot. One of the explanatory variables is the <code>x</code> of the boxplot, and the other one is entered as <code>fill</code>, thus:</p>
+<pre class="r"><code>ggplot(monkeys,aes(y=score,x=motivation,fill=drug))+geom_boxplot()</code></pre>
+<p><img src="../../../../post/2018-01-30-tidy-simple-effects-in-analysis-of-variance_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>The <code>fill</code> fills the boxes with the different colours; using <code>colour</code> instead outlines the boxes in different colours.</p>
+<p>The story to get from this is that for the high-motivation monkeys, there isn’t much difference between the drugs, but for low-motivation monkeys, there is a big difference; the score is a lot better (lower) for the placebo than for either of the genuine drugs, and drug Y is worse than X. This suggests that the effect of drug depends on how motivated the monkey is: an interaction.</p>
+<p>Another way of visualizing this is to use an “interaction plot”: a plot of mean response by group combination, as below. First we find means by group combination, and then we plot them:</p>
+<pre class="r"><code>monkeys %&gt;% 
+  group_by(motivation,drug) %&gt;% 
+  summarize(s_mean=mean(score)) %&gt;% 
+  ggplot(aes(y=s_mean,x=motivation,colour=drug,group=drug))+
+    geom_point()+geom_line()</code></pre>
+<p><img src="../../../../post/2018-01-30-tidy-simple-effects-in-analysis-of-variance_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>This is like a stripped-down version of the grouped boxplot. The idea is that you look at the lines, and ask whether they are (at least approximately) parallel. Here it seems that they are not, which would imply an interaction. (The interaction plot doesn’t tell you anything about variability, so it is possible to be deceived).</p>
+</div>
+<div id="the-analysis-of-variance" class="section level2">
+<h2>The analysis of variance</h2>
+<p>With the previous pictures in mind, we should run an analysis of variance with interaction, expecting it to be significant:</p>
+<pre class="r"><code>score.1=aov(score~motivation*drug,data=monkeys)
+summary(score.1)</code></pre>
+<pre><code>##                 Df Sum Sq Mean Sq F value Pr(&gt;F)  
+## motivation       1     24   24.00   1.309 0.2675  
+## drug             2    112   56.00   3.055 0.0721 .
+## motivation:drug  2    144   72.00   3.927 0.0384 *
+## Residuals       18    330   18.33                 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>At <span class="math inline">\(\alpha=0.05\)</span>, the interaction is indeed significant. We need to understand what kind of interaction we have , and not go to interpreting the main effects <code>motivation</code> and <code>drug</code>, because those do not have a consistent effect that we will be able to understand.</p>
+</div>
+<div id="simple-effects" class="section level2">
+<h2>Simple effects</h2>
+<p>One way of understanding a significant interaction is to condition on the level of one variable and look for the effect of the other. Here we will condition on motivation, and look separately for an</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2018
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

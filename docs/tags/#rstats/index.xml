@@ -6,10 +6,19 @@
     <description>Recent content in #Rstats on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 30 Dec 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 30 Jan 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/#rstats/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tidy simple effects in analysis of variance</title>
+      <link>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</link>
+      <pubDate>Tue, 30 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</guid>
+      <description>Introduction In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an interaction.</description>
+    </item>
     
     <item>
       <title>Drawing a network with &#34;ggraph&#34; and &#34;tidygraph&#34;</title>
