@@ -14,7 +14,7 @@ tags:
 
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an <strong>interaction</strong>. Understanding interactions can be difficult. One way to do it is via “simple effects”, where you look at the levels of one factor individually and assess the effect of the other factor.</p>
+<p>In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an <strong>interaction</strong>. Understanding interactions can be difficult. One way to do it is via “simple effects”, where you look at the levels of one factor individually and assess the effect of the other factor at each level of the first.</p>
 <p>Let’s think about an example. In an experiment, monkeys were asked to solve “oddity problems”, in which they were presented with sets of three objects, one of which was different from the others. If they correctly identified the odd object, they were rewarded with food. Some of the monkeys had been food-deprived before the experiment; they were believed to be “highly motivated” to find the odd object (and get fed). In addition, each monkey received a drug, one of X, Y and a placebo (labelled “control”). Four monkeys were in each combination of motivation (high or low) and the three drugs. The response variable was a <code>score</code> based on the number of problems a monkey got wrong, so that a lower score is better. Our question is what effects the drugs have on the score, and is that effect different depending how motivated a monkey is?</p>
 </div>
 <div id="packages" class="section level2">
@@ -70,7 +70,7 @@ monkeys=read_csv(my_url)</code></pre>
   ggplot(aes(y=s_mean,x=motivation,colour=drug,group=drug))+
     geom_point()+geom_line()</code></pre>
 <p><img src="/post/2018-01-30-tidy-simple-effects-in-analysis-of-variance_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>This is like a stripped-down version of the grouped boxplot. The idea is that you look at the lines, and ask whether they are (at least approximately) parallel. Here it seems that they are not, which would imply an interaction. (The interaction plot doesn’t tell you anything about variability, so it is possible to be deceived).</p>
+<p>This is like a stripped-down version of the grouped boxplot. The idea is that you look at the lines, and ask whether they are (at least approximately) parallel. Here it seems that they are not, which would imply an interaction. (The interaction plot shows means, but doesn’t tell you anything about variability, so it is possible to be deceived).</p>
 </div>
 <div id="the-analysis-of-variance" class="section level2">
 <h2>The analysis of variance</h2>
@@ -88,5 +88,129 @@ summary(score.1)</code></pre>
 </div>
 <div id="simple-effects" class="section level2">
 <h2>Simple effects</h2>
-<p>One way of understanding a significant interaction is to condition on the level of one variable and look for the effect of the other. Here we will condition on motivation, and look separately for an</p>
+<p>One way of understanding a significant interaction is to condition on the level of one variable and look for the effect of the other. Here we will condition on motivation, and look separately for an effect of drug. (The conditioning that makes sense will depend on the application.)</p>
+<p>The way to assess the simple effects is to pull out just the data for just the motivation level you’re looking at (say <code>low</code>), and then do a one-way ANOVA of score on drug for just those observations. Then you repeat for the other motivation level. The obvious way to do this is something like</p>
+<pre class="r"><code>monkeys %&gt;% filter(motivation==&quot;low&quot;) %&gt;% 
+  aov(score~drug,data=.) %&gt;% 
+  summary()</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)  
+## drug         2    248     124    7.75  0.011 *
+## Residuals    9    144      16                 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>and then repeat for the other motivation level. But there is a lot of repetitiveness here. Is it possible to automate the implied loop over motivation levels?</p>
+</div>
+<div id="simple-effects-the-tidy-way" class="section level2">
+<h2>Simple effects, the tidy way</h2>
+<p>There is a way to do both simple-effects ANOVAs at once. It requires <code>map</code>, list-columns and a couple of helper functions. Let’s take it a step at a time:</p>
+<pre class="r"><code>monkeys %&gt;% 
+  nest(-motivation)</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   motivation data             
+##   &lt;chr&gt;      &lt;list&gt;           
+## 1 low        &lt;tibble [12 × 2]&gt;
+## 2 high       &lt;tibble [12 × 2]&gt;</code></pre>
+<p>This condenses the data frame into two parts: one is the data for the low-motivation monkeys, and one for the high. The thing in the <code>data</code> column is the entire rest of the data (for each level of motivation), so each nested data-frame-within-a-data-frame contains a score column and a drug column, but not a <code>motivation</code> column (since we excluded that from the <code>nest</code>: “everything but <code>motivation</code>”). So for each of <em>these</em> data frames, we need to run a one-way ANOVA of score on drug, which will test for the presence of simple effects of drug.</p>
+<p>To do that, I like to write a helper function. Here that will do the ANOVA of score on drug for any input data frame that happens to have columns by those names:</p>
+<pre class="r"><code>anova_pval=function(x) {
+  x.1=aov(score~drug,data=x)
+  summary(x.1)
+}
+anova_pval(monkeys)</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## drug         2    112   56.00   2.361  0.119
+## Residuals   21    498   23.71</code></pre>
+<p>This appears to be correct, but it’s not the most helpful output, because we want the P-value and the <code>summary</code> output doesn’t provide an easy way to get at that. This is where <code>broom</code> comes in: it provides the <code>glance</code> function to give a one-line summary of a model, and a <code>tidy</code> function to give “tidy” output of a model, in both cases the output being a data frame, so it’s easy to do other things with.</p>
+<p>In this case, we want just the P-value, so <code>glance</code> seems like the thing:</p>
+<pre class="r"><code>anova_pval=function(x) {
+  x.1=aov(score~drug,data=x)
+  glance(x.1)
+}
+anova_pval(monkeys)</code></pre>
+<pre><code>##   r.squared adj.r.squared    sigma statistic   p.value df    logLik
+## 1 0.1836066     0.1058548 4.869732  2.361446 0.1188351  3 -70.44508
+##        AIC      BIC deviance df.residual
+## 1 148.8902 153.6024      498          21</code></pre>
+<p>The thing we want is <code>p.value</code>, so:</p>
+<pre class="r"><code>anova_pval=function(x) {
+  x.1=aov(score~drug,data=x)
+  glance(x.1)$p.value
+}
+anova_pval(monkeys)</code></pre>
+<pre><code>## [1] 0.1188351</code></pre>
+<p>That’s what we want.</p>
+<p>Now, to do that for each motivation level, we calculate a new column <code>pval</code> that calculates the P-value for each of our nested data frames, using <code>map</code>. This function returns a decimal number, so <code>map_dbl</code> is the thing. Adding that to the end of our pipeline, recognizing that the data frames we want P-values for are the ones hidden in the <code>data</code> column (“for each data frame in <code>data</code>, run <code>anova_pval</code> on it”):</p>
+<pre class="r"><code>monkeys %&gt;% 
+  nest(-motivation) %&gt;% 
+  mutate(pval=map_dbl(data,anova_pval))</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   motivation data                pval
+##   &lt;chr&gt;      &lt;list&gt;             &lt;dbl&gt;
+## 1 low        &lt;tibble [12 × 2]&gt; 0.0110
+## 2 high       &lt;tibble [12 × 2]&gt; 0.827</code></pre>
+<p>And there we have the two simple-effects ANOVAs. For the low-motivation monkeys, there is a significant difference in scores between the drugs, and for the high-motivation monkeys, there is not.</p>
+</div>
+<div id="tidy-simple-effects-tukey" class="section level2">
+<h2>Tidy simple-effects Tukey</h2>
+<p>For the high-motivation monkeys, that’s the end of the story: there are no differences in mean score among the different drugs. But for the low-motivation monkeys, there is more to say, because we don’t know which drugs differ from which.</p>
+<p>A modification of what we did for the two ANOVA P-values will also get the two Tukey Honestly Significant Difference tables. We don’t really need the one for high-motivation monkeys, but I wanted to illustrate the procedure, so we’ll see what it produces.</p>
+<p>The first thing is a helper function to get the (tidy) Tukey output for a data frame <code>x</code> that happens to have a <code>score</code> and <code>drug</code> column in it:</p>
+<pre class="r"><code>tukey_table=function(x) {
+  x.1=aov(score~drug,data=x)
+  TukeyHSD(x.1)
+}
+tukey_table(monkeys)</code></pre>
+<pre><code>##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = score ~ drug, data = x)
+## 
+## $drug
+##           diff      lwr      upr     p adj
+## X-control    4 -2.13725 10.13725 0.2504184
+## Y-control    5 -1.13725 11.13725 0.1242236
+## Y-X          1 -5.13725  7.13725 0.9116034</code></pre>
+<p>That is almost it, but not quite; what we want is the table at the bottom. It looks as if <code>tidy</code> should produce that:</p>
+<pre class="r"><code>tukey_table=function(x) {
+  x.1=aov(score~drug,data=x)
+  tidy(TukeyHSD(x.1))
+}
+tukey_table(monkeys)</code></pre>
+<pre><code>##   term comparison estimate conf.low conf.high adj.p.value
+## 1 drug  X-control        4 -2.13725  10.13725   0.2504184
+## 2 drug  Y-control        5 -1.13725  11.13725   0.1242236
+## 3 drug        Y-X        1 -5.13725   7.13725   0.9116034</code></pre>
+<p>That’s exactly what we need, with the column <code>adj.p.value</code> containing the Tukey-adjusted P-values for each pair of means. So now we put this into our pipeline in place of <code>anova_pval</code>, using <code>map</code> instead of <code>map_dbl</code> because <code>tukey_table</code> returns a data frame rather than a number:</p>
+<pre class="r"><code>monkeys %&gt;% 
+  nest(-motivation) %&gt;% 
+  mutate(tukey=map(data,tukey_table))</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   motivation data              tukey               
+##   &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;              
+## 1 low        &lt;tibble [12 × 2]&gt; &lt;data.frame [3 × 6]&gt;
+## 2 high       &lt;tibble [12 × 2]&gt; &lt;data.frame [3 × 6]&gt;</code></pre>
+<p>The column <code>tukey</code> contains the two Tukey tables, but unfortunately we can’t see them, because they are wrapped up in a list-column. The way to “explode out” a list-column so that you can see it is to <code>unnest</code> it, which lends the pipeline a pleasing symmetry:</p>
+<pre class="r"><code>monkeys %&gt;% 
+  nest(-motivation) %&gt;% 
+  mutate(tukey=map(data,tukey_table)) %&gt;% 
+  unnest(tukey)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+##   motivation term  comparison estimate conf.low conf.high adj.p.value
+##   &lt;chr&gt;      &lt;fct&gt; &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;       &lt;dbl&gt;
+## 1 low        drug  X-control      7.00  - 0.897     14.9      0.0818 
+## 2 low        drug  Y-control     11.0     3.10      18.9      0.00927
+## 3 low        drug  Y-X            4.00  - 3.90      11.9      0.374  
+## 4 high       drug  X-control      1.00  - 7.98       9.98     0.948  
+## 5 high       drug  Y-control    - 1.00  - 9.98       7.98     0.948  
+## 6 high       drug  Y-X          - 2.00  -11.0        6.98     0.812</code></pre>
+<p>There are three pairs of means to compare for each <code>motivation</code> level, so that the motivations <code>low</code> and <code>high</code> are repeated three times each.</p>
+<p>The three P-values for high motivation are all above 0.8, which is confirming that there were no significant differences among the drugs for the high-motivation monkeys (this is what we found before). There <em>were</em> differences in drugs for the low-motivation monkeys; this Tukey tells us that this is because drug Y and control showed a significant difference in score (with drug Y producing a higher score on average), but neither of the differences involving drug X did.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>The <code>nest-mutate-unnest</code> combination is a powerful <code>tidyverse</code> way to repeat an analysis on subsets of a data set without implicitly or explicitly writing a loop. Simple effects in analysis of variance provides a nice example of this, where, by writing helper functions, we are able to get the P-values and the Tukey multiple-comparison tables for each of the simple analyses.</p>
+</div>
+<div id="thanks" class="section level2">
+<h2>Thanks</h2>
+<p>to Julia Silge, <span class="citation">@juliasilge</span> (see for example <a href="https://twitter.com/juliasilge/status/845324411993501699">this tweet</a>) for planting the idea of <code>tidy</code> in my head in this context (I hadn’t realized that <code>tidy(quantile)</code> works, which is where it all started: <a href="https://stackoverflow.com/questions/30488389/%20%C2%B7%20using-dplyr-window-functions-to-calculate-percentiles.">see this Stack Overflow answer</a>), and for pushing my thinking in this direction generally. I had been grappling with <code>split</code>, which is a much uglier way of solving this kind of problem (in my humble opinion).</p>
 </div>
