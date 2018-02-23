@@ -50,7 +50,7 @@ Now I can use `map` from `purrr` to generate the random samples and store them i
 d = d %>% mutate(randoms=map(lambda,random_poisson,1000))
 ```
 
-This says, in words, "for each value in the `lambda` column, run the function `random_poisson` with that `lambda` value as its first input and the fixed value 100 as its second, storing the results in `randoms`". 
+This says, in words, "for each value in the `lambda` column, run the function `random_poisson` with that `lambda` value as its first input and the fixed value 1000 as its second, storing the results in `randoms`". 
 
 There is another way to do this, effectively defining the function in the `map`, but I always forget how to code it, so I find it easier to write a helper function first, and use *that* as the second thing in `map`.
 

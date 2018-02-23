@@ -51,7 +51,7 @@ d</code></pre>
 }</code></pre>
 <p>Now I can use <code>map</code> from <code>purrr</code> to generate the random samples and store them in the data frame, which goes this way. (If you are not used to this kind of thing, take a deep breath before you move on.)</p>
 <pre class="r"><code>d = d %&gt;% mutate(randoms=map(lambda,random_poisson,1000))</code></pre>
-<p>This says, in words, “for each value in the <code>lambda</code> column, run the function <code>random_poisson</code> with that <code>lambda</code> value as its first input and the fixed value 100 as its second, storing the results in <code>randoms</code>”.</p>
+<p>This says, in words, “for each value in the <code>lambda</code> column, run the function <code>random_poisson</code> with that <code>lambda</code> value as its first input and the fixed value 1000 as its second, storing the results in <code>randoms</code>”.</p>
 <p>There is another way to do this, effectively defining the function in the <code>map</code>, but I always forget how to code it, so I find it easier to write a helper function first, and use <em>that</em> as the second thing in <code>map</code>.</p>
 <p>How can you store a vector of 1000 values in one cell of a data frame, you ask? Well, here is your answer:</p>
 <pre class="r"><code>d</code></pre>
