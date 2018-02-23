@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>Ken&#39;s Blog - Making a lot of plots all at once, the tidyverse way</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Ken&#39;s Blog">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/02/23/making-a-lot-of-plots-all-at-once-the-tidyverse-way/">Making a lot of plots all at once, the tidyverse way</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Feb 23, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;7 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I was thinking the other day about how you might come up with a bunch of separate-but-related plots, without plotting them one by one, for example to show a class.</p>
+<p>By way of example, suppose we want to plot a number of Poisson distributions with different means, so that we can compare their shapes. The textbook says that a Poisson with a large mean is “approximately normal”, but that is just words until you see it on a picture. The advantage of the Poisson distribution, for expository purposes, is that it only has one parameter (which is both its mean and its variance).</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<p>The tidyverse, plus a random number seed (for reproducibility):</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.7.2          ✔ stringr 1.2.0     
+## ✔ readr   1.1.1          ✔ forcats 0.2.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>set.seed(457299)</code></pre>
+</div>
+<div id="generating-some-random-data" class="section level2">
+<h2>Generating some random data</h2>
+<p>Let’s make a data frame with the means we want to use. The traditional name for a Poisson mean is <code>lambda</code>:</p>
+<pre class="r"><code>d=tibble(lambda=c(0.3,1,2,5,10))
+d</code></pre>
+<pre><code>## # A tibble: 5 x 1
+##   lambda
+##    &lt;dbl&gt;
+## 1  0.300
+## 2  1.00 
+## 3  2.00 
+## 4  5.00 
+## 5 10.0</code></pre>
+<p>I’m going to use <code>rpois</code> to generate 1000 random Poisson observations from distributions with each of those means. <code>rpois</code> takes two arguments, the number of values to generate and the mean in that order, but this is backwards for us because we want (for what we are about to do) to have the mean as a “variable” first argument and the number of values as a “fixed” second one. So I write a little helper function to do this for me:</p>
+<pre class="r"><code>random_poisson=function(lambda,n) {
+  rpois(n,lambda)
+}</code></pre>
+<p>Now I can use <code>map</code> from <code>purrr</code> to generate the random samples and store them in the data frame, which goes this way. (If you are not used to this kind of thing, take a deep breath before you move on.)</p>
+<pre class="r"><code>d = d %&gt;% mutate(randoms=map(lambda,random_poisson,1000))</code></pre>
+<p>This says, in words, “for each value in the <code>lambda</code> column, run the function <code>random_poisson</code> with that <code>lambda</code> value as its first input and the fixed value 100 as its second, storing the results in <code>randoms</code>”.</p>
+<p>There is another way to do this, effectively defining the function in the <code>map</code>, but I always forget how to code it, so I find it easier to write a helper function first, and use <em>that</em> as the second thing in <code>map</code>.</p>
+<p>How can you store a vector of 1000 values in one cell of a data frame, you ask? Well, here is your answer:</p>
+<pre class="r"><code>d</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   lambda randoms      
+##    &lt;dbl&gt; &lt;list&gt;       
+## 1  0.300 &lt;int [1,000]&gt;
+## 2  1.00  &lt;int [1,000]&gt;
+## 3  2.00  &lt;int [1,000]&gt;
+## 4  5.00  &lt;int [1,000]&gt;
+## 5 10.0   &lt;int [1,000]&gt;</code></pre>
+<p>That thing <code>randoms</code> is a so-called <strong>list-column</strong>. In a list-column, each entry can be any kind of thing that you can save in an R variable, in this case a vector of 100 integers. Except that you can’t see the actual values yet.</p>
+<p>To see them, you <code>unnest</code> them:</p>
+<pre class="r"><code>d %&gt;% unnest(randoms)</code></pre>
+<pre><code>## # A tibble: 5,000 x 2
+##    lambda randoms
+##     &lt;dbl&gt;   &lt;int&gt;
+##  1  0.300       1
+##  2  0.300       0
+##  3  0.300       0
+##  4  0.300       0
+##  5  0.300       0
+##  6  0.300       1
+##  7  0.300       0
+##  8  0.300       0
+##  9  0.300       0
+## 10  0.300       1
+## # ... with 4,990 more rows</code></pre>
+<p>This “explodes” all the <span class="math inline">\(5 \times 1000\)</span> values out so that you see them one by one, with the <code>lambda</code> values repeated as necessary, so that you know which Poisson mean each random value goes with.</p>
+</div>
+<div id="making-a-plot-take-one" class="section level2">
+<h2>Making a plot, take one</h2>
+<p>The <code>ggplot</code> thought process for making a collection of plots is that you put all the things you want to plot in the same columns, act as if you’re going to plot them all at once, and then at the last minute you throw in a <code>facet_wrap</code> that describes how you want the plots separated out, in this case by <code>lambda</code>. Because the Poisson distribution is discrete rather than continuous (only takes integer values), a bar plot is better than a histogram:</p>
+<pre class="r"><code>d %&gt;% unnest(randoms) %&gt;% 
+  ggplot(aes(x=randoms))+
+  geom_bar()+
+  facet_wrap(~lambda,scales=&quot;free&quot;)</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>The <code>scales=&quot;free&quot;</code> part is to give each sub-plot its own scale, because what I was after was a comparison of shape, so I might as well have the sub-plots fill the space.</p>
+<p>The story is that for small <code>lambda</code>, the distribution is skewed to the right, but as <code>lambda</code> increases, the skewness diminishes until by the time you get to <code>lambda=10</code>, the distribution looks bell-shaped to within sampling variability.</p>
+<p>If you are really interested in normality, you could replace the bar plots with normal quantile plots, which goes this way:</p>
+<pre class="r"><code>d %&gt;% unnest(randoms) %&gt;% 
+  ggplot(aes(sample=randoms))+
+  stat_qq()+
+  facet_wrap(~lambda,scales=&quot;free&quot;)</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>The impression from the plots is confused by the discreteness, but the plots progress from an upward-opening curve (indicating right skewness) to very nearly straight (indicating very close to normal). Another way of looking at it is that when the mean is small, there is an appreciable probability of observing the lower limit of zero (and the distribution is skewed away upwards from that), but when the mean gets up to about 10, it is almost impossible to observe a zero and so the lower tail is more normal-like.</p>
+<p>I wanted to plot the means on the bar plots, but the obvious thing didn’t work:</p>
+<pre class="r"><code>d %&gt;% unnest(randoms) %&gt;% 
+  ggplot(aes(x=randoms))+
+  geom_bar()+
+  geom_vline(xintercept=d$lambda,colour=&quot;red&quot;)+
+  facet_wrap(~lambda,scales=&quot;free&quot;)</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>The problem is that <em>all</em> the <code>lambda</code>s appear on <em>all</em> the plots, not the one that goes with each plot, which is what I wanted.</p>
+</div>
+<div id="making-a-plot-take-two" class="section level2">
+<h2>Making a plot, take two</h2>
+<p>So I took a different tack. The elements of a list column can be anything: can they be plots? We’ll try the same two-step strategy as before: write a helper function to produce exactly the kind of plot I want, and then use <code>map</code> to (we hope) fill a column with plots.</p>
+<p>The helper function first: given a vector of (integer) values and a value of <code>lambda</code>, make a bar plot of the integer values and on it put a vertical line at <code>lambda</code>, in red:</p>
+<pre class="r"><code>bar_mean=function(x,lambda) {
+  d=tibble(x=x,lambda=lambda)
+  ggplot(d,aes(x=x))+
+    geom_bar()+
+    geom_vline(xintercept=lambda,colour=&quot;red&quot;)
+}</code></pre>
+<p>Now, the <code>map</code>. This requires a bit of extra care, since the “for each” part has to loop over <em>two</em> variables: the random sample and the value of <code>lambda</code>. This requires using <code>map2</code>, which goes like this:</p>
+<pre class="r"><code>d = d %&gt;% mutate(g=map2(randoms,lambda,bar_mean))
+d</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##   lambda randoms       g       
+##    &lt;dbl&gt; &lt;list&gt;        &lt;list&gt;  
+## 1  0.300 &lt;int [1,000]&gt; &lt;S3: gg&gt;
+## 2  1.00  &lt;int [1,000]&gt; &lt;S3: gg&gt;
+## 3  2.00  &lt;int [1,000]&gt; &lt;S3: gg&gt;
+## 4  5.00  &lt;int [1,000]&gt; &lt;S3: gg&gt;
+## 5 10.0   &lt;int [1,000]&gt; &lt;S3: gg&gt;</code></pre>
+<p>Those things in the <code>g</code> column really are <code>ggplot</code> graphs. But once again, they are hidden inside the list column. How do I get them out? <code>unnest</code>?</p>
+<pre class="r"><code>d %&gt;% unnest(g)</code></pre>
+<pre><code>## Error: Each column must either be a list of vectors or a list of data frames [g]</code></pre>
+<p>Nope. How about this?</p>
+<pre class="r"><code>d %&gt;% pull(g)</code></pre>
+<pre><code>## [[1]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<pre><code>## 
+## [[2]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
+<pre><code>## 
+## [[3]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-13-3.png" width="672" /></p>
+<pre><code>## 
+## [[4]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-13-4.png" width="672" /></p>
+<pre><code>## 
+## [[5]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-13-5.png" width="672" /></p>
+<p>When I tried this last night <em>and it worked</em>, I let out an audible gasp. (On an R Studio notebook, it’s even nicer, because you get little thumbnails of each plot that you can click on).</p>
+<p>One final refinement: I’d like to have a title on each plot that says what <code>lambda</code> is, because in R Studio the plots don’t seem to come out in the right order. That’s a small fix to our helper function:</p>
+<pre class="r"><code>bar_mean_title=function(x,lambda) {
+  d=tibble(x=x,lambda=lambda)
+  ggplot(d,aes(x=x))+
+    geom_bar()+
+    geom_vline(xintercept=lambda,colour=&quot;red&quot;)+
+    ggtitle(str_c(&quot;Lambda is &quot;,lambda))
+}</code></pre>
+<p>and away we go again:</p>
+<pre class="r"><code>d %&gt;% mutate(g=map2(randoms,lambda,bar_mean_title)) %&gt;% pull(g)</code></pre>
+<pre><code>## [[1]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre><code>## 
+## [[2]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-15-2.png" width="672" /></p>
+<pre><code>## 
+## [[3]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-15-3.png" width="672" /></p>
+<pre><code>## 
+## [[4]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-15-4.png" width="672" /></p>
+<pre><code>## 
+## [[5]]</code></pre>
+<p><img src="../../../../post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-15-5.png" width="672" /></p>
+<p>As <code>lambda</code> increases, the mean gets closer to the peak of the bar plot, instead of being pulled to the right by the skew.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2018
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

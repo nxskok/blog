@@ -6,10 +6,20 @@
     <description>Recent content in R on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 08 Jun 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 23 Feb 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Making a lot of plots all at once, the tidyverse way</title>
+      <link>/2018/02/23/making-a-lot-of-plots-all-at-once-the-tidyverse-way/</link>
+      <pubDate>Fri, 23 Feb 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/02/23/making-a-lot-of-plots-all-at-once-the-tidyverse-way/</guid>
+      <description>Introduction I was thinking the other day about how you might come up with a bunch of separate-but-related plots, without plotting them one by one, for example to show a class.
+By way of example, suppose we want to plot a number of Poisson distributions with different means, so that we can compare their shapes. The textbook says that a Poisson with a large mean is “approximately normal”, but that is just words until you see it on a picture.</description>
+    </item>
     
     <item>
       <title>Histograms and bins</title>

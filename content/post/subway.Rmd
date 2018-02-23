@@ -1,7 +1,7 @@
 ---
 title: "Toronto subway connections"
 author: "Ken Butler"
-date: "January 24, 2018"
+date: "February 23, 2018"
 output: html_document
 ---
 
@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 Toronto's subway network consists of four lines, as shown [here](http://ttc.ca/PDF/Maps/TTC_SubwayMap_2017-12.pdf). The shape of the network is somewhat iconic, with one line going across, and one down and up in a U-shape. 
 
 Let's suppose that all I have is a list of the stations on each line. How could I represent the structure of the network, how could I draw it, and how would my image match up to reality? Let's find out.
+
+In this article, I will use the statistical package R
 
 ## The data
 
