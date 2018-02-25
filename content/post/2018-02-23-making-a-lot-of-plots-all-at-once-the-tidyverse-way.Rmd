@@ -121,7 +121,7 @@ d %>% unnest(randoms) %>%
 which works. and neatly negates the need for take two below (but I wanted to share it with you anyway).
 
 
-## Making a plot, take two
+## Making a plot, take two 
 
 So I took a different tack. The elements of a list column can be anything: can they be plots? We'll try the same two-step strategy as before: write a helper function to produce exactly the kind of plot I want, and then use `map` to (we hope) fill a column with plots.
 
