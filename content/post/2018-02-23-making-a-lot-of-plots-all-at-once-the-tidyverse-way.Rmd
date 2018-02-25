@@ -60,7 +60,7 @@ How can you store a vector of 1000 values in one cell of a data frame, you ask? 
 d
 ```
 
-That thing `randoms` is a so-called **list-column**. In a list-column, each entry can be any kind of thing that you can save in an R variable, in this case a vector of 100 integers. Except that you can't see the actual values yet.
+That thing `randoms` is a so-called **list-column**. In a list-column, each entry can be any kind of thing that you can save in an R variable, in this case a vector of 1000 integers. Except that you can't see the actual values yet.
 
 To see them, you `unnest` them:
 
@@ -108,6 +108,19 @@ d %>% unnest(randoms) %>%
 
 The problem is that *all* the `lambda`s appear on *all* the plots, not the one that goes with each plot, which is what I wanted.
 
+Grant's comment (below), for which thanks, suggests a way around this: use a `group=` in the boxplot. This allows a proper reference to `lambda` in the `geom_vline` (which should have been inside an `aes`), like this:
+
+```{r}
+d %>% unnest(randoms) %>% 
+  ggplot(aes(x=randoms, group=lambda))+
+  geom_bar()+
+  geom_vline(aes(xintercept=lambda),colour="red")+
+  facet_wrap(~lambda,scales="free")
+```
+
+which works. and neatly negates the need for take two below (but I wanted to share it with you anyway).
+
+
 ## Making a plot, take two
 
 So I took a different tack. The elements of a list column can be anything: can they be plots? We'll try the same two-step strategy as before: write a helper function to produce exactly the kind of plot I want, and then use `map` to (we hope) fill a column with plots.
@@ -123,7 +136,7 @@ bar_mean=function(x,lambda) {
 }
 ```
 
-Now, the `map`. This requires a bit of extra care, since the "for each" part has to loop over *two* variables: the random sample and the value of `lambda`. This requires using `map2`, which goes like this:
+Now, the `map`. This requires a bit of extra care, since the "for each" part has to loop over *two* variables in parallel: the random sample and the value of `lambda`. This requires using `map2`, which goes like this:
 
 ```{r}
 d = d %>% mutate(g=map2(randoms,lambda,bar_mean))
