@@ -233,7 +233,7 @@ generated quantities {
   x_new=poisson_rng(lambda);
 }
 &#39;</code></pre>
-<p>In <code>generated quantities</code>, this says that <code>x_new</code> is obtained by sampling a random Poisson for each value of <code>lambda</code> in the posterior distribution (<code>y_new</code> is declared first; since it only appears in <code>generated quantities</code>, it can be declared there, it being neither a parameter nor data.) Thus there will be as many <code>x_new</code> values as <code>lambda</code> values.</p>
+<p>In <code>generated quantities</code>, this says that <code>x_new</code> is obtained by sampling a random Poisson for each value of <code>lambda</code> in the posterior distribution (<code>x_new</code> is declared first; since it only appears in <code>generated quantities</code>, it can be declared there, it being neither a parameter nor data.) Thus there will be as many <code>x_new</code> values as <code>lambda</code> values.</p>
 <p>I like to compile my model first, rather than compiling it each time I run my model, because that is the slowest part of the enterprise. This is how it goes:</p>
 <pre class="r"><code>x_compiled=stan_model(model_code = model)</code></pre>
 <pre><code>## In file included from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/BH/include/boost/config.hpp:39:0,
@@ -256,8 +256,8 @@ generated quantities {
 <pre><code>## 
 ## SAMPLING FOR MODEL &#39;a9c3a8210d79a3e3b9765b6167f9a209&#39; NOW (CHAIN 1).
 ## 
-## Gradient evaluation took 7e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+## Gradient evaluation took 6e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.06 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -274,15 +274,15 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.013435 seconds (Warm-up)
-##                0.01252 seconds (Sampling)
-##                0.025955 seconds (Total)
+##  Elapsed Time: 0.013885 seconds (Warm-up)
+##                0.013072 seconds (Sampling)
+##                0.026957 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;a9c3a8210d79a3e3b9765b6167f9a209&#39; NOW (CHAIN 2).
 ## 
-## Gradient evaluation took 1.6e-05 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.16 seconds.
+## Gradient evaluation took 5e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -299,9 +299,9 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.012695 seconds (Warm-up)
-##                0.012561 seconds (Sampling)
-##                0.025256 seconds (Total)
+##  Elapsed Time: 0.013217 seconds (Warm-up)
+##                0.013938 seconds (Sampling)
+##                0.027155 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;a9c3a8210d79a3e3b9765b6167f9a209&#39; NOW (CHAIN 3).
@@ -324,15 +324,15 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.012729 seconds (Warm-up)
-##                0.01218 seconds (Sampling)
-##                0.024909 seconds (Total)
+##  Elapsed Time: 0.013463 seconds (Warm-up)
+##                0.014018 seconds (Sampling)
+##                0.027481 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;a9c3a8210d79a3e3b9765b6167f9a209&#39; NOW (CHAIN 4).
 ## 
-## Gradient evaluation took 4e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.04 seconds.
+## Gradient evaluation took 7e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -349,9 +349,9 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.012837 seconds (Warm-up)
-##                0.013692 seconds (Sampling)
-##                0.026529 seconds (Total)</code></pre>
+##  Elapsed Time: 0.014921 seconds (Warm-up)
+##                0.014727 seconds (Sampling)
+##                0.029648 seconds (Total)</code></pre>
 <p>The sampling process is tweakable. I used the default four chains of length 2000, with the first half of each chain being warmup and the second half being actual sampling. (“Warmup” is not the same as “burn-in” that you might be familiar with from Metropolis-Hastings.)</p>
 <p>Looking at <code>pp1</code> gives us some information about the simulation:</p>
 <pre class="r"><code>pp1</code></pre>
@@ -364,7 +364,7 @@ generated quantities {
 ## x_new   3.20    0.03 1.81  0.00  2.00  3.00  4.00  7.00  3889    1
 ## lp__   28.08    0.02 0.70 26.00 27.91 28.35 28.53 28.59  1828    1
 ## 
-## Samples were drawn using NUTS(diag_e) at Wed Feb 28 22:09:28 2018.
+## Samples were drawn using NUTS(diag_e) at Wed Feb 28 22:24:12 2018.
 ## For each parameter, n_eff is a crude measure of effective sample size,
 ## and Rhat is the potential scale reduction factor on split chains (at 
 ## convergence, Rhat=1).</code></pre>
@@ -463,9 +463,9 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.039806 seconds (Warm-up)
-##                0.138641 seconds (Sampling)
-##                0.178447 seconds (Total)
+##  Elapsed Time: 0.040256 seconds (Warm-up)
+##                0.133279 seconds (Sampling)
+##                0.173535 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;a9c3a8210d79a3e3b9765b6167f9a209&#39; NOW (CHAIN 2).
@@ -488,9 +488,9 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.034426 seconds (Warm-up)
-##                0.034981 seconds (Sampling)
-##                0.069407 seconds (Total)
+##  Elapsed Time: 0.035194 seconds (Warm-up)
+##                0.035326 seconds (Sampling)
+##                0.07052 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;a9c3a8210d79a3e3b9765b6167f9a209&#39; NOW (CHAIN 3).
@@ -513,9 +513,9 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.034715 seconds (Warm-up)
-##                0.043932 seconds (Sampling)
-##                0.078647 seconds (Total)
+##  Elapsed Time: 0.034821 seconds (Warm-up)
+##                0.034415 seconds (Sampling)
+##                0.069236 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;a9c3a8210d79a3e3b9765b6167f9a209&#39; NOW (CHAIN 4).
@@ -538,9 +538,9 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.035827 seconds (Warm-up)
-##                0.033133 seconds (Sampling)
-##                0.06896 seconds (Total)</code></pre>
+##  Elapsed Time: 0.036441 seconds (Warm-up)
+##                0.034526 seconds (Sampling)
+##                0.070967 seconds (Total)</code></pre>
 <pre class="r"><code>pp2</code></pre>
 <pre><code>## Inference for Stan model: a9c3a8210d79a3e3b9765b6167f9a209.
 ## 4 chains, each with iter=2000; warmup=1000; thin=1; 
@@ -555,7 +555,7 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## x_new     1
 ## lp__      1
 ## 
-## Samples were drawn using NUTS(diag_e) at Wed Feb 28 22:09:32 2018.
+## Samples were drawn using NUTS(diag_e) at Wed Feb 28 22:24:16 2018.
 ## For each parameter, n_eff is a crude measure of effective sample size,
 ## and Rhat is the potential scale reduction factor on split chains (at 
 ## convergence, Rhat=1).</code></pre>

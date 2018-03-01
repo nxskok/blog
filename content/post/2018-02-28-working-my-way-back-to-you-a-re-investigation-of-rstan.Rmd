@@ -160,7 +160,7 @@ generated quantities {
 '
 ```
 
-In `generated quantities`, this says that `x_new` is obtained by sampling a random Poisson for each value of `lambda` in the posterior distribution (`y_new` is declared first; since it only appears in `generated quantities`, it can be declared there, it being neither a parameter nor data.) Thus there will be as many `x_new` values as `lambda` values.
+In `generated quantities`, this says that `x_new` is obtained by sampling a random Poisson for each value of `lambda` in the posterior distribution (`x_new` is declared first; since it only appears in `generated quantities`, it can be declared there, it being neither a parameter nor data.) Thus there will be as many `x_new` values as `lambda` values.
 
 I like to compile my model first, rather than compiling it each time I run my model, because that is the slowest part of the enterprise. This is how it goes:
 
