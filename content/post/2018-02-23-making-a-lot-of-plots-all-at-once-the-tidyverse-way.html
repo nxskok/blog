@@ -115,6 +115,21 @@ d</code></pre>
   facet_wrap(~lambda,scales=&quot;free&quot;)</code></pre>
 <p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>which works. and neatly negates the need for take two below (but I wanted to share it with you anyway).</p>
+<p>Now, I made two modifications to my earlier plot: I added a <code>group</code> and I put an aesthetic in the <code>geom_vline</code>. Did I really need them both? Let’s try taking them out one at a time:</p>
+<pre class="r"><code>d %&gt;% unnest(randoms) %&gt;% 
+  ggplot(aes(x=randoms))+
+  geom_bar()+
+  geom_vline(aes(xintercept=lambda),colour=&quot;red&quot;)+
+  facet_wrap(~lambda,scales=&quot;free&quot;)</code></pre>
+<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>That works.</p>
+<pre class="r"><code>d %&gt;% unnest(randoms) %&gt;% 
+  ggplot(aes(x=randoms, group=lambda))+
+  geom_bar()+
+  geom_vline(xintercept=d$lambda,colour=&quot;red&quot;)+
+  facet_wrap(~lambda,scales=&quot;free&quot;)</code></pre>
+<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>And that takes us back to where we were. So Grant’s second suspicion (in the comments below) was right: getting the aesthetic right in the <code>geom_vline</code> was the key.</p>
 </div>
 <div id="making-a-plot-take-two" class="section level2">
 <h2>Making a plot, take two</h2>
@@ -143,31 +158,6 @@ d</code></pre>
 <p>Nope. How about this?</p>
 <pre class="r"><code>d %&gt;% pull(g)</code></pre>
 <pre><code>## [[1]]</code></pre>
-<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<pre><code>## 
-## [[2]]</code></pre>
-<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
-<pre><code>## 
-## [[3]]</code></pre>
-<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-14-3.png" width="672" /></p>
-<pre><code>## 
-## [[4]]</code></pre>
-<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-14-4.png" width="672" /></p>
-<pre><code>## 
-## [[5]]</code></pre>
-<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-14-5.png" width="672" /></p>
-<p>When I tried this last night <em>and it worked</em>, I let out an audible gasp. (On an R Studio notebook, it’s even nicer, because you get little thumbnails of each plot that you can click on).</p>
-<p>One final refinement: I’d like to have a title on each plot that says what <code>lambda</code> is, because in R Studio the plots don’t seem to come out in the right order. That’s a small fix to our helper function:</p>
-<pre class="r"><code>bar_mean_title=function(x,lambda) {
-  d=tibble(x=x,lambda=lambda)
-  ggplot(d,aes(x=x))+
-    geom_bar()+
-    geom_vline(xintercept=lambda,colour=&quot;red&quot;)+
-    ggtitle(str_c(&quot;Lambda is &quot;,lambda))
-}</code></pre>
-<p>and away we go again:</p>
-<pre class="r"><code>d %&gt;% mutate(g=map2(randoms,lambda,bar_mean_title)) %&gt;% pull(g)</code></pre>
-<pre><code>## [[1]]</code></pre>
 <p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <pre><code>## 
 ## [[2]]</code></pre>
@@ -181,5 +171,30 @@ d</code></pre>
 <pre><code>## 
 ## [[5]]</code></pre>
 <p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-16-5.png" width="672" /></p>
+<p>When I tried this last night <em>and it worked</em>, I let out an audible gasp. (On an R Studio notebook, it’s even nicer, because you get little thumbnails of each plot that you can click on).</p>
+<p>One final refinement: I’d like to have a title on each plot that says what <code>lambda</code> is, because in R Studio the plots don’t seem to come out in the right order. That’s a small fix to our helper function:</p>
+<pre class="r"><code>bar_mean_title=function(x,lambda) {
+  d=tibble(x=x,lambda=lambda)
+  ggplot(d,aes(x=x))+
+    geom_bar()+
+    geom_vline(xintercept=lambda,colour=&quot;red&quot;)+
+    ggtitle(str_c(&quot;Lambda is &quot;,lambda))
+}</code></pre>
+<p>and away we go again:</p>
+<pre class="r"><code>d %&gt;% mutate(g=map2(randoms,lambda,bar_mean_title)) %&gt;% pull(g)</code></pre>
+<pre><code>## [[1]]</code></pre>
+<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<pre><code>## 
+## [[2]]</code></pre>
+<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-18-2.png" width="672" /></p>
+<pre><code>## 
+## [[3]]</code></pre>
+<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-18-3.png" width="672" /></p>
+<pre><code>## 
+## [[4]]</code></pre>
+<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-18-4.png" width="672" /></p>
+<pre><code>## 
+## [[5]]</code></pre>
+<p><img src="/post/2018-02-23-making-a-lot-of-plots-all-at-once-the-tidyverse-way_files/figure-html/unnamed-chunk-18-5.png" width="672" /></p>
 <p>As <code>lambda</code> increases, the mean gets closer to the peak of the bar plot, instead of being pulled to the right by the skew.</p>
 </div>

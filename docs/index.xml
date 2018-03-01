@@ -6,10 +6,20 @@
     <description>Recent content on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 23 Feb 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 28 Feb 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Working my way back to you, a re-investigation of rstan</title>
+      <link>/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/</link>
+      <pubDate>Wed, 28 Feb 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/</guid>
+      <description>Introduction I learned Stan a while back, when I was fitting some Bayesian models. I wanted to fix up one of them, and I realized that I had forgotten most of what I knew about Stan, so I had to go back and learn it again.
+A Bayesian model has two parts: a prior distribution, which summarizes your belief about the parameters you are trying to estimate before you look at any data, and a model that asserts the data-generating mechanism conditional on the parameter value(s).</description>
+    </item>
     
     <item>
       <title>Making a lot of plots all at once, the tidyverse way</title>

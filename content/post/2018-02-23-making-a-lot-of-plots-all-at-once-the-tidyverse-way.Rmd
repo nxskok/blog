@@ -120,6 +120,28 @@ d %>% unnest(randoms) %>%
 
 which works. and neatly negates the need for take two below (but I wanted to share it with you anyway).
 
+Now, I made two modifications to my earlier plot: I added a `group` and I put an aesthetic in the `geom_vline`. Did I really need them both? Let's try taking them out one at a time:
+
+```{r}
+d %>% unnest(randoms) %>% 
+  ggplot(aes(x=randoms))+
+  geom_bar()+
+  geom_vline(aes(xintercept=lambda),colour="red")+
+  facet_wrap(~lambda,scales="free")
+```
+
+That works.
+
+```{r}
+d %>% unnest(randoms) %>% 
+  ggplot(aes(x=randoms, group=lambda))+
+  geom_bar()+
+  geom_vline(xintercept=d$lambda,colour="red")+
+  facet_wrap(~lambda,scales="free")
+
+```
+
+And that takes us back to where we were. So Grant's second suspicion (in the comments below) was right: getting the aesthetic right in the `geom_vline` was the key.
 
 ## Making a plot, take two 
 
