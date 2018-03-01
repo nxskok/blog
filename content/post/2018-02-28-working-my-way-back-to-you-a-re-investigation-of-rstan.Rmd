@@ -32,7 +32,7 @@ The [Poisson distribution](https://www.umass.edu/wsp/resources/poisson/) is a mo
 
 Let's make things easy for ourselves by generating some data that actually *is* from a Poisson distribution with a mean that we know, and see whether the estimation process recovers the true mean. (This is a good way of developing Stan code: try it out first on data known to be from the model you are trying to fit, and when that seems to be behaving itself, run the same code on your actual data.)
 
-Stan runs either independently (via the command-line version of Stan called `cmdstan`) or connected with other languages such as R, Python, [and others](http://mc-stan.org/users/interfaces/index.html).  We will use the R interface, which works via the package `rstan`. I probably need the `tidyverse` as well:
+Stan runs either independently (via the command-line version of Stan called `cmdstan`) or connected with other languages such as R, Python, [and others](http://mc-stan.org/users/interfaces/index.html).  We will use the R interface, which works via the package `rstan`. I probably need the `tidyverse` as well, and I will be reading an Excel sheet in later:
 
 ```{r}
 library(tidyverse)
@@ -207,7 +207,7 @@ ppp1=extract(pp1)
 str(ppp1)
 ```
 
-Thus the simulated posterior distribution of `lambda` and the posterior predictive distribution of `x` are elements of the list `ppp1`. There are 4000 elements of each, $4 \times 1000$ non-warm-up sampled values. The way the predictive distribution is obtained is, for each value of `lambda`, a randomly-sampled Poisson with that mean is drawn. Several realizations of the posterior predictive distribution could be obtained by making `y_new` into an array. 
+Thus the simulated posterior distribution of `lambda` and the posterior predictive distribution of `x` are elements of the list `ppp1`. There are 4000 elements of each, $4 \times 1000$ non-warm-up sampled values. The way the predictive distribution is obtained is, for each value of `lambda`, a randomly-sampled Poisson with that mean is drawn. Several realizations of the posterior predictive distribution could be obtained by making `x_new` into an array. 
 
 What does the posterior distribution of `lambda` look like?
 
@@ -239,7 +239,7 @@ The actual data has an observed value of 11, which is unlikely but still just po
 
 ## Real data: English soccer scores
 
-I mentioned earlier that a smart way to develop a model in Stan is to fit to data of a known distribution before, checking that it behaves itself before letting it loose on real data. The model seems to work, so let's take some real data now. I've chosen soccer scores from England for the 2017-2018 season up to the current date (Febrary 28, 2018) which are available from (here)[http://www.football-data.co.uk/downloadm.php], and I saved on my local machine:
+I mentioned earlier that a smart way to develop a model in Stan is to fit to data of a known distribution before checking that it behaves itself before letting it loose on real data. The model seems to work, so let's take some real data now. I've chosen soccer scores from England for the 2017-2018 season up to the current date (Febrary 28, 2018) which are available from [here](http://www.football-data.co.uk/downloadm.php), and I saved on my local machine:
 
 ```{r}
 england=read_excel("/home/ken/all-euro-data-2017-2018.xlsx",sheet = "E0")
