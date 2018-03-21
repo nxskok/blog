@@ -1,0 +1,72 @@
+---
+title: Readr and how to make summary work
+author: Ken
+date: '2018-03-21'
+slug: readr-and-how-to-make-summary-work
+categories:
+  - R
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+## Packages
+
+In this post I use these packages (the last one at the end):
+
+```{r}
+library(tidyverse)
+library(skimr)
+```
+
+## Introduction
+
+The `readr` file-reading functions read text as text without turning it into factors. This is a big plus for those of us who remember `read.table` and `stringsAsFactors=F`, but sometimes having categorical variables as text is *not* what we want. Here, we learn a batch-conversion method that will enable us to make text temporarily into factors again and make `summary` and `skimr::skim` more helpful.
+
+To illustrate, I have data on bridges in Pittsburgh, Pennsylvania. The data frame contains a lot of categorical variables, and some missing values written as `?`, which we'll turn into proper missing values: 
+
+```{r}
+bridges=read_csv("http://www.utsc.utoronto.ca/~butler/d29/bridges.csv",na="?")
+bridges
+```
+
+These are correctly read in as text.
+
+## Summary
+
+The old workhorse function for summarizing a data frame is `summary`. I'm running it like this for consistency with what comes later.
+
+```{r}
+bridges %>% summary()
+```
+
+The problem is that `summary` expects text to have been turned into factors. All it does with text columns is to count how many values there are, when it would be nice to handle text columns the way it handles factors.
+
+## Temporarily converting text to factor
+
+Wouldn't it be nice if we could temporarily convert text columns into factors, for the purpose of passing them into `summary`, and then forget that we had ever done so? Well, we can. `dplyr` has `mutate_if`, which runs a function on all the columns that satisfy a condition, such as being text. Here, the function we want to run is `as.factor` to turn the text columns temporarily into factors:
+
+```{r}
+bridges %>% mutate_if(is.character,as.factor) %>% summary()
+```
+
+and now, for the categorical variables, we see counts of categories and of missing values.
+
+## skimr
+
+`skimr` is a package that does slicker summaries of data frames and the variables in them. It does the same thing with text variables as `summary` does:
+
+```{r}
+bridges %>% skim()
+```
+
+except that at least this time we get counts of missing values and of the number of unique values. Note that numerical variables have an inline histogram for quick assessment of the distribution.
+
+The same trick as above will give us better summaries of the categorical variables:
+
+```{r}
+bridges %>% mutate_if(is.character,as.factor) %>% skim()
+```
+
+This also shows us which categories (names abbreviated) are the most common. For example, in `material`, most of the bridges are made of steel, with only a few (presumably old) bridges being made of wood or iron.
+

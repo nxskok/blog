@@ -1,13 +1,12 @@
 ---
-title: Drawing a network with "ggraph" and "tidygraph"
-author: Ken
+title: "Drawing a network with ggraph and tidygraph"
+author: "Ken"
 date: '2017-12-30'
 slug: drawing-a-network-with-ggraph-and-tidygraph
-categories:
-  - R trains
 tags:
-  - '#rstats'
-  - '#tidyverse'
+- '#rstats'
+- '#tidyverse'
+categories: R trains
 ---
 
 
@@ -19,9 +18,9 @@ tags:
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
-## ✔ tibble  1.3.4          ✔ dplyr   0.7.4     
-## ✔ tidyr   0.7.2          ✔ stringr 1.2.0     
-## ✔ readr   1.1.1          ✔ forcats 0.2.0</code></pre>
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
 <pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
@@ -36,10 +35,7 @@ tags:
 <div id="example-the-west-yorkshire-train-network" class="section level2">
 <h2>Example: the West Yorkshire train network</h2>
 <p><a href="https://en.wikipedia.org/wiki/West_Yorkshire">West Yorkshire</a> is a metropolitan county of northern England, containing the city of Leeds. It has a considerable local rail network, as shown below:</p>
-<div class="figure">
-<embed src="/Rail-network-map.pdf" />
-
-</div>
+<p><embed src="/Rail-network-map.pdf" /></p>
 <p>My aim is to treat the stations as nodes in a graph and rail lines between them as edges, and see how I succeed and fail in reproducing this map.</p>
 </div>
 <div id="reading-in-the-data-and-storing-as-a-graph" class="section level2">
@@ -75,55 +71,55 @@ tags:
 ## )</code></pre>
 <pre class="r"><code>yorks %&gt;% print(n=20)</code></pre>
 <pre><code>## # A tibble: 145 x 1
-##                 station
-##                   &lt;chr&gt;
-##  1              Skipton
-##  2             Cononley
-##  3    Steeton &amp; Silsden
-##  4             Keighley
-##  5          Crossflatts
-##  6              Bingley
-##  7             Saltaire
-##  8              Shipley
-##  9          Frizinghall
-## 10             Bradford
-## 11                 &lt;NA&gt;
-## 12              Shipley
-## 13      Apperley Bridge
-## 14      Kirkstall Forge
-## 15                Leeds
-## 16                 &lt;NA&gt;
-## 17               Ilkley
-## 18         Ben Rhydding
+##    station             
+##    &lt;chr&gt;               
+##  1 Skipton             
+##  2 Cononley            
+##  3 Steeton &amp; Silsden   
+##  4 Keighley            
+##  5 Crossflatts         
+##  6 Bingley             
+##  7 Saltaire            
+##  8 Shipley             
+##  9 Frizinghall         
+## 10 Bradford            
+## 11 &lt;NA&gt;                
+## 12 Shipley             
+## 13 Apperley Bridge     
+## 14 Kirkstall Forge     
+## 15 Leeds               
+## 16 &lt;NA&gt;                
+## 17 Ilkley              
+## 18 Ben Rhydding        
 ## 19 Burley-in-Wharfedale
-## 20              Menston
+## 20 Menston             
 ## # ... with 125 more rows</code></pre>
 <p>Now, how to connect each station with the next one on the list? I realized that the <code>lag</code> function would do exactly this:</p>
 <pre class="r"><code>yorks %&gt;% mutate(station2=lag(station)) %&gt;% 
   print(n=20)</code></pre>
 <pre><code>## # A tibble: 145 x 2
-##                 station             station2
-##                   &lt;chr&gt;                &lt;chr&gt;
-##  1              Skipton                 &lt;NA&gt;
-##  2             Cononley              Skipton
-##  3    Steeton &amp; Silsden             Cononley
-##  4             Keighley    Steeton &amp; Silsden
-##  5          Crossflatts             Keighley
-##  6              Bingley          Crossflatts
-##  7             Saltaire              Bingley
-##  8              Shipley             Saltaire
-##  9          Frizinghall              Shipley
-## 10             Bradford          Frizinghall
-## 11                 &lt;NA&gt;             Bradford
-## 12              Shipley                 &lt;NA&gt;
-## 13      Apperley Bridge              Shipley
-## 14      Kirkstall Forge      Apperley Bridge
-## 15                Leeds      Kirkstall Forge
-## 16                 &lt;NA&gt;                Leeds
-## 17               Ilkley                 &lt;NA&gt;
-## 18         Ben Rhydding               Ilkley
-## 19 Burley-in-Wharfedale         Ben Rhydding
-## 20              Menston Burley-in-Wharfedale
+##    station              station2            
+##    &lt;chr&gt;                &lt;chr&gt;               
+##  1 Skipton              &lt;NA&gt;                
+##  2 Cononley             Skipton             
+##  3 Steeton &amp; Silsden    Cononley            
+##  4 Keighley             Steeton &amp; Silsden   
+##  5 Crossflatts          Keighley            
+##  6 Bingley              Crossflatts         
+##  7 Saltaire             Bingley             
+##  8 Shipley              Saltaire            
+##  9 Frizinghall          Shipley             
+## 10 Bradford             Frizinghall         
+## 11 &lt;NA&gt;                 Bradford            
+## 12 Shipley              &lt;NA&gt;                
+## 13 Apperley Bridge      Shipley             
+## 14 Kirkstall Forge      Apperley Bridge     
+## 15 Leeds                Kirkstall Forge     
+## 16 &lt;NA&gt;                 Leeds               
+## 17 Ilkley               &lt;NA&gt;                
+## 18 Ben Rhydding         Ilkley              
+## 19 Burley-in-Wharfedale Ben Rhydding        
+## 20 Menston              Burley-in-Wharfedale
 ## # ... with 125 more rows</code></pre>
 <p>and now the rows of this data frame will be the edges of my graph. Separating the routes with <code>NA</code> was an accidentally-smart thing to do, since if I remove all the rows with <code>NA</code> in them, I will get only the genuine edges I want for my graph:</p>
 <pre class="r"><code>yorks2 = yorks %&gt;% 
@@ -131,28 +127,28 @@ tags:
   filter(!is.na(station),!is.na(station2)) %&gt;% 
   print(n=20)</code></pre>
 <pre><code>## # A tibble: 110 x 2
-##                 station             station2
-##                   &lt;chr&gt;                &lt;chr&gt;
-##  1             Cononley              Skipton
-##  2    Steeton &amp; Silsden             Cononley
-##  3             Keighley    Steeton &amp; Silsden
-##  4          Crossflatts             Keighley
-##  5              Bingley          Crossflatts
-##  6             Saltaire              Bingley
-##  7              Shipley             Saltaire
-##  8          Frizinghall              Shipley
-##  9             Bradford          Frizinghall
-## 10      Apperley Bridge              Shipley
-## 11      Kirkstall Forge      Apperley Bridge
-## 12                Leeds      Kirkstall Forge
-## 13         Ben Rhydding               Ilkley
-## 14 Burley-in-Wharfedale         Ben Rhydding
-## 15              Menston Burley-in-Wharfedale
-## 16             Guiseley              Menston
-## 17              Baildon             Guiseley
-## 18              Shipley              Baildon
-## 19      Kirkstall Forge             Guiseley
-## 20          Burley Park                Leeds
+##    station              station2            
+##    &lt;chr&gt;                &lt;chr&gt;               
+##  1 Cononley             Skipton             
+##  2 Steeton &amp; Silsden    Cononley            
+##  3 Keighley             Steeton &amp; Silsden   
+##  4 Crossflatts          Keighley            
+##  5 Bingley              Crossflatts         
+##  6 Saltaire             Bingley             
+##  7 Shipley              Saltaire            
+##  8 Frizinghall          Shipley             
+##  9 Bradford             Frizinghall         
+## 10 Apperley Bridge      Shipley             
+## 11 Kirkstall Forge      Apperley Bridge     
+## 12 Leeds                Kirkstall Forge     
+## 13 Ben Rhydding         Ilkley              
+## 14 Burley-in-Wharfedale Ben Rhydding        
+## 15 Menston              Burley-in-Wharfedale
+## 16 Guiseley             Menston             
+## 17 Baildon              Guiseley            
+## 18 Shipley              Baildon             
+## 19 Kirkstall Forge      Guiseley            
+## 20 Burley Park          Leeds               
 ## # ... with 90 more rows</code></pre>
 <p>(something I discovered the other day: if you put a <code>print</code> on the end of a pipeline, it prints the result <em>even if you have saved it in a variable</em>.)</p>
 <p><code>tidygraph</code> has a function for turning a data frame structured like this, with edges as rows, into an actual tidy graph:</p>
@@ -163,14 +159,14 @@ yorks_g</code></pre>
 ## # A directed acyclic simple graph with 1 component
 ## #
 ## # Node Data: 98 x 1 (active)
-##                name
-##               &lt;chr&gt;
-## 1          Cononley
+##   name             
+##   &lt;chr&gt;            
+## 1 Cononley         
 ## 2 Steeton &amp; Silsden
-## 3          Keighley
-## 4       Crossflatts
-## 5           Bingley
-## 6          Saltaire
+## 3 Keighley         
+## 4 Crossflatts      
+## 5 Bingley          
+## 6 Saltaire         
 ## # ... with 92 more rows
 ## #
 ## # Edge Data: 110 x 2
@@ -191,18 +187,18 @@ yorks_g</code></pre>
   mutate(node_number=row_number()) %&gt;%
   print(n=10)</code></pre>
 <pre><code>## # A tibble: 98 x 2
-##                 name node_number
-##                &lt;chr&gt;       &lt;int&gt;
-##  1          Cononley           1
+##    name              node_number
+##    &lt;chr&gt;                   &lt;int&gt;
+##  1 Cononley                    1
 ##  2 Steeton &amp; Silsden           2
-##  3          Keighley           3
-##  4       Crossflatts           4
-##  5           Bingley           5
-##  6          Saltaire           6
-##  7           Shipley           7
-##  8       Frizinghall           8
-##  9          Bradford           9
-## 10   Apperley Bridge          10
+##  3 Keighley                    3
+##  4 Crossflatts                 4
+##  5 Bingley                     5
+##  6 Saltaire                    6
+##  7 Shipley                     7
+##  8 Frizinghall                 8
+##  9 Bradford                    9
+## 10 Apperley Bridge            10
 ## # ... with 88 more rows</code></pre>
 <pre class="r"><code>edges = yorks_g %&gt;% 
   activate(edges) %&gt;% 
@@ -227,28 +223,28 @@ yorks_g</code></pre>
   left_join(nodes,by=c(&quot;to&quot;=&quot;node_number&quot;)) %&gt;% 
   print(n=20)</code></pre>
 <pre><code>## # A tibble: 110 x 4
-##     from    to               name.x               name.y
-##    &lt;int&gt; &lt;int&gt;                &lt;chr&gt;                &lt;chr&gt;
-##  1     1    97             Cononley              Skipton
-##  2     2     1    Steeton &amp; Silsden             Cononley
-##  3     3     2             Keighley    Steeton &amp; Silsden
-##  4     4     3          Crossflatts             Keighley
-##  5     5     4              Bingley          Crossflatts
-##  6     6     5             Saltaire              Bingley
-##  7     7     6              Shipley             Saltaire
-##  8     8     7          Frizinghall              Shipley
-##  9     9     8             Bradford          Frizinghall
-## 10    10     7      Apperley Bridge              Shipley
-## 11    11    10      Kirkstall Forge      Apperley Bridge
-## 12    12    11                Leeds      Kirkstall Forge
-## 13    13    98         Ben Rhydding               Ilkley
-## 14    14    13 Burley-in-Wharfedale         Ben Rhydding
-## 15    15    14              Menston Burley-in-Wharfedale
-## 16    16    15             Guiseley              Menston
-## 17    17    16              Baildon             Guiseley
-## 18     7    17              Shipley              Baildon
-## 19    11    16      Kirkstall Forge             Guiseley
-## 20    18    12          Burley Park                Leeds
+##     from    to name.x               name.y              
+##    &lt;int&gt; &lt;int&gt; &lt;chr&gt;                &lt;chr&gt;               
+##  1     1    97 Cononley             Skipton             
+##  2     2     1 Steeton &amp; Silsden    Cononley            
+##  3     3     2 Keighley             Steeton &amp; Silsden   
+##  4     4     3 Crossflatts          Keighley            
+##  5     5     4 Bingley              Crossflatts         
+##  6     6     5 Saltaire             Bingley             
+##  7     7     6 Shipley              Saltaire            
+##  8     8     7 Frizinghall          Shipley             
+##  9     9     8 Bradford             Frizinghall         
+## 10    10     7 Apperley Bridge      Shipley             
+## 11    11    10 Kirkstall Forge      Apperley Bridge     
+## 12    12    11 Leeds                Kirkstall Forge     
+## 13    13    98 Ben Rhydding         Ilkley              
+## 14    14    13 Burley-in-Wharfedale Ben Rhydding        
+## 15    15    14 Menston              Burley-in-Wharfedale
+## 16    16    15 Guiseley             Menston             
+## 17    17    16 Baildon              Guiseley            
+## 18     7    17 Shipley              Baildon             
+## 19    11    16 Kirkstall Forge      Guiseley            
+## 20    18    12 Burley Park          Leeds               
 ## # ... with 90 more rows</code></pre>
 <p>This is what I started with.</p>
 </div>
@@ -260,26 +256,26 @@ yorks_g</code></pre>
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-10-1.png" width="672" /></p>
 <p>This seems to do a nice job of reproducing the topology in a clear fashion with no overlaps where there shouldn’t be any. (I tried this using the separate stations, Westgate and Kirkgate, in Wakefield, and the display was a lot more confusing.) It doesn’t get compass directions right (it seems to have west and east reversed), but we had no right to expect that it would.</p>
 <p>Another plausible layout is the one called <code>lgl</code>. How does that work here? We leave everything else the same:</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-11-1.png" width="672" /></p>
 <p>This is much less pleasing, especially in the middle. Can I make it try more iterations than the default 150?</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;,maxiter=400)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-12-1.png" width="672" /></p>
 <p>This is a lot better, but still has some unnecessary crossings.</p>
 <p>One more try: the GEM “force-directed” layout:</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;gem&quot;)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-13-1.png" width="672" /></p>
 <p>This is better, but I like the <code>kk</code> one the best.</p>
 </div>

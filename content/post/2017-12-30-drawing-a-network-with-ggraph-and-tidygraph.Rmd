@@ -1,13 +1,12 @@
 ---
-title: Drawing a network with "ggraph" and "tidygraph"
-author: Ken
+title: "Drawing a network with ggraph and tidygraph"
+author: "Ken"
 date: '2017-12-30'
 slug: drawing-a-network-with-ggraph-and-tidygraph
-categories:
-  - R trains
 tags:
-  - '#rstats'
-  - '#tidyverse'
+- '#rstats'
+- '#tidyverse'
+categories: R trains
 ---
 
 ## Introduction

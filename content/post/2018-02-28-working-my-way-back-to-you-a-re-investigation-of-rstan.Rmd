@@ -32,7 +32,7 @@ The [Poisson distribution](https://www.umass.edu/wsp/resources/poisson/) is a mo
 
 Let's make things easy for ourselves by generating some data that actually *is* from a Poisson distribution with a mean that we know, and see whether the estimation process recovers the true mean. (This is a good way of developing Stan code: try it out first on data known to be from the model you are trying to fit, and when that seems to be behaving itself, run the same code on your actual data.)
 
-Stan runs either independently (via the command-line version of Stan called `cmdstan`) or connected with other languages such as R, Python, [and others](http://mc-stan.org/users/interfaces/index.html).  We will use the R interface, which works via the package `rstan`. I probably need the `tidyverse` as well, and I will be reading an Excel sheet in later:
+Stan runs either independently (via the command-line version of Stan called `cmdstan`) or connected with other languages such as R, Python, [and others](http://mc-stan.org/users/interfaces/index.html).  We will use the R interface, which works via the package `rstan`. I probably need the `tidyverse` as well, and I will be reading an Excel sheet in later: 
 
 ```{r}
 library(tidyverse)
