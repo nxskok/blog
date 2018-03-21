@@ -6,7 +6,9 @@ slug: drawing-a-network-with-ggraph-and-tidygraph
 tags:
 - '#rstats'
 - '#tidyverse'
-categories: R trains
+categories: 
+ - R 
+ - trains
 ---
 
 
@@ -16,12 +18,12 @@ categories: R trains
 <p><a href="https://github.com/thomasp85">Thomas Lin Pedersen</a> is the author of a lot of packages, including two that deal with graphs (in the sense of networks), <code>tidygraph</code> for storing and handling graphs, and <code>ggraph</code> for drawing them, <code>ggplot</code>-style. I have a feeling I will be spending a lot of time with <code>tidygraph</code>, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.</p>
 <p>Packages:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
 ## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
 ## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
 ## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(tidygraph)</code></pre>

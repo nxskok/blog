@@ -2,13 +2,16 @@
 title: Readr and summary
 author: Ken
 date: '2018-03-21'
-slug: readr-and-summary
+slug: readr-and-summary 
 categories:
   - R
-tags: []
+tags: 
+  - "#rstats"
+  - "#tidyverse"
 ---
 
-## Packages
+## Packages 
+
 
 In this post I use these packages (the last one at the end):
 

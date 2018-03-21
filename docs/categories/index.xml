@@ -68,18 +68,9 @@
     <item>
       <title>R</title>
       <link>/categories/r/</link>
-      <pubDate>Wed, 28 Feb 2018 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 21 Mar 2018 00:00:00 +0000</pubDate>
       
       <guid>/categories/r/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>R Trains</title>
-      <link>/categories/r-trains/</link>
-      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
-      
-      <guid>/categories/r-trains/</guid>
       <description></description>
     </item>
     
@@ -107,6 +98,15 @@
       <pubDate>Sat, 10 Jun 2017 00:00:00 +0000</pubDate>
       
       <guid>/categories/toronto/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Trains</title>
+      <link>/categories/trains/</link>
+      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/categories/trains/</guid>
       <description></description>
     </item>
     

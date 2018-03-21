@@ -6,10 +6,20 @@
     <description>Recent content in R on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 28 Feb 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 21 Mar 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Readr and summary</title>
+      <link>/2018/03/21/readr-and-summary/</link>
+      <pubDate>Wed, 21 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/21/readr-and-summary/</guid>
+      <description>Packages In this post I use these packages (the last one at the end):
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() library(skimr) ## ## Attaching package: &amp;#39;skimr&amp;#39; ## The following objects are masked from &amp;#39;package:dplyr&amp;#39;: ## ## contains, ends_with, everything, matches, num_range, one_of, ## starts_with  Introduction The readr file-reading functions read text as text without turning it into factors.</description>
+    </item>
     
     <item>
       <title>Working my way back to you, a re-investigation of rstan</title>
@@ -59,6 +69,15 @@ library(tidyverse) ## ── Attaching packages ──────────�
       <description>Introduction When you have two categorical variables to plot, grouped bar charts are one possible visualization. I learned something new about them today, from Hadley Wickham himself (well, via a tweet, anyway).
 As an example, let’s use some data from the Australian Institute for Sport:
 library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.1 ✔ dplyr 0.7.4 ## ✔ tidyr 0.</description>
+    </item>
+    
+    <item>
+      <title>Drawing a network with ggraph and tidygraph</title>
+      <link>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</link>
+      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</guid>
+      <description>Introduction Thomas Lin Pedersen is the author of a lot of packages, including two that deal with graphs (in the sense of networks), tidygraph for storing and handling graphs, and ggraph for drawing them, ggplot-style. I have a feeling I will be spending a lot of time with tidygraph, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.</description>
     </item>
     
     <item>
@@ -146,7 +165,7 @@ p=c(0.25,0.3,0.42) We’ll need the tidyverse, as usual:</description>
       
       <guid>/2017/06/01/carter-and-guthrie-part-2-model-building/</guid>
       <description>Estimating the parameters Start, as ever, with the tidyverse, along with MASS for modelling later:
-library(MASS) library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ## Loading tidyverse: tidyr ## Loading tidyverse: readr ## Loading tidyverse: purrr ## Loading tidyverse: dplyr ## Conflicts with tidy packages ---------------------------------------------- ## filter(): dplyr, stats ## lag(): dplyr, stats ## select(): dplyr, MASS The model The Carter and Guthrie model is a simplified version of cricketing reality, thus:</description>
+library(MASS) library(tidyverse) ## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() ## ✖ dplyr::select() masks MASS::select() The model The Carter and Guthrie model is a simplified version of cricketing reality, thus:</description>
     </item>
     
   </channel>

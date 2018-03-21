@@ -37,7 +37,7 @@ Soccer has a tiebreaker “goal difference”: when two teams have the same numb
       
       <guid>/2017/06/01/carter-and-guthrie-part-2-model-building/</guid>
       <description>Estimating the parameters Start, as ever, with the tidyverse, along with MASS for modelling later:
-library(MASS) library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ## Loading tidyverse: tidyr ## Loading tidyverse: readr ## Loading tidyverse: purrr ## Loading tidyverse: dplyr ## Conflicts with tidy packages ---------------------------------------------- ## filter(): dplyr, stats ## lag(): dplyr, stats ## select(): dplyr, MASS The model The Carter and Guthrie model is a simplified version of cricketing reality, thus:</description>
+library(MASS) library(tidyverse) ## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() ## ✖ dplyr::select() masks MASS::select() The model The Carter and Guthrie model is a simplified version of cricketing reality, thus:</description>
     </item>
     
   </channel>

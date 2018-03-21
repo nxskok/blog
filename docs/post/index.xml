@@ -6,10 +6,20 @@
     <description>Recent content in Posts on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 28 Feb 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 21 Mar 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Readr and summary</title>
+      <link>/2018/03/21/readr-and-summary/</link>
+      <pubDate>Wed, 21 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/21/readr-and-summary/</guid>
+      <description>Packages In this post I use these packages (the last one at the end):
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() library(skimr) ## ## Attaching package: &amp;#39;skimr&amp;#39; ## The following objects are masked from &amp;#39;package:dplyr&amp;#39;: ## ## contains, ends_with, everything, matches, num_range, one_of, ## starts_with  Introduction The readr file-reading functions read text as text without turning it into factors.</description>
+    </item>
     
     <item>
       <title>Working my way back to you, a re-investigation of rstan</title>
@@ -62,7 +72,7 @@ library(tidyverse) ## ── Attaching packages ──────────�
     </item>
     
     <item>
-      <title>Drawing a network with &#34;ggraph&#34; and &#34;tidygraph&#34;</title>
+      <title>Drawing a network with ggraph and tidygraph</title>
       <link>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</link>
       <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
       
@@ -210,7 +220,7 @@ Soccer has a tiebreaker “goal difference”: when two teams have the same numb
       <guid>/2017/06/10/heritage-walk-in-kensington-market/</guid>
       <description>This morning’s Heritage Walk was in Kensington Market. I grabbed a few photos.
 This is the Church of St Stephen-in-the-Fields, on College between Spadina and Bathurst:
- Though it is now thoroughly of downtown, when it was built (1857), it was literally in the fields. However, its mission is still the same as it was, to help new immigrants and those of the area that need help. This was a theme of the walk: the various waves of immigrants who settled the area built institutions to help their fellows out.</description>
+Though it is now thoroughly of downtown, when it was built (1857), it was literally in the fields. However, its mission is still the same as it was, to help new immigrants and those of the area that need help. This was a theme of the walk: the various waves of immigrants who settled the area built institutions to help their fellows out.</description>
     </item>
     
     <item>
@@ -220,8 +230,7 @@ This is the Church of St Stephen-in-the-Fields, on College between Spadina and B
       
       <guid>/2017/06/10/monster-chiller-horror-theatre/</guid>
       <description>I saw this in the elevator last week:
- and it immediately made me think of Count Floyd in this:
- </description>
+and it immediately made me think of Count Floyd in this:</description>
     </item>
     
     <item>
@@ -231,7 +240,7 @@ This is the Church of St Stephen-in-the-Fields, on College between Spadina and B
       
       <guid>/2017/06/08/histograms-and-bins/</guid>
       <description>Most software, when you ask it to draw you a histogram, will choose a number of intervals (“bins”) for you. Base R is one of those. To illustrate, let’s read in some data:
-library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ## Loading tidyverse: tidyr ## Loading tidyverse: readr ## Loading tidyverse: purrr ## Loading tidyverse: dplyr ## Conflicts with tidy packages ---------------------------------------------- ## filter(): dplyr, stats ## lag(): dplyr, stats myurl=&amp;quot;http://www.</description>
+library(tidyverse) ## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() myurl=&amp;quot;http://www.</description>
     </item>
     
     <item>
@@ -259,7 +268,7 @@ library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ##
       
       <guid>/2017/06/01/carter-and-guthrie-part-2-model-building/</guid>
       <description>Estimating the parameters Start, as ever, with the tidyverse, along with MASS for modelling later:
-library(MASS) library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ## Loading tidyverse: tidyr ## Loading tidyverse: readr ## Loading tidyverse: purrr ## Loading tidyverse: dplyr ## Conflicts with tidy packages ---------------------------------------------- ## filter(): dplyr, stats ## lag(): dplyr, stats ## select(): dplyr, MASS The model The Carter and Guthrie model is a simplified version of cricketing reality, thus:</description>
+library(MASS) library(tidyverse) ## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() ## ✖ dplyr::select() masks MASS::select() The model The Carter and Guthrie model is a simplified version of cricketing reality, thus:</description>
     </item>
     
     <item>
@@ -289,8 +298,7 @@ Well, I thought, that ought to be easy enough to simulate. Randomly shuffle the 
       
       <guid>/2017/05/22/add-in/</guid>
       <description>I just discovered a couple of things:
-an R Studio add-in called CRANsearcher that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to @juliasilge on Twitter for this.)
- This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and “serving the site” so I can preview it.</description>
+an R Studio add-in called CRANsearcher that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to @juliasilge on Twitter for this.) To install:  devtools::install_github(&amp;quot;RhoInc/CRANsearcher&amp;quot;) This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and “serving the site” so I can preview it.</description>
     </item>
     
     <item>
@@ -451,16 +459,6 @@ This is the side of the S wing that nobody sees; it has the concrete brutalism o
       
       <guid>/1/01/01/</guid>
       <description>Only T20I (D/N), West Indies tour of England at Chester-le-Street, Sep 16 2017 | Match Statistics | ESPNCricinfo { &#34;@context&#34;: &#34;http://schema.org&#34;, &#34;@type&#34;: &#34;WebSite&#34;, &#34;name&#34;: &#34;ESPNcricinfo&#34;, &#34;url&#34;: &#34;http://www.espncricinfo.com/&#34; }  Only T20I (D/N), West Indies tour of England at Chester-le-Street, Sep 16 2017 | Match Summary | ESPNCricinfo    -- ;(function(){ function rc(a){for(var b=a+&#34;=&#34;,c=document.cookie.split(&#34;;&#34;),d=0;d0&amp;&amp;(h-=1)}),c.on(&#34;internal-error&#34;,function(t){i(&#34;ierr&#34;,[t,(new Date).getTime(),!0])})},{}],3:[function(t,e,n){t(&#34;loader&#34;).features.ins=!0},{}],4:[function(t,e,n){function r(){N++,S=y.hash,this[u]=Date.now()}function o(){N--,y.hash!==S&amp;&amp;i(0,!0);var t=Date.now();this[l]=~~this[l]+t-this[u],this[h]=t}function i(t,e){x.emit(&#34;newURL&#34;,[&#34;&#34;+y,e])}function a(t,e){t.on(e,function(){this[e]=Date.now()})}var c=&#34;-start&#34;,s=&#34;-end&#34;,f=&#34;-body&#34;,u=&#34;fn&#34;+c,h=&#34;fn&#34;+s,p=&#34;cb&#34;+c,d=&#34;cb&#34;+s,l=&#34;jsTime&#34;,m=&#34;fetch&#34;,v=&#34;addEventListener&#34;,w=window,y=w.location;if(w[v]){var g=t(9),b=t(10),x=t(8),E=t(6),T=t(12),O=t(7),P=t(13),R=t(&#34;ee&#34;),D=R.get(&#34;tracer&#34;);t(14),t(&#34;loader&#34;).features.spa=!0;var S,M=w[v],N=0;R.on(u,r),R.on(p,r),R.on(h,o),R.on(d,o),R.buffer([u,h,&#34;xhr-done&#34;,&#34;xhr-resolved&#34;]),E.buffer([u]),T.buffer([&#34;setTimeout&#34;+s,&#34;clearTimeout&#34;+c,u]),P.buffer([u,&#34;new-xhr&#34;,&#34;open-xhr&#34;+c]),O.buffer([m+c,m+&#34;-done&#34;,m+f+c,m+f+s]),x.buffer([&#34;newURL&#34;]),g.buffer([u]),b.buffer([&#34;propagate&#34;,p,d,&#34;executor-err&#34;,&#34;resolve&#34;+c]),D.buffer([u,&#34;no-&#34;+u]),a(P,&#34;open-xhr&#34;+c),a(R,&#34;xhr-resolved&#34;),a(R,&#34;xhr-done&#34;),a(O,m+c),a(O,m+&#34;-done&#34;),x.on(&#34;pushState-end&#34;,i),x.on(&#34;replaceState-end&#34;,i),M(&#34;hashchange&#34;,i,!0),M(&#34;load&#34;,i,!0),M(&#34;popstate&#34;,function(){i(0,N1)},!0)}},{}],5:[function(t,e,n){function r(t){}if(window.performance&amp;&amp;window.performance.timing&amp;&amp;window.performance.getEntriesByType){var o=t(&#34;ee&#34;),i=t(&#34;handle&#34;),a=t(12),c=t(11),s=&#34;learResourceTimings&#34;,f=&#34;addEventListener&#34;,u=&#34;resourcetimingbufferfull&#34;,h=&#34;bstResource&#34;,p=&#34;resource&#34;,d=&#34;-start&#34;,l=&#34;-end&#34;,m=&#34;fn&#34;+d,v=&#34;fn&#34;+l,w=&#34;bstTimer&#34;,y=&#34;pushState&#34;;t(&#34;loader&#34;).features.stn=!0,t(8);var g=NREUM.o.EV;o.on(m,function(t,e){var n=t[0];n instanceof g&amp;&amp;(this.</description>
-    </item>
-    
-    <item>
-      <title>Toronto subway connections</title>
-      <link>/1/01/01/toronto-subway-connections/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/1/01/01/toronto-subway-connections/</guid>
-      <description>Introduction Toronto’s subway network consists of four lines, as shown here. The shape of the network is somewhat iconic, with one line going across, and one down and up in a U-shape.
-Let’s suppose that all I have is a list of the stations on each line. How could I represent the structure of the network, how could I draw it, and how would my image match up to reality? Let’s find out.</description>
     </item>
     
   </channel>

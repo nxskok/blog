@@ -104,19 +104,21 @@
 <p>I found the whole 2008 season’s results <a href="http://www.baseball-reference.com/leagues/MLB/2008-schedule.shtml">here</a>. To extract what I wanted, I would have to handle the HTML, and even when I had the text displayed on that web page, I would have to organize it. This means using <code>rvest</code> to “scrape” the HTML, as well as <code>stringr</code> to handle the text. The latter is installed with the <code>tidyverse</code> but has to be loaded separately.</p>
 <p>All right, down to business:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## Loading tidyverse: ggplot2
-## Loading tidyverse: tibble
-## Loading tidyverse: tidyr
-## Loading tidyverse: readr
-## Loading tidyverse: purrr
-## Loading tidyverse: dplyr</code></pre>
-<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
-<pre><code>## filter(): dplyr, stats
-## lag():    dplyr, stats</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(rvest)</code></pre>
 <pre><code>## Loading required package: xml2</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     pluck</code></pre>
 <pre><code>## The following object is masked from &#39;package:readr&#39;:
 ## 
 ##     guess_encoding</code></pre>
@@ -125,15 +127,15 @@
 res2008=read_html(&quot;http://www.baseball-reference.com/leagues/MLB/2008-schedule.shtml&quot;)
 res2008</code></pre>
 <pre><code>## {xml_document}
-## &lt;html data-version=&quot;klecko-&quot; data-root=&quot;/home/br/build&quot; itemscope=&quot;&quot; itemtype=&quot;http://schema.org/WebSite&quot; lang=&quot;en&quot; class=&quot;no-js&quot;&gt;
+## &lt;html data-version=&quot;klecko-&quot; data-root=&quot;/home/br/build&quot; itemscope=&quot;&quot; itemtype=&quot;https://schema.org/WebSite&quot; lang=&quot;en&quot; class=&quot;no-js&quot;&gt;
 ## [1] &lt;head&gt;\n&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset= ...
 ## [2] &lt;body class=&quot;br&quot;&gt;\n\n&lt;div id=&quot;wrap&quot;&gt;\n  &lt;div id=&quot;header&quot; role=&quot;banne ...</code></pre>
 <p>So now we have to go inside the HTML and pull out the text that contains the teams and scores. A surreptitious peek at the HTML reveals that each game is enclosed in a <code>&lt;p&gt;</code> “paragraph” tag. The “paragraphs” can be extracted into a vector like this:</p>
 <pre class="r"><code>paragraphs=res2008 %&gt;% html_nodes(&quot;p&quot;)
 paragraphs</code></pre>
-<pre><code>## {xml_nodeset (2703)}
+<pre><code>## {xml_nodeset (2705)}
 ##  [1] &lt;p&gt;&lt;a href=&quot;http://www.sportslogos.net/&quot;&gt;via Sports Logos.net&lt;/a&gt;&lt;/p&gt;
-##  [2] &lt;p&gt;&lt;a href=&quot;http://www.sports-reference.com/blog/2016/06/redesign-t ...
+##  [2] &lt;p&gt;&lt;a href=&quot;https://www.sports-reference.com/blog/2016/06/redesign- ...
 ##  [3] &lt;p&gt;&lt;strong&gt;World Series Champion&lt;/strong&gt;: &lt;a href=&quot;/teams/PHI/2008 ...
 ##  [4] &lt;p&gt;&lt;a href=&quot;/register/league.cgi?year=2008&quot;&gt;Minor Leagues&lt;/a&gt;&lt;/p&gt;
 ##  [5] &lt;p&gt;&lt;a href=&quot;/leagues/MLB/2008-standings.shtml&quot;&gt;Standings&lt;/a&gt;&lt;/p&gt;
@@ -191,48 +193,48 @@ d$txt[1:20]</code></pre>
 <pre><code>##  [1] &quot;\n \n \n  Boston Red Sox\n (6)\n @\n  Oakland Athletics\n (5)\n     Boxscore\n &quot;           
 ##  [2] &quot;\n \n \n  Boston Red Sox\n (1)\n @\n  Oakland Athletics\n (5)\n     Boxscore\n &quot;           
 ##  [3] &quot;\n \n \n  Atlanta Braves\n (2)\n @\n  Washington Nationals\n (3)\n     Boxscore\n &quot;        
-##  [4] &quot;\n \n \n  Texas Rangers\n (2)\n @\n  Seattle Mariners\n (5)\n     Boxscore\n &quot;             
-##  [5] &quot;\n \n \n  LA Angels of Anaheim\n (2)\n @\n  Minnesota Twins\n (3)\n     Boxscore\n &quot;       
-##  [6] &quot;\n \n \n  Kansas City Royals\n (5)\n @\n  Detroit Tigers\n (4)\n     Boxscore\n &quot;          
-##  [7] &quot;\n \n \n  Chicago White Sox\n (8)\n @\n  Cleveland Indians\n (10)\n     Boxscore\n &quot;       
-##  [8] &quot;\n \n \n  Tampa Bay Rays\n (6)\n @\n  Baltimore Orioles\n (2)\n     Boxscore\n &quot;           
-##  [9] &quot;\n \n \n  Houston Astros\n (0)\n @\n  San Diego Padres\n (4)\n     Boxscore\n &quot;            
-## [10] &quot;\n \n \n  Washington Nationals\n (11)\n @\n  Philadelphia Phillies\n (6)\n     Boxscore\n &quot;
-## [11] &quot;\n \n \n  Pittsburgh Pirates\n (12)\n @\n  Atlanta Braves\n (11)\n     Boxscore\n &quot;        
-## [12] &quot;\n \n \n  Milwaukee Brewers\n (4)\n @\n  Chicago Cubs\n (3)\n     Boxscore\n &quot;             
-## [13] &quot;\n \n \n  Arizona D&#39;Backs\n (4)\n @\n  Cincinnati Reds\n (2)\n     Boxscore\n &quot;            
-## [14] &quot;\n \n \n  New York Mets\n (7)\n @\n  Florida Marlins\n (2)\n     Boxscore\n &quot;              
-## [15] &quot;\n \n \n  San Francisco Giants\n (0)\n @\n  Los Angeles Dodgers\n (5)\n     Boxscore\n &quot;   
-## [16] &quot;\n \n \n  Texas Rangers\n (5)\n @\n  Seattle Mariners\n (4)\n     Boxscore\n &quot;             
-## [17] &quot;\n \n \n  Boston Red Sox\n (2)\n @\n  Oakland Athletics\n (1)\n     Boxscore\n &quot;           
-## [18] &quot;\n \n \n  Toronto Blue Jays\n (2)\n @\n  New York Yankees\n (3)\n     Boxscore\n &quot;         
-## [19] &quot;\n \n \n  LA Angels of Anaheim\n (9)\n @\n  Minnesota Twins\n (1)\n     Boxscore\n &quot;       
-## [20] &quot;\n \n \n  Colorado Rockies\n (2)\n @\n  St. Louis Cardinals\n (1)\n     Boxscore\n &quot;</code></pre>
+##  [4] &quot;\n \n \n  Pittsburgh Pirates\n (12)\n @\n  Atlanta Braves\n (11)\n     Boxscore\n &quot;        
+##  [5] &quot;\n \n \n  Tampa Bay Rays\n (6)\n @\n  Baltimore Orioles\n (2)\n     Boxscore\n &quot;           
+##  [6] &quot;\n \n \n  Milwaukee Brewers\n (4)\n @\n  Chicago Cubs\n (3)\n     Boxscore\n &quot;             
+##  [7] &quot;\n \n \n  Arizona D&#39;Backs\n (4)\n @\n  Cincinnati Reds\n (2)\n     Boxscore\n &quot;            
+##  [8] &quot;\n \n \n  Chicago White Sox\n (8)\n @\n  Cleveland Indians\n (10)\n     Boxscore\n &quot;       
+##  [9] &quot;\n \n \n  Kansas City Royals\n (5)\n @\n  Detroit Tigers\n (4)\n     Boxscore\n &quot;          
+## [10] &quot;\n \n \n  New York Mets\n (7)\n @\n  Florida Marlins\n (2)\n     Boxscore\n &quot;              
+## [11] &quot;\n \n \n  San Francisco Giants\n (0)\n @\n  Los Angeles Dodgers\n (5)\n     Boxscore\n &quot;   
+## [12] &quot;\n \n \n  LA Angels of Anaheim\n (2)\n @\n  Minnesota Twins\n (3)\n     Boxscore\n &quot;       
+## [13] &quot;\n \n \n  Washington Nationals\n (11)\n @\n  Philadelphia Phillies\n (6)\n     Boxscore\n &quot;
+## [14] &quot;\n \n \n  Houston Astros\n (0)\n @\n  San Diego Padres\n (4)\n     Boxscore\n &quot;            
+## [15] &quot;\n \n \n  Texas Rangers\n (2)\n @\n  Seattle Mariners\n (5)\n     Boxscore\n &quot;             
+## [16] &quot;\n \n \n  New York Mets\n (4)\n @\n  Florida Marlins\n (5)\n     Boxscore\n &quot;              
+## [17] &quot;\n \n \n  San Francisco Giants\n (2)\n @\n  Los Angeles Dodgers\n (3)\n     Boxscore\n &quot;   
+## [18] &quot;\n \n \n  LA Angels of Anaheim\n (9)\n @\n  Minnesota Twins\n (1)\n     Boxscore\n &quot;       
+## [19] &quot;\n \n \n  Toronto Blue Jays\n (2)\n @\n  New York Yankees\n (3)\n     Boxscore\n &quot;         
+## [20] &quot;\n \n \n  Boston Red Sox\n (2)\n @\n  Oakland Athletics\n (1)\n     Boxscore\n &quot;</code></pre>
 <p>Those all appear to be game scores. They have a lot of extra newlines in them, but if we’re lucky, there’ll be the same number of newlines in each one and this idea will work (from <code>stringr</code>):</p>
 <pre class="r"><code>m=str_split(d$txt,&quot;\n&quot;,simplify=T)
 m[1:10,]</code></pre>
-<pre><code>##       [,1] [,2] [,3] [,4]                     [,5]    [,6]
-##  [1,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Boston Red Sox&quot;       &quot; (6)&quot;  &quot; @&quot;
-##  [2,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Boston Red Sox&quot;       &quot; (1)&quot;  &quot; @&quot;
-##  [3,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Atlanta Braves&quot;       &quot; (2)&quot;  &quot; @&quot;
-##  [4,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Texas Rangers&quot;        &quot; (2)&quot;  &quot; @&quot;
-##  [5,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  LA Angels of Anaheim&quot; &quot; (2)&quot;  &quot; @&quot;
-##  [6,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Kansas City Royals&quot;   &quot; (5)&quot;  &quot; @&quot;
-##  [7,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Chicago White Sox&quot;    &quot; (8)&quot;  &quot; @&quot;
-##  [8,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Tampa Bay Rays&quot;       &quot; (6)&quot;  &quot; @&quot;
-##  [9,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Houston Astros&quot;       &quot; (0)&quot;  &quot; @&quot;
-## [10,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Washington Nationals&quot; &quot; (11)&quot; &quot; @&quot;
-##       [,7]                      [,8]    [,9]            [,10]
-##  [1,] &quot;  Oakland Athletics&quot;     &quot; (5)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-##  [2,] &quot;  Oakland Athletics&quot;     &quot; (5)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-##  [3,] &quot;  Washington Nationals&quot;  &quot; (3)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-##  [4,] &quot;  Seattle Mariners&quot;      &quot; (5)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-##  [5,] &quot;  Minnesota Twins&quot;       &quot; (3)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-##  [6,] &quot;  Detroit Tigers&quot;        &quot; (4)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-##  [7,] &quot;  Cleveland Indians&quot;     &quot; (10)&quot; &quot;     Boxscore&quot; &quot; &quot;  
-##  [8,] &quot;  Baltimore Orioles&quot;     &quot; (2)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-##  [9,] &quot;  San Diego Padres&quot;      &quot; (4)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
-## [10,] &quot;  Philadelphia Phillies&quot; &quot; (6)&quot;  &quot;     Boxscore&quot; &quot; &quot;</code></pre>
+<pre><code>##       [,1] [,2] [,3] [,4]                   [,5]    [,6]
+##  [1,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Boston Red Sox&quot;     &quot; (6)&quot;  &quot; @&quot;
+##  [2,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Boston Red Sox&quot;     &quot; (1)&quot;  &quot; @&quot;
+##  [3,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Atlanta Braves&quot;     &quot; (2)&quot;  &quot; @&quot;
+##  [4,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Pittsburgh Pirates&quot; &quot; (12)&quot; &quot; @&quot;
+##  [5,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Tampa Bay Rays&quot;     &quot; (6)&quot;  &quot; @&quot;
+##  [6,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Milwaukee Brewers&quot;  &quot; (4)&quot;  &quot; @&quot;
+##  [7,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Arizona D&#39;Backs&quot;    &quot; (4)&quot;  &quot; @&quot;
+##  [8,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Chicago White Sox&quot;  &quot; (8)&quot;  &quot; @&quot;
+##  [9,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  Kansas City Royals&quot; &quot; (5)&quot;  &quot; @&quot;
+## [10,] &quot;&quot;   &quot; &quot;  &quot; &quot;  &quot;  New York Mets&quot;      &quot; (7)&quot;  &quot; @&quot;
+##       [,7]                     [,8]    [,9]            [,10]
+##  [1,] &quot;  Oakland Athletics&quot;    &quot; (5)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
+##  [2,] &quot;  Oakland Athletics&quot;    &quot; (5)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
+##  [3,] &quot;  Washington Nationals&quot; &quot; (3)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
+##  [4,] &quot;  Atlanta Braves&quot;       &quot; (11)&quot; &quot;     Boxscore&quot; &quot; &quot;  
+##  [5,] &quot;  Baltimore Orioles&quot;    &quot; (2)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
+##  [6,] &quot;  Chicago Cubs&quot;         &quot; (3)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
+##  [7,] &quot;  Cincinnati Reds&quot;      &quot; (2)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
+##  [8,] &quot;  Cleveland Indians&quot;    &quot; (10)&quot; &quot;     Boxscore&quot; &quot; &quot;  
+##  [9,] &quot;  Detroit Tigers&quot;       &quot; (4)&quot;  &quot;     Boxscore&quot; &quot; &quot;  
+## [10,] &quot;  Florida Marlins&quot;      &quot; (2)&quot;  &quot;     Boxscore&quot; &quot; &quot;</code></pre>
 <p>It looks as if the newlines split each piece of text into exactly 10 pieces, which was a lucky break and saved us having to do anything more sophisticated. Also, the road team is in column 4, the home team in column 7, the road team’s score in column 5 and the home team’s score in column 8, so now we can pull these out of the matrix and into a new data frame.</p>
 <p>Unfortunately, if you look carefully, the team names all have two extra spaces on the front, and since we are going to look them up later, we should get rid of those spaces now. <code>trimws</code> removes any leading or trailing whitespace, which is exactly what we want.</p>
 <p>There’s one more thing: the scores are in brackets, which you might think would need some regular expression trickery to extract, but no: there is a handy function <code>parse_number</code> that extracts the numeric part of any text. Finally, we need to calculate the total number of runs in each game, and store all of that in a data frame:</p>
@@ -243,18 +245,18 @@ m[1:10,]</code></pre>
               runs=s1+s2)
 scores</code></pre>
 <pre><code>## # A tibble: 2,460 x 5
-##                      t1                    t2    s1    s2  runs
-##                   &lt;chr&gt;                 &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-##  1       Boston Red Sox     Oakland Athletics     6     5    11
-##  2       Boston Red Sox     Oakland Athletics     1     5     6
-##  3       Atlanta Braves  Washington Nationals     2     3     5
-##  4        Texas Rangers      Seattle Mariners     2     5     7
-##  5 LA Angels of Anaheim       Minnesota Twins     2     3     5
-##  6   Kansas City Royals        Detroit Tigers     5     4     9
-##  7    Chicago White Sox     Cleveland Indians     8    10    18
-##  8       Tampa Bay Rays     Baltimore Orioles     6     2     8
-##  9       Houston Astros      San Diego Padres     0     4     4
-## 10 Washington Nationals Philadelphia Phillies    11     6    17
+##    t1                 t2                      s1    s2  runs
+##    &lt;chr&gt;              &lt;chr&gt;                &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 Boston Red Sox     Oakland Athletics     6.00  5.00 11.0 
+##  2 Boston Red Sox     Oakland Athletics     1.00  5.00  6.00
+##  3 Atlanta Braves     Washington Nationals  2.00  3.00  5.00
+##  4 Pittsburgh Pirates Atlanta Braves       12.0  11.0  23.0 
+##  5 Tampa Bay Rays     Baltimore Orioles     6.00  2.00  8.00
+##  6 Milwaukee Brewers  Chicago Cubs          4.00  3.00  7.00
+##  7 Arizona D&#39;Backs    Cincinnati Reds       4.00  2.00  6.00
+##  8 Chicago White Sox  Cleveland Indians     8.00 10.0  18.0 
+##  9 Kansas City Royals Detroit Tigers        5.00  4.00  9.00
+## 10 New York Mets      Florida Marlins       7.00  2.00  9.00
 ## # ... with 2,450 more rows</code></pre>
 <p>Success!</p>
 <p>Now, we turn our minds back to what we were trying to do: determine whether each game was played under American League rules (with a Designated Hitter) or National League rules (without). That depends on what league the <em>home</em> team plays in, the column <code>t2</code> in our data frame <code>scores</code>. What we’ll do is to make a small data frame of all the (home) teams, and to that glue a designation of which league each one was in (in 2008). Then we can use the small data frame to look up each home team in <code>scores</code> and append a column with the right League.</p>
@@ -262,20 +264,20 @@ scores</code></pre>
 <pre class="r"><code>teams=unique(scores$t2)
 teams</code></pre>
 <pre><code>##  [1] &quot;Oakland Athletics&quot;     &quot;Washington Nationals&quot; 
-##  [3] &quot;Seattle Mariners&quot;      &quot;Minnesota Twins&quot;      
-##  [5] &quot;Detroit Tigers&quot;        &quot;Cleveland Indians&quot;    
-##  [7] &quot;Baltimore Orioles&quot;     &quot;San Diego Padres&quot;     
-##  [9] &quot;Philadelphia Phillies&quot; &quot;Atlanta Braves&quot;       
-## [11] &quot;Chicago Cubs&quot;          &quot;Cincinnati Reds&quot;      
-## [13] &quot;Florida Marlins&quot;       &quot;Los Angeles Dodgers&quot;  
+##  [3] &quot;Atlanta Braves&quot;        &quot;Baltimore Orioles&quot;    
+##  [5] &quot;Chicago Cubs&quot;          &quot;Cincinnati Reds&quot;      
+##  [7] &quot;Cleveland Indians&quot;     &quot;Detroit Tigers&quot;       
+##  [9] &quot;Florida Marlins&quot;       &quot;Los Angeles Dodgers&quot;  
+## [11] &quot;Minnesota Twins&quot;       &quot;Philadelphia Phillies&quot;
+## [13] &quot;San Diego Padres&quot;      &quot;Seattle Mariners&quot;     
 ## [15] &quot;New York Yankees&quot;      &quot;St. Louis Cardinals&quot;  
-## [17] &quot;Toronto Blue Jays&quot;     &quot;LA Angels of Anaheim&quot; 
-## [19] &quot;Colorado Rockies&quot;      &quot;Milwaukee Brewers&quot;    
-## [21] &quot;Chicago White Sox&quot;     &quot;San Francisco Giants&quot; 
-## [23] &quot;Pittsburgh Pirates&quot;    &quot;Houston Astros&quot;       
-## [25] &quot;Arizona D&#39;Backs&quot;       &quot;Boston Red Sox&quot;       
-## [27] &quot;Kansas City Royals&quot;    &quot;Tampa Bay Rays&quot;       
-## [29] &quot;Texas Rangers&quot;         &quot;New York Mets&quot;</code></pre>
+## [17] &quot;LA Angels of Anaheim&quot;  &quot;Colorado Rockies&quot;     
+## [19] &quot;Milwaukee Brewers&quot;     &quot;Toronto Blue Jays&quot;    
+## [21] &quot;Arizona D&#39;Backs&quot;       &quot;Chicago White Sox&quot;    
+## [23] &quot;Houston Astros&quot;        &quot;Pittsburgh Pirates&quot;   
+## [25] &quot;San Francisco Giants&quot;  &quot;Boston Red Sox&quot;       
+## [27] &quot;Kansas City Royals&quot;    &quot;New York Mets&quot;        
+## [29] &quot;Tampa Bay Rays&quot;        &quot;Texas Rangers&quot;</code></pre>
 <p>As you can check, these no longer have any leading whitespace.</p>
 <p>I’m going to write these to a <code>.csv</code> file, add (manually) a second column with the leagues in, and then read it back in:</p>
 <pre class="r"><code>write_csv(tibble(teams),&quot;teams.csv&quot;)</code></pre>
@@ -288,42 +290,42 @@ teams</code></pre>
 ## )</code></pre>
 <pre class="r"><code>teams2</code></pre>
 <pre><code>## # A tibble: 30 x 2
-##                    teams  leagues
-##                    &lt;chr&gt;    &lt;chr&gt;
-##  1     Oakland Athletics American
-##  2  Washington Nationals National
-##  3      Seattle Mariners American
-##  4       Minnesota Twins American
-##  5        Detroit Tigers American
-##  6     Cleveland Indians American
-##  7     Baltimore Orioles American
-##  8      San Diego Padres National
+##    teams                 leagues 
+##    &lt;chr&gt;                 &lt;chr&gt;   
+##  1 Oakland Athletics     American
+##  2 Washington Nationals  National
+##  3 Seattle Mariners      American
+##  4 Minnesota Twins       American
+##  5 Detroit Tigers        American
+##  6 Cleveland Indians     American
+##  7 Baltimore Orioles     American
+##  8 San Diego Padres      National
 ##  9 Philadelphia Phillies National
-## 10        Atlanta Braves National
+## 10 Atlanta Braves        National
 ## # ... with 20 more rows</code></pre>
 <p>There’s supposed to be 16 National League teams and only 14 American League ones:</p>
 <pre class="r"><code>teams2 %&gt;% count(leagues)</code></pre>
 <pre><code>## # A tibble: 2 x 2
-##    leagues     n
-##      &lt;chr&gt; &lt;int&gt;
+##   leagues      n
+##   &lt;chr&gt;    &lt;int&gt;
 ## 1 American    14
 ## 2 National    16</code></pre>
 <p>so it looks as if I got the league memberships correct.</p>
 <p>Now, the lookup. Database people call this a “join”, which is also the name of the idea in <code>dplyr</code>. I want to match the column called <code>t2</code> in <code>scores</code> with the column called <code>teams</code> in <code>teams2</code>, which the <code>by</code> below does:</p>
 <pre class="r"><code>scores %&gt;% left_join(teams2,by=c(&quot;t2&quot;=&quot;teams&quot;))</code></pre>
 <pre><code>## # A tibble: 2,460 x 6
-##                      t1                    t2    s1    s2  runs  leagues
-##                   &lt;chr&gt;                 &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;chr&gt;
-##  1       Boston Red Sox     Oakland Athletics     6     5    11 American
-##  2       Boston Red Sox     Oakland Athletics     1     5     6 American
-##  3       Atlanta Braves  Washington Nationals     2     3     5 National
-##  4        Texas Rangers      Seattle Mariners     2     5     7 American
-##  5 LA Angels of Anaheim       Minnesota Twins     2     3     5 American
-##  6   Kansas City Royals        Detroit Tigers     5     4     9 American
-##  7    Chicago White Sox     Cleveland Indians     8    10    18 American
-##  8       Tampa Bay Rays     Baltimore Orioles     6     2     8 American
-##  9       Houston Astros      San Diego Padres     0     4     4 National
-## 10 Washington Nationals Philadelphia Phillies    11     6    17 National
+##    t1                 t2                      s1    s2  runs leagues 
+##    &lt;chr&gt;              &lt;chr&gt;                &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;   
+##  1 Boston Red Sox     Oakland Athletics     6.00  5.00 11.0  American
+##  2 Boston Red Sox     Oakland Athletics     1.00  5.00  6.00 American
+##  3 Atlanta Braves     Washington Nationals  2.00  3.00  5.00 National
+##  4 Pittsburgh Pirates Atlanta Braves       12.0  11.0  23.0  National
+##  5 Tampa Bay Rays     Baltimore Orioles     6.00  2.00  8.00 American
+##  6 Milwaukee Brewers  Chicago Cubs          4.00  3.00  7.00 National
+##  7 Arizona D&#39;Backs    Cincinnati Reds       4.00  2.00  6.00 National
+##  8 Chicago White Sox  Cleveland Indians     8.00 10.0  18.0  American
+##  9 Kansas City Royals Detroit Tigers        5.00  4.00  9.00 American
+## 10 New York Mets      Florida Marlins       7.00  2.00  9.00 National
 ## # ... with 2,450 more rows</code></pre>
 <p>If you scroll across, you’ll see that each game has acquired the league membership of its home team, and you can eyeball these 10 to make sure that they are correct (they seem to be).</p>
 <p>For our analysis, we only need the total number of runs in each game and the league membership of the home team, so let’s save only what we need:</p>
@@ -331,44 +333,44 @@ teams</code></pre>
   select(runs,leagues)
 byleague</code></pre>
 <pre><code>## # A tibble: 2,460 x 2
-##     runs  leagues
-##    &lt;dbl&gt;    &lt;chr&gt;
-##  1    11 American
-##  2     6 American
-##  3     5 National
-##  4     7 American
-##  5     5 American
-##  6     9 American
-##  7    18 American
-##  8     8 American
-##  9     4 National
-## 10    17 National
+##     runs leagues 
+##    &lt;dbl&gt; &lt;chr&gt;   
+##  1 11.0  American
+##  2  6.00 American
+##  3  5.00 National
+##  4 23.0  National
+##  5  8.00 American
+##  6  7.00 National
+##  7  6.00 National
+##  8 18.0  American
+##  9  9.00 American
+## 10  9.00 National
 ## # ... with 2,450 more rows</code></pre>
 <p>A graphical comparison of runs by game for each league is most easily a boxplot:</p>
 <pre class="r"><code>ggplot(byleague,aes(x=leagues,y=runs))+geom_boxplot()</code></pre>
-<p><img src="../../../../post/2017-06-08-the-designated-hitter_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-13-1.png" width="672" /></p>
 <p>As you might expect, there were a few games with a <em>lot</em> of runs, so the distributions are skewed to the right. There appears to be not much difference between the medians, but that might just be the scale.</p>
 <p>Also, were there really games with over 25 runs?</p>
 <pre class="r"><code>scores %&gt;% filter(runs&gt;25)</code></pre>
 <pre><code>## # A tibble: 7 x 5
-##                     t1                t2    s1    s2  runs
-##                  &lt;chr&gt;             &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-## 1      Florida Marlins  Colorado Rockies    17    18    35
-## 2  Los Angeles Dodgers  Colorado Rockies    16    10    26
-## 3       Detroit Tigers Cleveland Indians    14    12    26
-## 4        Texas Rangers    Boston Red Sox    17    19    36
-## 5       Atlanta Braves   Florida Marlins    16    14    30
-## 6 LA Angels of Anaheim     Texas Rangers    15    13    28
-## 7     New York Yankees    Boston Red Sox    19     8    27</code></pre>
+##   t1                   t2                   s1    s2  runs
+##   &lt;chr&gt;                &lt;chr&gt;             &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 Florida Marlins      Colorado Rockies   17.0 18.0   35.0
+## 2 Los Angeles Dodgers  Colorado Rockies   16.0 10.0   26.0
+## 3 Detroit Tigers       Cleveland Indians  14.0 12.0   26.0
+## 4 Texas Rangers        Boston Red Sox     17.0 19.0   36.0
+## 5 Atlanta Braves       Florida Marlins    16.0 14.0   30.0
+## 6 LA Angels of Anaheim Texas Rangers      15.0 13.0   28.0
+## 7 New York Yankees     Boston Red Sox     19.0  8.00  27.0</code></pre>
 <p>Those games are on the webpage with those scores, so they should be correct. There were actually <em>six</em> instances of a team scoring 19 runs in a game, some of which were scores like 19-3 or 19-6 that don’t show up here.</p>
 <p>All right then, what were the medians and means by league, and how much data do we have?</p>
 <pre class="r"><code>byleague %&gt;% group_by(leagues) %&gt;% 
   summarize(n=n(),mean=mean(runs),median=median(runs))</code></pre>
 <pre><code>## # A tibble: 2 x 4
-##    leagues     n     mean median
-##      &lt;chr&gt; &lt;int&gt;    &lt;dbl&gt;  &lt;dbl&gt;
-## 1 American  1151 9.485665      9
-## 2 National  1309 9.119175      9</code></pre>
+##   leagues      n  mean median
+##   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 American  1151  9.49   9.00
+## 2 National  1309  9.12   9.00</code></pre>
 <p>The medians for both leagues are the same (which was why it was hard to see any difference on the boxplots), but the mean for the American League is slightly higher. Is that difference significant? Despite the skewness, I am going to go ahead and do a two-sample <span class="math inline">\(t\)</span>-test because there is a lot of data. I’m using a one-sided test because the Designated Hitter rule means that there is an <em>a priori</em> reason for the American League mean to be bigger:</p>
 <pre class="r"><code>t.test(runs~leagues,data=byleague,alternative=&quot;greater&quot;)</code></pre>
 <pre><code>## 

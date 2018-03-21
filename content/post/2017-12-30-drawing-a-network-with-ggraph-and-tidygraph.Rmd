@@ -6,7 +6,9 @@ slug: drawing-a-network-with-ggraph-and-tidygraph
 tags:
 - '#rstats'
 - '#tidyverse'
-categories: R trains
+categories: 
+ - R 
+ - trains
 ---
 
 ## Introduction

@@ -50,7 +50,7 @@ p=c(0.25,0.3,0.42) We’ll need the tidyverse, as usual:</description>
       
       <guid>/2017/06/08/histograms-and-bins/</guid>
       <description>Most software, when you ask it to draw you a histogram, will choose a number of intervals (“bins”) for you. Base R is one of those. To illustrate, let’s read in some data:
-library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ## Loading tidyverse: tidyr ## Loading tidyverse: readr ## Loading tidyverse: purrr ## Loading tidyverse: dplyr ## Conflicts with tidy packages ---------------------------------------------- ## filter(): dplyr, stats ## lag(): dplyr, stats myurl=&amp;quot;http://www.</description>
+library(tidyverse) ## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() myurl=&amp;quot;http://www.</description>
     </item>
     
     <item>
@@ -69,8 +69,7 @@ library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ##
       
       <guid>/2017/05/22/add-in/</guid>
       <description>I just discovered a couple of things:
-an R Studio add-in called CRANsearcher that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to @juliasilge on Twitter for this.)
- This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and “serving the site” so I can preview it.</description>
+an R Studio add-in called CRANsearcher that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to @juliasilge on Twitter for this.) To install:  devtools::install_github(&amp;quot;RhoInc/CRANsearcher&amp;quot;) This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and “serving the site” so I can preview it.</description>
     </item>
     
     <item>

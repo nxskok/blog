@@ -6,10 +6,20 @@
     <description>Recent content in #Tidyverse on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 23 Feb 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 21 Mar 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/#tidyverse/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Readr and summary</title>
+      <link>/2018/03/21/readr-and-summary/</link>
+      <pubDate>Wed, 21 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/21/readr-and-summary/</guid>
+      <description>Packages In this post I use these packages (the last one at the end):
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() library(skimr) ## ## Attaching package: &amp;#39;skimr&amp;#39; ## The following objects are masked from &amp;#39;package:dplyr&amp;#39;: ## ## contains, ends_with, everything, matches, num_range, one_of, ## starts_with  Introduction The readr file-reading functions read text as text without turning it into factors.</description>
+    </item>
     
     <item>
       <title>Making a lot of plots all at once, the tidyverse way</title>
@@ -42,7 +52,7 @@ library(tidyverse) ## ── Attaching packages ──────────�
     </item>
     
     <item>
-      <title>Drawing a network with &#34;ggraph&#34; and &#34;tidygraph&#34;</title>
+      <title>Drawing a network with ggraph and tidygraph</title>
       <link>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</link>
       <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
       

@@ -16,16 +16,15 @@ tags: []
 <p>Start, as ever, with the <code>tidyverse</code>, along with <code>MASS</code> for modelling later:</p>
 <pre class="r"><code>library(MASS)
 library(tidyverse)</code></pre>
-<pre><code>## Loading tidyverse: ggplot2
-## Loading tidyverse: tibble
-## Loading tidyverse: tidyr
-## Loading tidyverse: readr
-## Loading tidyverse: purrr
-## Loading tidyverse: dplyr</code></pre>
-<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
-<pre><code>## filter(): dplyr, stats
-## lag():    dplyr, stats
-## select(): dplyr, MASS</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ✖ dplyr::select() masks MASS::select()</code></pre>
 <div id="the-model" class="section level2">
 <h2>The model</h2>
 <p>The Carter and Guthrie model is a simplified version of cricketing reality, thus:</p>
@@ -142,13 +141,13 @@ pExtra</code></pre>
 ## 0.3618481772 0.4080933004 0.0804909684 0.0106283094 0.1161361034 
 ##            5            6 
 ## 0.0003392157 0.0224639254</code></pre>
-Thus, the probability of an extra is 0.026, the probability of a wicket given a non-extra is 0.126, and the probabilities of <span class="math inline">\(0, 1, 2, \ldots\)</span> runs, given that there was neither an extra nor a wicket, are <span class="math inline">\(0.363, 0.408, 0.080, \ldots\)</span>. In detail, therefore, the recursion says that
+<p>Thus, the probability of an extra is 0.026, the probability of a wicket given a non-extra is 0.126, and the probabilities of <span class="math inline">\(0, 1, 2, \ldots\)</span> runs, given that there was neither an extra nor a wicket, are <span class="math inline">\(0.363, 0.408, 0.080, \ldots\)</span>. In detail, therefore, the recursion says that
 <span class="math display">\[\begin{eqnarray*}
 F(4;3,2)&amp;=&amp;0.026 F(3;3,2)+ (1-0.026)(0.126) F(4;2,1)+\\
 &amp;&amp;(1-0.026)(1-0.126)\left[ 0.363 F(4;2,2) + 0.408F(3;2,2)+\right.\\
 &amp;&amp;0.080 F(2;2,2)+0.011 F(1;2,2)+0.116 F(0;2,2)+\\
 &amp;&amp;\left. 0.0003 F(-1;2,2)+0.022F(-2;2,2)\right] \\
-\end{eqnarray*}\]</span>
+\end{eqnarray*}\]</span></p>
 <p>We note that <span class="math inline">\(F(-1;2,2)=F(-2;2,2)=0\)</span> (in words, the probability of getting 4 runs or less in 3 balls is 0 if 5 or 6 runs are scored off the first ball). The remaining <span class="math inline">\(F(r;b,w)\)</span> need to be calculated, and this is done using a similar recursion. Note that, for example, <span class="math inline">\(F(3;3,2)\)</span> will also need <span class="math inline">\(F(2;2,2)\)</span> (if one run is scored off the next ball), and thus a naive recursion would do a lot of unnecessary re-calculation. It is important, therefore, to create a look-up table of values already calculated, and to check it before starting on a calculation. In pseudocode, the procedure is therefore this:</p>
 <pre><code>bigF=function(r,b,w) {
   # base cases
@@ -212,7 +211,7 @@ str(env$lookupTable)</code></pre>
 <p>Let’s test it with the example we used above, and at the same time, time it:</p>
 <pre class="r"><code>system.time(ans &lt;- bigF(4,3,2))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.376   0.000   0.376</code></pre>
+##   0.217   0.000   0.216</code></pre>
 <pre class="r"><code>ans</code></pre>
 <pre><code>## [1] 0.721199</code></pre>
 <p>This result is reasonable, since with only three balls and two wickets left, it is most likely that four runs or fewer will be scored. I had to use the “alternative” arrow-like assignment operator here, because an equals sign inside <code>system.time</code> has a different meaning. We will assess the times in a moment.</p>
@@ -247,7 +246,7 @@ str(env$lookupTable)</code></pre>
 <p>Because the lookup table has now been populated, running the same calculation again should be a lot quicker:</p>
 <pre class="r"><code>system.time(ans &lt;- bigF(4,3,2))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.004   0.000   0.004</code></pre>
+##   0.001   0.000   0.001</code></pre>
 <pre class="r"><code>ans</code></pre>
 <pre><code>## [1] 0.721199</code></pre>
 <p>And so it is.</p>
@@ -257,7 +256,7 @@ str(env$lookupTable)</code></pre>
 <p>The nature of this recursion, with 8 recursive calls to <code>bigF</code> inside one original call, means that we threaten to branch wildly and will need to keep a large number of <span class="math inline">\((r,b,w)\)</span> triples on the stack. This is obviated by calling <code>bigF</code> repeatedly with values of <span class="math inline">\(r,b,w\)</span> only a little bigger than those already in the lookup table, taking advantage of the calculations already done (which will be most of the ones we need). For example:</p>
 <pre class="r"><code>system.time(bigF(10,10,10))</code></pre>
 <pre><code>##    user  system elapsed 
-##  11.512   0.000  11.515</code></pre>
+##   6.891   0.012   6.903</code></pre>
 <p>showing, for example, the cumulative distribution of runs with 8 balls and 9 wickets left (as calculated so far):</p>
 <pre class="r"><code>env$lookupTable %&gt;% filter(bb==8, ww==9) %&gt;% arrange(rr)</code></pre>
 <pre><code>##    rr bb ww            F
@@ -275,7 +274,7 @@ str(env$lookupTable)</code></pre>
 <p>and then</p>
 <pre class="r"><code>system.time(bigF(20,15,10))</code></pre>
 <pre><code>##    user  system elapsed 
-##  37.504   0.016  37.534</code></pre>
+##  22.277   0.016  22.295</code></pre>
 <p>after which, one can extract the more complete cumulative distribution of runs with 8 balls and 9 wickets left, thus:</p>
 <pre class="r"><code>env$lookupTable %&gt;% filter(bb==8, ww==9) %&gt;% arrange(rr)</code></pre>
 <pre><code>##    rr bb ww            F
