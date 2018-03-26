@@ -103,7 +103,7 @@
 <li>from <span class="citation">@pkqstr</span> about <code>separate_rows</code> from <code>tidyr</code>, that does something like <code>separate</code> followed by <code>gather</code>, but better.</li>
 <li>from <span class="citation">@ma_salmon</span> about <code>haven</code> for reading in data files from other software, and I thought about <code>rio</code> that does more or less the same thing, but more generally.</li>
 </ol>
-<p>I didn’t get to an answer to Maelle’s question of why <code>haven</code> worked less well for me than <code>rio</code> a long time ago. After all, <code>rio</code> <em>uses</em> <code>haven</code> when <code>haven</code> will work.</p>
+<p>I didn’t come up with an answer to Maëlle’s question of why <code>haven</code> worked less well for me than <code>rio</code> a long time ago. After all, <code>rio</code> <em>uses</em> <code>haven</code> when <code>haven</code> will work.</p>
 </div>
 <div id="packages" class="section level2">
 <h2>Packages</h2>
@@ -501,6 +501,9 @@ cars</code></pre>
 ##  9 Buick Estate Wagon  16.9   4.36      8.00 155   U.S.   
 ## 10 Audi 5000           20.3   2.83      5.00 103   Germany
 ## # ... with 28 more rows</code></pre>
+</div>
+<div id="other-kinds-of-file" class="section level3">
+<h3>Other kinds of file</h3>
 <p>It can also read the spreadsheet version of the supermarket data. We need the second sheet of the workbook, which is specified thus:</p>
 <pre class="r"><code>my_url=&quot;http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.XLS&quot;
 cereal2=import(my_url,which=2)
@@ -525,7 +528,7 @@ cereal2</code></pre>
 ## 17    22     4     3
 ## 18    26     4     4
 ## 19    28     4     5</code></pre>
-<p>This web site contains many tables for the English Premier soccer league, for example the current standings. I have to supply a <code>format</code> because the URL does not end in <code>.html</code>:</p>
+<p>The web site below contains many HTML tables related to the English Premier soccer league, for example the current standings. I have to supply a <code>format</code> here because the URL does not end in <code>.html</code>:</p>
 <pre class="r"><code>my_url=&quot;http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=8&quot;
 table=import(my_url,format=&quot;html&quot;,which=2)
 table</code></pre>

@@ -17,7 +17,7 @@ Today on Twitter I learned (or was reminded about) two #rstats things:
 1. from @pkqstr about `separate_rows` from `tidyr`, that does something like `separate` followed by `gather`, but better.
 1. from @ma_salmon about `haven` for reading in data files from other software, and I thought about `rio` that does more or less the same thing, but more generally.
 
-I didn't get to an answer to Maelle's question of why `haven` worked less well for me than `rio` a long time ago. After all, `rio` *uses* `haven` when `haven` will work. 
+I didn't come up with an answer to Ma&euml;lle's question of why `haven` worked less well for me than `rio` a long time ago. After all, `rio` *uses* `haven` when `haven` will work. 
 
 ## Packages
 
@@ -218,6 +218,8 @@ cars
 ```
 
 
+### Other kinds of file
+
 It can also read the spreadsheet version of the supermarket data. We need the second sheet of the workbook, which is specified thus:
 
 ```{r}
@@ -226,7 +228,7 @@ cereal2=import(my_url,which=2)
 cereal2
 ```
 
-This web site contains many tables for the English Premier soccer league, for example the current standings. I have to supply a `format` because the URL does not end in `.html`:
+The web site below contains many HTML tables related to the English Premier soccer league, for example the current standings. I have to supply a `format` here because the URL does not end in `.html`:
 
 ```{r}
 my_url="http://www.scoresway.com/?sport=soccer&page=competition&id=8"
