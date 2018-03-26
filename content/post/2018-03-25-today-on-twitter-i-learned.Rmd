@@ -1,0 +1,237 @@
+---
+title: Today on Twitter I learned...
+author: Ken
+date: '2018-03-25'
+slug: today-on-twitter-i-learned
+categories:
+  - statistics
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+## Introduction
+
+Today on Twitter I learned (or was reminded about) two #rstats things:
+
+1. from @pkqstr about `separate_rows` from `tidyr`, that does something like `separate` followed by `gather`, but better.
+1. from @ma_salmon about `haven` for reading in data files from other software, and I thought about `rio` that does more or less the same thing, but more generally.
+
+I didn't get an answer to Maelle's question of why `haven` worked less well for me than `rio` a long time ago. After all, `rio` *uses* `haven` when `haven` will work. 
+
+## Packages
+
+```{r}
+library(rio)
+library(haven)
+library(tidyverse)
+```
+
+## `separate_rows`
+
+This is part of the Tidyverse, specifically `tidyr`.
+
+Suppose you have a survey, for which one of the questions was a "check any that apply", where respondents can select any or all of options a, b, c, d or e. For example, the survey might be about ways of commuting to work, and the question might be something like this:
+
+Which of these ways of travelling to or from work have you used at least once in the past month?
+`r tufte::margin_note("I live in Toronto, where we have streetcars.")`
+
+- a: car, as driver or passenger
+- b: subway
+- c: bus or streetcar
+- d: bicycle
+- e: walk
+
+The responses might look like this (I made these up): 
+
+```
+ID  answers
+ 1  a
+ 2  b,c
+ 3  d,e
+ 4  c,d
+ 5  b,c,e
+ 6  e
+```
+
+I saved these into a file `travel_survey.txt`. These are aligned columns, so I read them in with `read_table`:
+
+```{r}
+survey=read_table("travel_survey.txt")
+survey
+```
+
+Those survey responses need to be separated out, for example to find out how many people have walked to work at least once this month. The standard procedure is `separate`:
+
+```{r}
+survey %>% separate(answers,into=c("a1","a2","a3","a4","a5"),sep=",")
+```
+
+I had to allow for five separate columns because a respondent might have used all the different ways of getting to work this month, but there are a lot of missings because most people used only one or two methods. Undaunted, we `gather` up the response columns:
+
+```{r}
+survey %>% 
+  separate(answers,into=c("a1","a2","a3","a4","a5"),sep=",") %>% 
+  gather(nth_response,response,a1:a5) %>% print(n=Inf)
+```
+
+and now we have to get rid of all those missings:
+
+```{r}
+survey %>% 
+  separate(answers,into=c("a1","a2","a3","a4","a5"),sep=",") %>% 
+  gather(nth_response,response,a1:a5) %>% 
+  filter(!is.na(response))
+```
+
+or, better, to remove the missings in the `gather`:
+
+```{r}
+survey %>% 
+  separate(answers,into=c("a1","a2","a3","a4","a5"),sep=",") %>% 
+  gather(nth_response,response,a1:a5,na.rm=T) 
+```
+
+I don't know why this gives me a warning, but it seems to work.
+However, the business of having to name five extra columns that we are not going to use, even though we could do it a lot more succinctly than I did, is unpleasant.
+
+Enter `separate_rows`. Let's remind ourselves of how the original data frame looked:
+
+```{r}
+survey 
+```
+
+and then it goes like this:
+
+```{r}
+survey %>% separate_rows(answers,sep=",")
+```
+
+Boom! How many people have used each mode of transportation at least once this month?
+
+```{r}
+survey %>% separate_rows(answers,sep=",") %>% 
+  count(answers)
+```
+
+
+I think my days of using `stringr::str_split` in situations like this are over. 
+
+
+## Reading/writing data files from other packages
+
+### Reading and writing SPSS, Stata and SAS data files: `haven`
+
+People we work with, or whose data we want to use, don't always use R, but might prefer some other software.
+The `haven` package, by Hadley Wickham and Evan Miller, reads in data files created by SPSS, SAS and Stata and turns them into `tibble`s, the `tidyverse` version of a data frame. The syntax is very like that of `readr`, with `read_` functions for reading data files of the different types.
+
+### SAS data sets
+
+[SAS](https://www.sas.com) is venerable general-purpose statistical software, used in many fields. I learned it in grad school.
+
+SAS has what is known as "permanent data sets", stored in a file. This is a way of storing data so that it can be used immediately by SAS's `proc`s, without needing to read the data in via `proc import` or a `data` step. 
+
+I have a SAS permanent data set, with data on some cars, at the URL below:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/c32/cars.sas7bdat"
+```
+
+This is read in using `read_sas`:
+
+```{r}
+cars=read_sas(my_url)
+cars
+```
+
+This is correct.
+
+There is also `write_sas`, to save a data frame as a SAS permanent data set, that can be opened immediately in SAS. As with the `write_` functions in `readr`, the syntax is the data frame name, then the file to write it to.
+
+### Stata data sets
+
+[Stata](https://www.stata.com) is used in [these disciplines](https://www.stata.com/disciplines/), from economics and finance through medical research.
+
+[This website](http://www.principlesofeconometrics.com/stata.htm) has a collection of Stata data sets. Stata data sets have extension `.dta`. Randomly picking one of these data sets to open, the one called `korea`:
+
+```{r}
+my_url="http://www.principlesofeconometrics.com/stata/korea.dta"
+korea=read_dta(my_url)
+korea
+```
+
+I have no idea what these variables are, but it seems to have worked.
+
+Likewise, there is also `write_dta`, to be supplied a data frame and a file name. 
+
+### SPSS data sets
+
+[SPSS](https://www.ibm.com/analytics/data-science/predictive-analytics/spss-statistical-software) has traditionally been used in the social sciences, but, like SAS, appears to be trying to get into the world of business analytics. 
+
+The data whose URL is given below is sales of a breakfast cereal, which was sold on different shelves (at different times) at different supermarkets:
+
+```{r}
+my_url="http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.sav"
+cereal=read_sav(my_url)
+cereal
+```
+
+The [accompanying spreadsheet](http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.XLS) also has 19 rows of data, but 4 different shelves at 5 different stores (shelf 3, store 5 is missing). The row of missing data here could have been caused by a blank last line of the file, but it appears that the SPSS file is different from the spreadsheet.
+
+### A general file reader and writer: the `rio` package
+
+The `rio` package, by Thomas Leeper and many others, bills itself as a "Swiss-Army Knife for Data I/O". It handles, according to the vignette, 34 different types of data file, including the three we have just seen, and other things such as Minitab portable files, Matlab, Excel and OpenDocument spreadsheets, and HTML tables. The `readr` philosophy, as also seen in `haven`, is to have different `read_` functions tailored precisely to each type of data, with the onus on the user to pick the right one. `rio` goes the opposite way: it has basically two functions, `import` and `export`, with the actual function called being arranged behind the scenes, based (by default) on the filename extension. `r tufte::margin_note("Import also has a 'format' argument that can be specified manually.")`
+
+### SAS, Stata and SPSS
+
+`rio` uses `haven` to import files from SAS, Stata and SPSS, so it should get the same results as above:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/c32/cars.sas7bdat"
+cars=import(my_url)
+cars
+```
+
+and
+
+```{r}
+my_url="http://www.principlesofeconometrics.com/stata/korea.dta"
+korea=import(my_url)
+korea
+```
+
+and
+
+```{r}
+my_url="http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.sav"
+cereal=import(my_url)
+cereal
+```
+
+Note that `rio` reads a `data.frame`, not a `tibble`, but you can return a tibble if you want one:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/c32/cars.sas7bdat"
+cars=import(my_url,setclass="tibble")
+cars
+```
+
+
+It can also read the spreadsheet version of the supermarket data. We need the second sheet of the workbook, which is specified thus:
+
+```{r}
+my_url="http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.XLS"
+cereal2=import(my_url,which=2)
+cereal2
+```
+
+This web site contains many tables for the English Premier soccer league, for example the current standings. I have to supply a `format` because the URL does not end in `.html`:
+
+```{r}
+my_url="http://www.scoresway.com/?sport=soccer&page=competition&id=8"
+table=import(my_url,format="html",which=2)
+table
+```
+
+Note again the use of `which` to specify which of the multiple HTML tables we want, with a default of "the first one". This didn't get the column headings right, but those can be supplied. (I didn't realize that `rio` uses `xml2`, so could be a replacement for that or `rvest` for small HTML-table tasks.)
+

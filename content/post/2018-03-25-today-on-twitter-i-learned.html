@@ -1,0 +1,471 @@
+---
+title: Today on Twitter I learned...
+author: Ken
+date: '2018-03-25'
+slug: today-on-twitter-i-learned
+categories:
+  - statistics
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Today on Twitter I learned (or was reminded about) two #rstats things:</p>
+<ol style="list-style-type: decimal">
+<li>from <span class="citation">@pkqstr</span> about <code>separate_rows</code> from <code>tidyr</code>, that does something like <code>separate</code> followed by <code>gather</code>, but better.</li>
+<li>from <span class="citation">@ma_salmon</span> about <code>haven</code> for reading in data files from other software, and I thought about <code>rio</code> that does more or less the same thing, but more generally.</li>
+</ol>
+<p>I didn’t get an answer to Maelle’s question of why <code>haven</code> worked less well for me than <code>rio</code> a long time ago. After all, <code>rio</code> <em>uses</em> <code>haven</code> when <code>haven</code> will work.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(rio)
+library(haven)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div id="separate_rows" class="section level2">
+<h2><code>separate_rows</code></h2>
+<p>This is part of the Tidyverse, specifically <code>tidyr</code>.</p>
+<p>Suppose you have a survey, for which one of the questions was a “check any that apply”, where respondents can select any or all of options a, b, c, d or e. For example, the survey might be about ways of commuting to work, and the question might be something like this:</p>
+<p>Which of these ways of travelling to or from work have you used at least once in the past month?
+<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I live in Toronto, where we have streetcars.</span></p>
+<ul>
+<li>a: car, as driver or passenger</li>
+<li>b: subway</li>
+<li>c: bus or streetcar</li>
+<li>d: bicycle</li>
+<li>e: walk</li>
+</ul>
+<p>The responses might look like this (I made these up):</p>
+<pre><code>ID  answers
+ 1  a
+ 2  b,c
+ 3  d,e
+ 4  c,d
+ 5  b,c,e
+ 6  e</code></pre>
+<p>I saved these into a file <code>travel_survey.txt</code>. These are aligned columns, so I read them in with <code>read_table</code>:</p>
+<pre class="r"><code>survey=read_table(&quot;travel_survey.txt&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   ID = col_integer(),
+##   answers = col_character()
+## )</code></pre>
+<pre class="r"><code>survey</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##      ID answers
+##   &lt;int&gt; &lt;chr&gt;  
+## 1     1 a      
+## 2     2 b,c    
+## 3     3 d,e    
+## 4     4 c,d    
+## 5     5 b,c,e  
+## 6     6 e</code></pre>
+<p>Those survey responses need to be separated out, for example to find out how many people have walked to work at least once this month. The standard procedure is <code>separate</code>:</p>
+<pre class="r"><code>survey %&gt;% separate(answers,into=c(&quot;a1&quot;,&quot;a2&quot;,&quot;a3&quot;,&quot;a4&quot;,&quot;a5&quot;),sep=&quot;,&quot;)</code></pre>
+<pre><code>## Warning: Expected 5 pieces. Missing pieces filled with `NA` in 6 rows [1,
+## 2, 3, 4, 5, 6].</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##      ID a1    a2    a3    a4    a5   
+##   &lt;int&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1     1 a     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 2     2 b     c     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 3     3 d     e     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 4     4 c     d     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 5     5 b     c     e     &lt;NA&gt;  &lt;NA&gt; 
+## 6     6 e     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;</code></pre>
+<p>I had to allow for five separate columns because a respondent might have used all the different ways of getting to work this month, but there are a lot of missings because most people used only one or two methods. Undaunted, we <code>gather</code> up the response columns:</p>
+<pre class="r"><code>survey %&gt;% 
+  separate(answers,into=c(&quot;a1&quot;,&quot;a2&quot;,&quot;a3&quot;,&quot;a4&quot;,&quot;a5&quot;),sep=&quot;,&quot;) %&gt;% 
+  gather(nth_response,response,a1:a5) %&gt;% print(n=Inf)</code></pre>
+<pre><code>## Warning: Expected 5 pieces. Missing pieces filled with `NA` in 6 rows [1,
+## 2, 3, 4, 5, 6].</code></pre>
+<pre><code>## # A tibble: 30 x 3
+##       ID nth_response response
+##    &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;   
+##  1     1 a1           a       
+##  2     2 a1           b       
+##  3     3 a1           d       
+##  4     4 a1           c       
+##  5     5 a1           b       
+##  6     6 a1           e       
+##  7     1 a2           &lt;NA&gt;    
+##  8     2 a2           c       
+##  9     3 a2           e       
+## 10     4 a2           d       
+## 11     5 a2           c       
+## 12     6 a2           &lt;NA&gt;    
+## 13     1 a3           &lt;NA&gt;    
+## 14     2 a3           &lt;NA&gt;    
+## 15     3 a3           &lt;NA&gt;    
+## 16     4 a3           &lt;NA&gt;    
+## 17     5 a3           e       
+## 18     6 a3           &lt;NA&gt;    
+## 19     1 a4           &lt;NA&gt;    
+## 20     2 a4           &lt;NA&gt;    
+## 21     3 a4           &lt;NA&gt;    
+## 22     4 a4           &lt;NA&gt;    
+## 23     5 a4           &lt;NA&gt;    
+## 24     6 a4           &lt;NA&gt;    
+## 25     1 a5           &lt;NA&gt;    
+## 26     2 a5           &lt;NA&gt;    
+## 27     3 a5           &lt;NA&gt;    
+## 28     4 a5           &lt;NA&gt;    
+## 29     5 a5           &lt;NA&gt;    
+## 30     6 a5           &lt;NA&gt;</code></pre>
+<p>and now we have to get rid of all those missings:</p>
+<pre class="r"><code>survey %&gt;% 
+  separate(answers,into=c(&quot;a1&quot;,&quot;a2&quot;,&quot;a3&quot;,&quot;a4&quot;,&quot;a5&quot;),sep=&quot;,&quot;) %&gt;% 
+  gather(nth_response,response,a1:a5) %&gt;% 
+  filter(!is.na(response))</code></pre>
+<pre><code>## Warning: Expected 5 pieces. Missing pieces filled with `NA` in 6 rows [1,
+## 2, 3, 4, 5, 6].</code></pre>
+<pre><code>## # A tibble: 11 x 3
+##       ID nth_response response
+##    &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;   
+##  1     1 a1           a       
+##  2     2 a1           b       
+##  3     3 a1           d       
+##  4     4 a1           c       
+##  5     5 a1           b       
+##  6     6 a1           e       
+##  7     2 a2           c       
+##  8     3 a2           e       
+##  9     4 a2           d       
+## 10     5 a2           c       
+## 11     5 a3           e</code></pre>
+<p>or, better, to remove the missings in the <code>gather</code>:</p>
+<pre class="r"><code>survey %&gt;% 
+  separate(answers,into=c(&quot;a1&quot;,&quot;a2&quot;,&quot;a3&quot;,&quot;a4&quot;,&quot;a5&quot;),sep=&quot;,&quot;) %&gt;% 
+  gather(nth_response,response,a1:a5,na.rm=T) </code></pre>
+<pre><code>## Warning: Expected 5 pieces. Missing pieces filled with `NA` in 6 rows [1,
+## 2, 3, 4, 5, 6].</code></pre>
+<pre><code>## # A tibble: 11 x 3
+##       ID nth_response response
+##  * &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;   
+##  1     1 a1           a       
+##  2     2 a1           b       
+##  3     3 a1           d       
+##  4     4 a1           c       
+##  5     5 a1           b       
+##  6     6 a1           e       
+##  7     2 a2           c       
+##  8     3 a2           e       
+##  9     4 a2           d       
+## 10     5 a2           c       
+## 11     5 a3           e</code></pre>
+<p>I don’t know why this gives me a warning, but it seems to work.
+However, the business of having to name five extra columns that we are not going to use, even though we could do it a lot more succinctly than I did, is unpleasant.</p>
+<p>Enter <code>separate_rows</code>. Let’s remind ourselves of how the original data frame looked:</p>
+<pre class="r"><code>survey </code></pre>
+<pre><code>## # A tibble: 6 x 2
+##      ID answers
+##   &lt;int&gt; &lt;chr&gt;  
+## 1     1 a      
+## 2     2 b,c    
+## 3     3 d,e    
+## 4     4 c,d    
+## 5     5 b,c,e  
+## 6     6 e</code></pre>
+<p>and then it goes like this:</p>
+<pre class="r"><code>survey %&gt;% separate_rows(answers,sep=&quot;,&quot;)</code></pre>
+<pre><code>## # A tibble: 11 x 2
+##       ID answers
+##    &lt;int&gt; &lt;chr&gt;  
+##  1     1 a      
+##  2     2 b      
+##  3     2 c      
+##  4     3 d      
+##  5     3 e      
+##  6     4 c      
+##  7     4 d      
+##  8     5 b      
+##  9     5 c      
+## 10     5 e      
+## 11     6 e</code></pre>
+<p>Boom! How many people have used each mode of transportation at least once this month?</p>
+<pre class="r"><code>survey %&gt;% separate_rows(answers,sep=&quot;,&quot;) %&gt;% 
+  count(answers)</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   answers     n
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 a           1
+## 2 b           2
+## 3 c           3
+## 4 d           2
+## 5 e           3</code></pre>
+<p>I think my days of using <code>stringr::str_split</code> in situations like this are over.</p>
+</div>
+<div id="readingwriting-data-files-from-other-packages" class="section level2">
+<h2>Reading/writing data files from other packages</h2>
+<div id="reading-and-writing-spss-stata-and-sas-data-files-haven" class="section level3">
+<h3>Reading and writing SPSS, Stata and SAS data files: <code>haven</code></h3>
+<p>People we work with, or whose data we want to use, don’t always use R, but might prefer some other software.
+The <code>haven</code> package, by Hadley Wickham and Evan Miller, reads in data files created by SPSS, SAS and Stata and turns them into <code>tibble</code>s, the <code>tidyverse</code> version of a data frame. The syntax is very like that of <code>readr</code>, with <code>read_</code> functions for reading data files of the different types.</p>
+</div>
+<div id="sas-data-sets" class="section level3">
+<h3>SAS data sets</h3>
+<p><a href="https://www.sas.com">SAS</a> is venerable general-purpose statistical software, used in many fields. I learned it in grad school.</p>
+<p>SAS has what is known as “permanent data sets”, stored in a file. This is a way of storing data so that it can be used immediately by SAS’s <code>proc</code>s, without needing to read the data in via <code>proc import</code> or a <code>data</code> step.</p>
+<p>I have a SAS permanent data set, with data on some cars, at the URL below:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/c32/cars.sas7bdat&quot;</code></pre>
+<p>This is read in using <code>read_sas</code>:</p>
+<pre class="r"><code>cars=read_sas(my_url)
+cars</code></pre>
+<pre><code>## # A tibble: 38 x 6
+##    car                  mpg weight cylinders    hp country
+##    &lt;chr&gt;              &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  
+##  1 Buick Skylark       28.4   2.67      4.00  90.0 U.S.   
+##  2 Dodge Omni          30.9   2.23      4.00  75.0 U.S.   
+##  3 Mercury Zephyr      20.8   3.07      6.00  85.0 U.S.   
+##  4 Fiat Strada         37.3   2.13      4.00  69.0 Italy  
+##  5 Peugeot 694 SL      16.2   3.41      6.00 133   France 
+##  6 VW Rabbit           31.9   1.92      4.00  71.0 Germany
+##  7 Plymouth Horizon    34.2   2.20      4.00  70.0 U.S.   
+##  8 Mazda GLC           34.1   1.98      4.00  65.0 Japan  
+##  9 Buick Estate Wagon  16.9   4.36      8.00 155   U.S.   
+## 10 Audi 5000           20.3   2.83      5.00 103   Germany
+## # ... with 28 more rows</code></pre>
+<p>This is correct.</p>
+<p>There is also <code>write_sas</code>, to save a data frame as a SAS permanent data set, that can be opened immediately in SAS. As with the <code>write_</code> functions in <code>readr</code>, the syntax is the data frame name, then the file to write it to.</p>
+</div>
+<div id="stata-data-sets" class="section level3">
+<h3>Stata data sets</h3>
+<p><a href="https://www.stata.com">Stata</a> is used in <a href="https://www.stata.com/disciplines/">these disciplines</a>, from economics and finance through medical research.</p>
+<p><a href="http://www.principlesofeconometrics.com/stata.htm">This website</a> has a collection of Stata data sets. Stata data sets have extension <code>.dta</code>. Randomly picking one of these data sets to open, the one called <code>korea</code>:</p>
+<pre class="r"><code>my_url=&quot;http://www.principlesofeconometrics.com/stata/korea.dta&quot;
+korea=read_dta(my_url)
+korea</code></pre>
+<pre><code>## # A tibble: 17 x 6
+##        n     p1    p2     r      w     y
+##    &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+##  1  14.2   9.80  14.8  22.4   7.40  3005
+##  2  15.7  11.6   16.2  23.5   7.90  3071
+##  3  17.4  15.0   19.5  26.9   9.00  3351
+##  4  23.2  19.5   26.2  34.3  11.0   3672
+##  5  27.7  20.7   28.8  39.0  13.1   3885
+##  6  29.9  23.7   31.4  42.5  15.4   4378
+##  7  30.7  27.4   33.4  44.9  18.8   4669
+##  8  32.2  31.8   36.1  50.5  23.8   5196
+##  9  33.3  36.5   38.5  50.9  29.4   5911
+## 10  36.5  42.2   42.1  57.1  37.9   6348
+## 11  38.7  47.4   45.7  60.1  45.2   6909
+## 12  44.0  54.8   52.0  67.0  52.4   7305
+## 13  49.7  62.1   55.6  70.2  58.2   8377
+## 14  84.7  80.8   79.0  78.7  78.7   9009
+## 15 100   100    100   100   100     9644
+## 16 110   118    121   105   135    11916
+## 17 117   137    122   110   180    12175</code></pre>
+<p>I have no idea what these variables are, but it seems to have worked.</p>
+<p>Likewise, there is also <code>write_dta</code>, to be supplied a data frame and a file name.</p>
+</div>
+<div id="spss-data-sets" class="section level3">
+<h3>SPSS data sets</h3>
+<p><a href="https://www.ibm.com/analytics/data-science/predictive-analytics/spss-statistical-software">SPSS</a> has traditionally been used in the social sciences, but, like SAS, appears to be trying to get into the world of business analytics.</p>
+<p>The data whose URL is given below is sales of a breakfast cereal, which was sold on different shelves (at different times) at different supermarkets:</p>
+<pre class="r"><code>my_url=&quot;http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.sav&quot;
+cereal=read_sav(my_url)
+cereal</code></pre>
+<pre><code>## # A tibble: 20 x 3
+##    Sales Shelf Store
+##    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1  11.0  1.00  1.00
+##  2  17.0  1.00  2.00
+##  3  16.0  1.00  1.00
+##  4  14.0  1.00  2.00
+##  5  15.0  1.00  1.00
+##  6  12.0  1.00  2.00
+##  7  10.0  1.00  1.00
+##  8  15.0  2.00  2.00
+##  9  19.0  2.00  1.00
+## 10  11.0  2.00  2.00
+## 11  23.0  2.00  1.00
+## 12  20.0  2.00  2.00
+## 13  18.0  2.00  1.00
+## 14  17.0  3.00  2.00
+## 15  27.0  3.00  1.00
+## 16  33.0  3.00  2.00
+## 17  22.0  3.00  1.00
+## 18  26.0  3.00  2.00
+## 19  28.0  3.00  1.00
+## 20  NA   NA    NA</code></pre>
+<p>The <a href="http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.XLS">accompanying spreadsheet</a> also has 19 rows of data, but 4 different shelves at 5 different stores (shelf 3, store 5 is missing). The row of missing data here could have been caused by a blank last line of the file, but it appears that the SPSS file is different from the spreadsheet.</p>
+</div>
+<div id="a-general-file-reader-and-writer-the-rio-package" class="section level3">
+<h3>A general file reader and writer: the <code>rio</code> package</h3>
+<p>The <code>rio</code> package, by Thomas Leeper and many others, bills itself as a “Swiss-Army Knife for Data I/O”. It handles, according to the vignette, 34 different types of data file, including the three we have just seen, and other things such as Minitab portable files, Matlab, Excel and OpenDocument spreadsheets, and HTML tables. The <code>readr</code> philosophy, as also seen in <code>haven</code>, is to have different <code>read_</code> functions tailored precisely to each type of data, with the onus on the user to pick the right one. <code>rio</code> goes the opposite way: it has basically two functions, <code>import</code> and <code>export</code>, with the actual function called being arranged behind the scenes, based (by default) on the filename extension. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Import also has a ‘format’ argument that can be specified manually.</span></p>
+</div>
+<div id="sas-stata-and-spss" class="section level3">
+<h3>SAS, Stata and SPSS</h3>
+<p><code>rio</code> uses <code>haven</code> to import files from SAS, Stata and SPSS, so it should get the same results as above:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/c32/cars.sas7bdat&quot;
+cars=import(my_url)
+cars</code></pre>
+<pre><code>##                          car  mpg weight cylinders  hp country
+## 1              Buick Skylark 28.4  2.670         4  90    U.S.
+## 2                 Dodge Omni 30.9  2.230         4  75    U.S.
+## 3             Mercury Zephyr 20.8  3.070         6  85    U.S.
+## 4                Fiat Strada 37.3  2.130         4  69   Italy
+## 5             Peugeot 694 SL 16.2  3.410         6 133  France
+## 6                  VW Rabbit 31.9  1.925         4  71 Germany
+## 7           Plymouth Horizon 34.2  2.200         4  70    U.S.
+## 8                  Mazda GLC 34.1  1.975         4  65   Japan
+## 9         Buick Estate Wagon 16.9  4.360         8 155    U.S.
+## 10                 Audi 5000 20.3  2.830         5 103 Germany
+## 11        Chevy Malibu Wagon 19.2  3.605         8 125    U.S.
+## 12               Dodge Aspen 18.6  3.620         6 110    U.S.
+## 13                 VW Dasher 30.5  2.190         4  78 Germany
+## 14            Ford Mustang 4 26.5  2.585         4  88    U.S.
+## 15                Dodge Colt 35.1  1.915         4  80   Japan
+## 16                Datsun 810 22.0  2.815         6  97   Japan
+## 17               VW Scirocco 31.5  1.990         4  71 Germany
+## 18            Chevy Citation 28.8  2.595         6 115    U.S.
+## 19                Olds Omega 26.8  2.700         6 115    U.S.
+## 20    Chrysler LeBaron Wagon 18.5  3.940         8 150    U.S.
+## 21                Datsun 510 27.2  2.300         4  97   Japan
+## 22           AMC Concord D/L 18.1  3.410         6 120    U.S.
+## 23     Buick Century Special 20.6  3.380         6 105    U.S.
+## 24               Saab 99 GLE 21.6  2.795         4 115  Sweden
+## 25                Datsun 210 31.8  2.020         4  65   Japan
+## 26                  Ford LTD 17.6  3.725         8 129    U.S.
+## 27              Volvo 240 GL 17.0  3.140         6 125  Sweden
+## 28            Dodge St Regis 18.2  3.830         8 135    U.S.
+## 29             Toyota Corona 27.5  2.560         4  95   Japan
+## 30                  Chevette 30.0  2.155         4  68    U.S.
+## 31         Ford Mustang Ghia 21.9  2.910         6 109    U.S.
+## 32                AMC Spirit 27.4  2.670         4  80    U.S.
+## 33 Ford Country Squire Wagon 15.5  4.054         8 142    U.S.
+## 34                  BMW 320i 21.5  2.600         4 110 Germany
+## 35           Pontiac Phoenix 33.5  2.556         4  90    U.S.
+## 36           Honda Accord LX 29.5  2.135         4  68   Japan
+## 37     Mercury Grand Marquis 16.5  3.955         8 138    U.S.
+## 38     Chevy Caprice Classic 17.0  3.840         8 130    U.S.</code></pre>
+<p>and</p>
+<pre class="r"><code>my_url=&quot;http://www.principlesofeconometrics.com/stata/korea.dta&quot;
+korea=import(my_url)
+korea</code></pre>
+<pre><code>##        n    p1    p2     r     w       y
+## 1   14.2   9.8  14.8  22.4   7.4  3004.6
+## 2   15.7  11.6  16.2  23.5   7.9  3071.1
+## 3   17.4  15.0  19.5  26.9   9.0  3350.7
+## 4   23.2  19.5  26.2  34.3  11.0  3671.5
+## 5   27.7  20.7  28.8  39.0  13.1  3885.0
+## 6   29.9  23.7  31.4  42.5  15.4  4378.5
+## 7   30.7  27.4  33.4  44.9  18.8  4669.4
+## 8   32.2  31.8  36.1  50.5  23.8  5195.6
+## 9   33.3  36.5  38.5  50.9  29.4  5911.4
+## 10  36.5  42.2  42.1  57.1  37.9  6347.7
+## 11  38.7  47.4  45.7  60.1  45.2  6908.7
+## 12  44.0  54.8  52.0  67.0  52.4  7305.0
+## 13  49.7  62.1  55.6  70.2  58.2  8377.1
+## 14  84.7  80.8  79.0  78.7  78.7  9009.4
+## 15 100.0 100.0 100.0 100.0 100.0  9644.2
+## 16 110.1 118.5 121.1 105.0 134.7 11916.4
+## 17 117.0 136.8 122.2 110.0 179.5 12175.2</code></pre>
+<p>and</p>
+<pre class="r"><code>my_url=&quot;http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.sav&quot;
+cereal=import(my_url)
+cereal</code></pre>
+<pre><code>##    Sales Shelf Store
+## 1     11     1     1
+## 2     17     1     2
+## 3     16     1     1
+## 4     14     1     2
+## 5     15     1     1
+## 6     12     1     2
+## 7     10     1     1
+## 8     15     2     2
+## 9     19     2     1
+## 10    11     2     2
+## 11    23     2     1
+## 12    20     2     2
+## 13    18     2     1
+## 14    17     3     2
+## 15    27     3     1
+## 16    33     3     2
+## 17    22     3     1
+## 18    26     3     2
+## 19    28     3     1
+## 20    NA    NA    NA</code></pre>
+<p>Note that <code>rio</code> reads a <code>data.frame</code>, not a <code>tibble</code>, but you can return a tibble if you want one:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/c32/cars.sas7bdat&quot;
+cars=import(my_url,setclass=&quot;tibble&quot;)
+cars</code></pre>
+<pre><code>## # A tibble: 38 x 6
+##    car                  mpg weight cylinders    hp country
+##    &lt;chr&gt;              &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  
+##  1 Buick Skylark       28.4   2.67      4.00  90.0 U.S.   
+##  2 Dodge Omni          30.9   2.23      4.00  75.0 U.S.   
+##  3 Mercury Zephyr      20.8   3.07      6.00  85.0 U.S.   
+##  4 Fiat Strada         37.3   2.13      4.00  69.0 Italy  
+##  5 Peugeot 694 SL      16.2   3.41      6.00 133   France 
+##  6 VW Rabbit           31.9   1.92      4.00  71.0 Germany
+##  7 Plymouth Horizon    34.2   2.20      4.00  70.0 U.S.   
+##  8 Mazda GLC           34.1   1.98      4.00  65.0 Japan  
+##  9 Buick Estate Wagon  16.9   4.36      8.00 155   U.S.   
+## 10 Audi 5000           20.3   2.83      5.00 103   Germany
+## # ... with 28 more rows</code></pre>
+<p>It can also read the spreadsheet version of the supermarket data. We need the second sheet of the workbook, which is specified thus:</p>
+<pre class="r"><code>my_url=&quot;http://calcnet.mth.cmich.edu/org/spss/V16_materials/DataSets_v16/supermarket.XLS&quot;
+cereal2=import(my_url,which=2)
+cereal2</code></pre>
+<pre><code>##    Sales Shelf Store
+## 1     11     1     1
+## 2     17     1     2
+## 3     16     1     3
+## 4     14     1     4
+## 5     15     1     5
+## 6     12     2     1
+## 7     10     2     2
+## 8     15     2     3
+## 9     19     2     4
+## 10    11     2     5
+## 11    23     3     1
+## 12    20     3     2
+## 13    18     3     3
+## 14    17     3     4
+## 15    27     4     1
+## 16    33     4     2
+## 17    22     4     3
+## 18    26     4     4
+## 19    28     4     5</code></pre>
+<p>This web site contains many tables for the English Premier soccer league, for example the current standings. I have to supply a <code>format</code> because the URL does not end in <code>.html</code>:</p>
+<pre class="r"><code>my_url=&quot;http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=8&quot;
+table=import(my_url,format=&quot;html&quot;,which=2)
+table</code></pre>
+<pre><code>##    V1                     V2 V3 V4 V5 V6 V7 V8  V9 V10 V11 V12 V13 V14 V15
+## 1   1        Manchester City 30 26  3  1 85 20  65  81   W   W   W   W   D
+## 2   2      Manchester United 30 20  5  5 58 23  35  65   W   W   W   L   W
+## 3   3              Liverpool 31 18  9  4 73 34  39  63   W   L   W   W   W
+## 4   4      Tottenham Hotspur 30 18  7  5 59 25  34  61   W   W   W   W   D
+## 5   5                Chelsea 30 17  5  8 52 27  25  56   W   L   L   W   L
+## 6   6                Arsenal 30 14  6 10 55 41  14  48   W   L   L   L   W
+## 7   7                Burnley 30 11 10  9 27 26   1  43   W   W   D   L   D
+## 8   8         Leicester City 30 10 10 10 45 43   2  40   W   D   D   L   D
+## 9   9                Everton 31 11  7 13 37 50 -13  40   W   W   L   L   W
+## 10 10        AFC Bournemouth 31  9  9 13 37 49 -12  36   W   L   D   D   L
+## 11 11                Watford 31 10  6 15 39 55 -16  36   L   L   W   W   L
+## 12 12 Brighton &amp; Hove Albion 30  8 10 12 28 40 -12  34   L   W   W   D   W
+## 13 13       Newcastle United 30  8  8 14 30 40 -10  32   W   L   D   W   D
+## 14 14           Swansea City 30  8  7 15 25 42 -17  31   D   W   L   W   D
+## 15 15      Huddersfield Town 31  8  7 16 25 52 -27  31   L   D   L   W   W
+## 16 16         Crystal Palace 31  7  9 15 30 48 -18  30   W   L   L   L   L
+## 17 17        West Ham United 30  7  9 14 36 57 -21  30   L   L   L   W   L
+## 18 18            Southampton 30  5 13 12 29 44 -15  28   L   D   D   L   W
+## 19 19             Stoke City 31  6  9 16 29 58 -29  27   L   L   D   D   D
+## 20 20   West Bromwich Albion 31  3 11 17 24 49 -25  20   L   L   L   L   L</code></pre>
+<p>Note again the use of <code>which</code> to specify which of the multiple HTML tables we want, with a default of “the first one”. This didn’t get the column headings right, but those can be supplied. (I didn’t realize that <code>rio</code> uses <code>xml2</code>, so could be a replacement for that or <code>rvest</code> for small HTML-table tasks.)</p>
+</div>
+</div>

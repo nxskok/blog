@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>Ken&#39;s Blog - Ward&#39;s method and dissimilarities</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Ken&#39;s Blog">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/03/22/ward-s-method-and-dissimilarities/">Ward&#39;s method and dissimilarities</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Mar 22, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;12 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">Statistics</a>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p><em>I don’t know yet where this post is going. Think of it, for now, as a ramble through cluster analysis. I may eventually figure out what to do with it, but I don’t want to delete what I have written just yet.</em></p>
+<p>Hierarchical clustering is a way of forming groups or “clusters” of like individuals. The various forms of hierarchical clustering work from distances or dissimilarilities between <em>individuals</em>. The process is to start from each individual in a cluster by itself and then to join the closest pair of <em>clusters</em> one by one until all individuals are in a single cluster. To use the clustering, a tree diagram or “dendrogram” is drawn and the tree is “chopped” at an appropriate number of clusters.</p>
+</div>
+<div id="clustering-methods" class="section level2">
+<h2>Clustering methods</h2>
+<p>The various forms of hierarchical clustering differ in the way they turn a distance between <em>individuals</em> into a distance between <em>clusters</em>.
+and define a distance between <em>clusters</em> from this.</p>
+<p>Start by loading the <code>tidyverse</code>:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<p>For example, suppose we are considering Euclidean distance as dissimilarity, and we have some points in the <span class="math inline">\((x,y)\)</span> plane like this. I’m showing you the R code to make these plots, for completeness, but you should feel free to ignore it and just look at the pictures:</p>
+<pre class="r"><code>set.seed(457299)
+a=data.frame(x=runif(5,0,20),y=runif(5,0,20))
+b=data.frame(x=runif(5,20,40),y=runif(5,20,40))
+ddd=bind_rows(a=a,b=b,.id=&quot;cluster&quot;)
+g=ggplot(ddd,aes(x=x,y=y,colour=cluster))+geom_point()+
+  coord_fixed(xlim=c(0,40),ylim=c(0,40))
+g</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-2-1.png" width="672" /></p>
+<p>To measure the distance between the red cluster and the blue cluster, we might consider the closest distance between a red and a blue:</p>
+<pre class="r"><code>distance=function(p1,p2) {
+  sqrt((p1[1]-p2[1])^2+(p1[2]-p2[2])^2)
+}
+distances=matrix(0,nrow(a),nrow(b))
+for (i in 1:nrow(a)) {
+  for (j in 1:nrow(b)) {
+    dd=distance(a[i,],b[j,])
+    distances[i,j]=dd
+  }
+}
+wm1=which.min(apply(distances,1,min))
+wm2=which.min(apply(distances,2,min))
+closest=bind_rows(a=a[wm1,],b=b[wm2,],.id=&quot;cluster&quot;)
+# single linkage distance
+g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour=&quot;blue&quot;)</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-3-1.png" width="672" /></p>
+<p>the so-called <strong>single-linkage distance</strong>, or the farthest distance between a red and a blue:</p>
+<pre class="r"><code>wm1=which.max(apply(distances,1,max))
+wm2=which.max(apply(distances,2,max))
+closest=bind_rows(a[wm1,],b[wm2,],.id=&quot;cluster&quot;)
+g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour=&quot;blue&quot;)</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-4-1.png" width="672" /></p>
+<p>the <strong>complete-linkage distance</strong>. Another option, that often works well in practice, is “Ward’s method.” This is most easily understood by thinking of the means of coordinates, for each group individually:</p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-5-1.png" width="672" /></p>
+<p>and for the two groups combined:</p>
+<pre class="r"><code>ddd %&gt;% summarize(x=mean(x),y=mean(y)) -&gt; dm
+# loop through data frame and create grp that links to cluster&#39;s mean
+new=data.frame(x=double(),y=double(),cluster=character(),grp=integer(),
+  stringsAsFactors = F)
+count=0;
+for (i in 1:5) {
+  count=count+1
+  new[2*count-1,]=c(a[i,],cluster=&quot;a&quot;,grp=count)
+  new[2*count,]=c(dm[1,],cluster=&quot;a&quot;,grp=count)
+  count=count+1
+  new[2*count-1,]=c(b[i,],cluster=&quot;b&quot;,grp=count)
+  new[2*count,]=c(dm[1,],cluster=&quot;b&quot;,grp=count)
+}
+ggplot(ddd,aes(x=x,y=y,colour=cluster))+
+  coord_fixed(xlim=c(0,40),ylim=c(0,40))+
+  geom_point()+
+  geom_point(data=dm,aes(colour=NULL),shape=3)+
+  geom_line(data=new,aes(group=grp),alpha=0.5)</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The Ward distance is the difference between the sum of squared distances in the second case vs. the first case. Here, the distances from the combined mean are a lot bigger than from the individual cluster means, so the Ward distance between the two clusters is large.</p>
+<p>But, if we don’t have coordinates from which the distances come, how do we define the cluster means, and thus how do we make Ward’s method go?</p>
+</div>
+<div id="re-thinking-ward" class="section level2">
+<h2>Re-thinking Ward</h2>
+<p>Ward, as seen above, is like analysis of variance in that it compares dispersion within clusters (the first Ward graph above) to total dispersion (the second graph). The total dispersion will always be bigger, but if the clusters are close to each other, it will not be much bigger.</p>
+<p>I remembered that the variance can also be written as a measure of how dispersed the individuals are <em>from each other</em>. As a way of motivating that idea, let’s imagine that we have observations <span class="math inline">\(x_i\)</span>, <span class="math inline">\(i=1,2,\ldots,n\)</span> on a variable <span class="math inline">\(x\)</span>, and let’s take the sum of squared differences between each observation and each other observation. I’m including the differences between observations and themselves, and the differences both ways around, to make the algebra easier:</p>
+<span class="math display">\[\begin{eqnarray*}
+\sum_i \sum_j (x_i-x_j)^2 &amp;=&amp; 
+\sum_i \sum_j (x_i^2- 2 x_i x_j+ x_j^2) \\
+&amp;=&amp; \sum_i (nx_i^2 -2n x_i \bar{x} + T)\\
+&amp;=&amp; nT - 2n^2 \bar{x}^2 + nT\\
+&amp;=&amp; 2n ( T - n \bar{x}^2)\\
+&amp;=&amp; 2n(n-1)s^2
+\end{eqnarray*}\]</span>
+<p>where <span class="math inline">\(T=\sum_i x_i^2\)</span> and <span class="math inline">\(s^2\)</span> is the usual sample variance.</p>
+<p>This shows that there is a simple relationship between the variance and the sum of squared differences between the observations.</p>
+<p>Why is that important? Well, the variance requires a mean, but the sum of squared differences does not. This means that a variance is still meaningful if we think (in cluster analysis terms) of dissimilarities between individuals, <em>even if the mean doesn’t make sense</em>.</p>
+</div>
+<div id="application-to-wards-method" class="section level2">
+<h2>Application to Ward’s method</h2>
+<p>One simple way to measure a dissimilarity between two languages (written in the same alphabet) is to write down their words for 1 through 10, and count up how many of those words <em>begin with different letters</em>. I did this for 11 European languages. Here are the results:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/d29/languages.txt&quot;
+number.d=read_table(my_url)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   la = col_character(),
+##   en = col_integer(),
+##   no = col_integer(),
+##   dk = col_integer(),
+##   nl = col_integer(),
+##   de = col_integer(),
+##   fr = col_integer(),
+##   es = col_integer(),
+##   it = col_integer(),
+##   pl = col_integer(),
+##   hu = col_integer(),
+##   fi = col_integer()
+## )</code></pre>
+<pre class="r"><code>number.d</code></pre>
+<pre><code>## # A tibble: 11 x 12
+##    la       en    no    dk    nl    de    fr    es    it    pl    hu    fi
+##    &lt;chr&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;
+##  1 en        0     2     2     7     6     6     6     6     7     9     9
+##  2 no        2     0     1     5     4     6     6     6     7     8     9
+##  3 dk        2     1     0     6     5     6     5     5     6     8     9
+##  4 nl        7     5     6     0     5     9     9     9    10     8     9
+##  5 de        6     4     5     5     0     7     7     7     8     9     9
+##  6 fr        6     6     6     9     7     0     2     1     5    10     9
+##  7 es        6     6     5     9     7     2     0     1     3    10     9
+##  8 it        6     6     5     9     7     1     1     0     4    10     9
+##  9 pl        7     7     6    10     8     5     3     4     0    10     9
+## 10 hu        9     8     8     8     9    10    10    10    10     0     8
+## 11 fi        9     9     9     9     9     9     9     8     9     8     0</code></pre>
+<p>See the Appendix for how I got these numbers in the first place.</p>
+<p>This needs to be turned into a <code>dist</code> object for input to <code>hclust</code>. The numbers are already dissimilarities, so <code>as.dist</code> is needed. First we take off the column of language names:</p>
+<pre class="r"><code>dd = number.d %&gt;% select(-la) %&gt;% as.dist()
+dd</code></pre>
+<pre><code>##    en no dk nl de fr es it pl hu
+## no  2                           
+## dk  2  1                        
+## nl  7  5  6                     
+## de  6  4  5  5                  
+## fr  6  6  6  9  7               
+## es  6  6  5  9  7  2            
+## it  6  6  5  9  7  1  1         
+## pl  7  7  6 10  8  5  3  4      
+## hu  9  8  8  8  9 10 10 10 10   
+## fi  9  9  9  9  9  9  9  8  9  8</code></pre>
+<p>and then obtain the clustering. This form uses Ward’s original method. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">and I now realize that I taught my class the wrong one, since I used ward.D.</span></p>
+<pre class="r"><code>lang.1=hclust(dd,method=&quot;ward.D2&quot;)</code></pre>
+<p>and then draw a dendrogram:</p>
+<pre class="r"><code>plot(lang.1)</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-10-1.png" width="672" /></p>
+<p>To me, this suggests three language clusters, these:</p>
+<pre class="r"><code>plot(lang.1)
+rect.hclust(lang.1,3)</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-11-1.png" width="672" /></p>
+<p>This is rather pleasing from a linguistic point of view. From left to right, we have a cluster of three Romance (Latin-based) languages and the most Latin-like of the Slavic languages; then we have five Germanic languages, <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">English counts as a Germanic language from this point of view because the number words are very old, predating the Norman conquest from which most of English’s Latin-derived words date.</span> and finally the “Finno-Ugric” languages. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This is a bit of a cheat, since Finnish and Hungarian are not very similar at all, but they are (just about) more like each other than they are like anything else.</span></p>
+<p>**** continue with some calculation of within-cluster sums of squares and consideration of height</p>
+<pre class="r"><code>lang.1$merge</code></pre>
+<pre><code>##       [,1] [,2]
+##  [1,]   -2   -3
+##  [2,]   -6   -8
+##  [3,]   -7    2
+##  [4,]   -1    1
+##  [5,]   -9    3
+##  [6,]   -4   -5
+##  [7,]    4    6
+##  [8,]  -10  -11
+##  [9,]    7    8
+## [10,]    5    9</code></pre>
+</div>
+<div id="appendix-the-languages-data" class="section level2">
+<h2>Appendix: the languages data</h2>
+<p>The words for 1–10 in eleven European languages are shown <a href="http://www.utsc.utoronto.ca/~butler/d29/one-ten.txt">here</a>, separated by single spaces:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/d29/one-ten.txt&quot;
+lang=read_delim(my_url,&quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   en = col_character(),
+##   no = col_character(),
+##   dk = col_character(),
+##   nl = col_character(),
+##   de = col_character(),
+##   fr = col_character(),
+##   es = col_character(),
+##   it = col_character(),
+##   pl = col_character(),
+##   hu = col_character(),
+##   fi = col_character()
+## )</code></pre>
+<pre class="r"><code>lang </code></pre>
+<pre><code>## # A tibble: 10 x 11
+##    en    no    dk    nl    de     fr     es     it      pl     hu    fi   
+##    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt;
+##  1 one   en    en    een   eins   un     uno    uno     jeden  egy   yksi 
+##  2 two   to    to    twee  zwei   deux   dos    due     dwa    ketto kaksi
+##  3 three tre   tre   drie  drei   trois  tres   tre     trzy   harom kolme
+##  4 four  fire  fire  vier  vier   quatre cuatro quattro cztery negy  nelja
+##  5 five  fem   fem   vijf  funf   cinq   cinco  cinque  piec   ot    viisi
+##  6 six   seks  seks  zes   sechs  six    seis   sei     szesc  hat   kuusi
+##  7 seven sju   syv   zeven sieben sept   siete  sette   siedem het   seit…
+##  8 eight atte  otte  acht  acht   huit   ocho   otto    osiem  nyolc kahd…
+##  9 nine  ni    ni    negen neun   neuf   nueve  nove    dziew… kile… yhde…
+## 10 ten   ti    ti    tien  zehn   dix    diez   dieci   dzies… tiz   kymm…</code></pre>
+<p>It would be a lot easier to extract the first letter if the number
+names were all in one column. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">When all you have is gather, everything looks like a wide data frame.</span></p>
+<pre class="r"><code>lang.long = lang %&gt;% mutate(number=row_number()) %&gt;%
+    gather(language,name,-number) %&gt;%
+    mutate(first=str_sub(name,1,1))
+lang.long </code></pre>
+<pre><code>## # A tibble: 110 x 4
+##    number language name  first
+##     &lt;int&gt; &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;
+##  1      1 en       one   o    
+##  2      2 en       two   t    
+##  3      3 en       three t    
+##  4      4 en       four  f    
+##  5      5 en       five  f    
+##  6      6 en       six   s    
+##  7      7 en       seven s    
+##  8      8 en       eight e    
+##  9      9 en       nine  n    
+## 10     10 en       ten   t    
+## # ... with 100 more rows</code></pre>
+<ul>
+<li><p>Dissimilarity between English and
+Norwegian is the number of first letters that are different.</p></li>
+<li><p>First get the lines for English:</p></li>
+</ul>
+<pre class="r"><code>english = lang.long %&gt;% filter(language==&quot;en&quot;)
+english</code></pre>
+<pre><code>## # A tibble: 10 x 4
+##    number language name  first
+##     &lt;int&gt; &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;
+##  1      1 en       one   o    
+##  2      2 en       two   t    
+##  3      3 en       three t    
+##  4      4 en       four  f    
+##  5      5 en       five  f    
+##  6      6 en       six   s    
+##  7      7 en       seven s    
+##  8      8 en       eight e    
+##  9      9 en       nine  n    
+## 10     10 en       ten   t</code></pre>
+<ul>
+<li>and then the lines for Norwegian:</li>
+</ul>
+<pre class="r"><code>norwegian = lang.long %&gt;% filter(language==&quot;no&quot;)
+norwegian</code></pre>
+<pre><code>## # A tibble: 10 x 4
+##    number language name  first
+##     &lt;int&gt; &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt;
+##  1      1 no       en    e    
+##  2      2 no       to    t    
+##  3      3 no       tre   t    
+##  4      4 no       fire  f    
+##  5      5 no       fem   f    
+##  6      6 no       seks  s    
+##  7      7 no       sju   s    
+##  8      8 no       atte  a    
+##  9      9 no       ni    n    
+## 10     10 no       ti    t</code></pre>
+<p>And now we want to put them side by side, matched by number. This is
+what <code>left_join</code> does:</p>
+<pre class="r"><code>english %&gt;% left_join(norwegian, by=&quot;number&quot;)</code></pre>
+<pre><code>## # A tibble: 10 x 7
+##    number language.x name.x first.x language.y name.y first.y
+##     &lt;int&gt; &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;  
+##  1      1 en         one    o       no         en     e      
+##  2      2 en         two    t       no         to     t      
+##  3      3 en         three  t       no         tre    t      
+##  4      4 en         four   f       no         fire   f      
+##  5      5 en         five   f       no         fem    f      
+##  6      6 en         six    s       no         seks   s      
+##  7      7 en         seven  s       no         sju    s      
+##  8      8 en         eight  e       no         atte   a      
+##  9      9 en         nine   n       no         ni     n      
+## 10     10 en         ten    t       no         ti     t</code></pre>
+<p><code>first.x</code> is 1st letter of English word, <code>first.y</code> 1st
+letter of Norwegian word.</p>
+<p>Create a column saying whether or not the first letters are different, then count them by summing up 1 for <code>TRUE</code> and 0 for <code>FALSE</code>:</p>
+<pre class="r"><code>english %&gt;% left_join(norwegian, by=&quot;number&quot;) %&gt;%
+  mutate(different=(first.x!=first.y)) %&gt;%
+  summarize(diff=sum(different))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##    diff
+##   &lt;int&gt;
+## 1     2</code></pre>
+<p>Words for 1 and 8 start with different letter; rest are same.</p>
+<p>Write this as a function to do it for any two languages:</p>
+<pre class="r"><code>countdiff=function(lang.1,lang.2,d) {
+    lang1d=d %&gt;% filter(language==lang.1)
+    lang2d=d %&gt;% filter(language==lang.2)
+    lang1d %&gt;% left_join(lang2d, by=&quot;number&quot;) %&gt;%
+        mutate(different=(first.x!=first.y)) %&gt;%
+        summarize(diff=sum(different)) %&gt;% 
+        pull(diff)
+}</code></pre>
+<p>Test:</p>
+<pre class="r"><code>countdiff(&quot;en&quot;,&quot;no&quot;,lang.long)</code></pre>
+<pre><code>## [1] 2</code></pre>
+<p>For all pairs of languages:</p>
+<ul>
+<li>First need all the languages:</li>
+</ul>
+<pre class="r"><code>languages=names(lang)
+languages</code></pre>
+<pre><code>##  [1] &quot;en&quot; &quot;no&quot; &quot;dk&quot; &quot;nl&quot; &quot;de&quot; &quot;fr&quot; &quot;es&quot; &quot;it&quot; &quot;pl&quot; &quot;hu&quot; &quot;fi&quot;</code></pre>
+<ul>
+<li>and then all <em>pairs</em> of languages:</li>
+</ul>
+<pre class="r"><code>pairs=crossing(lang=languages, lang2=languages) </code></pre>
+<p>Run <code>countdiff</code> for all those language pairs:</p>
+<pre class="r"><code>thediffs = pairs %&gt;% 
+    mutate(diff=map2_int(lang,lang2,countdiff,lang.long)) %&gt;% 
+    print(n=12)</code></pre>
+<pre><code>## # A tibble: 121 x 3
+##    lang  lang2  diff
+##    &lt;chr&gt; &lt;chr&gt; &lt;int&gt;
+##  1 de    de        0
+##  2 de    dk        5
+##  3 de    en        6
+##  4 de    es        7
+##  5 de    fi        9
+##  6 de    fr        7
+##  7 de    hu        9
+##  8 de    it        7
+##  9 de    nl        5
+## 10 de    no        4
+## 11 de    pl        8
+## 12 dk    de        5
+## # ... with 109 more rows</code></pre>
+<p>Make square table of these by (finally) undoing the <code>gather</code>:</p>
+<pre class="r"><code>thediffs %&gt;% spread(lang2,diff)</code></pre>
+<pre><code>## # A tibble: 11 x 12
+##    lang     de    dk    en    es    fi    fr    hu    it    nl    no    pl
+##    &lt;chr&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;
+##  1 de        0     5     6     7     9     7     9     7     5     4     8
+##  2 dk        5     0     2     5     9     6     8     5     6     1     6
+##  3 en        6     2     0     6     9     6     9     6     7     2     7
+##  4 es        7     5     6     0     9     2    10     1     9     6     3
+##  5 fi        9     9     9     9     0     9     8     9     9     9     9
+##  6 fr        7     6     6     2     9     0    10     1     9     6     5
+##  7 hu        9     8     9    10     8    10     0    10     8     8    10
+##  8 it        7     5     6     1     9     1    10     0     9     6     4
+##  9 nl        5     6     7     9     9     9     8     9     0     5    10
+## 10 no        4     1     2     6     9     6     8     6     5     0     7
+## 11 pl        8     6     7     3     9     5    10     4    10     7     0</code></pre>
+<p>And that is the data set we were working with.</p>
+</div>
+</section>
+<section>
+  
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2018
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

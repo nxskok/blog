@@ -1,0 +1,310 @@
+---
+title: Ward's method and dissimilarities
+author: ''
+date: '2018-03-22'
+slug: ward-s-method-and-dissimilarities
+categories: 
+  - Statistics
+  - R
+tags: 
+  - "#rstats"
+---
+
+## Introduction
+
+*I don't know yet where this post is going. Think of it, for now, as a ramble through cluster analysis. I may eventually figure out what to do with it, but I don't want to delete what I have written just yet.*
+
+Hierarchical clustering is a way of forming groups or "clusters" of like individuals. The various forms of hierarchical clustering work from distances or dissimilarilities between *individuals*. The process is to start from each individual in a cluster by itself and then to join the closest pair of *clusters* one by one until all individuals are in a single cluster. To use the clustering, a tree diagram or "dendrogram" is drawn and the tree is "chopped" at an appropriate number of clusters.
+
+## Clustering methods
+
+The various forms of hierarchical clustering differ in the way they turn a distance between *individuals* into a distance between *clusters*.
+and define a distance between *clusters* from this.
+
+Start by loading the `tidyverse`:
+
+```{r}
+library(tidyverse)
+```
+
+
+For example, suppose we are considering Euclidean distance as dissimilarity, and we have some points in the $(x,y)$ plane like this. I'm showing you the R code to make these plots, for completeness, but you should feel free to ignore it and just look at the pictures:
+
+```{r}
+set.seed(457299)
+a=data.frame(x=runif(5,0,20),y=runif(5,0,20))
+b=data.frame(x=runif(5,20,40),y=runif(5,20,40))
+ddd=bind_rows(a=a,b=b,.id="cluster")
+g=ggplot(ddd,aes(x=x,y=y,colour=cluster))+geom_point()+
+  coord_fixed(xlim=c(0,40),ylim=c(0,40))
+g
+```
+
+To measure the distance between the red cluster and the blue cluster, we might consider the closest distance between a red and a blue:
+
+```{r}
+distance=function(p1,p2) {
+  sqrt((p1[1]-p2[1])^2+(p1[2]-p2[2])^2)
+}
+distances=matrix(0,nrow(a),nrow(b))
+for (i in 1:nrow(a)) {
+  for (j in 1:nrow(b)) {
+    dd=distance(a[i,],b[j,])
+    distances[i,j]=dd
+  }
+}
+wm1=which.min(apply(distances,1,min))
+wm2=which.min(apply(distances,2,min))
+closest=bind_rows(a=a[wm1,],b=b[wm2,],.id="cluster")
+# single linkage distance
+g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour="blue")
+```   
+
+the so-called **single-linkage distance**, or the farthest distance between a red and a blue:
+
+```{r}
+wm1=which.max(apply(distances,1,max))
+wm2=which.max(apply(distances,2,max))
+closest=bind_rows(a[wm1,],b[wm2,],.id="cluster")
+g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour="blue")
+```
+
+the **complete-linkage distance**. Another option, that often works well in practice, is "Ward's method." This is most easily understood by thinking of the means of coordinates, for each group individually:
+
+```{r, echo=F}
+xm=aggregate(x~cluster,ddd,mean)
+ym=aggregate(y~cluster,ddd,mean)
+dm=cbind(xm,y=ym[,2])
+# loop through data frame and create grp that links to cluster's mean
+new=data.frame(x=double(),y=double(),cluster=character(),grp=integer(),
+  stringsAsFactors = F)
+count=0;
+for (i in 1:5) {
+  count=count+1
+  new[2*count-1,]=c(a[i,],cluster="a",grp=count)
+  new[2*count,]=c(dm[1,-1],cluster="a",grp=count)
+  count=count+1
+  new[2*count-1,]=c(b[i,],cluster="b",grp=count)
+  new[2*count,]=c(dm[2,-1],cluster="b",grp=count)
+}
+ggplot(ddd,aes(x=x,y=y,colour=cluster))+
+  coord_fixed(xlim=c(0,40),ylim=c(0,40))+
+  geom_point()+
+  geom_point(data=dm,shape=3)+
+  geom_line(data=new,aes(group=grp),alpha=0.5)
+```   
+
+and for the two groups combined:
+
+```{r}
+ddd %>% summarize(x=mean(x),y=mean(y)) -> dm
+# loop through data frame and create grp that links to cluster's mean
+new=data.frame(x=double(),y=double(),cluster=character(),grp=integer(),
+  stringsAsFactors = F)
+count=0;
+for (i in 1:5) {
+  count=count+1
+  new[2*count-1,]=c(a[i,],cluster="a",grp=count)
+  new[2*count,]=c(dm[1,],cluster="a",grp=count)
+  count=count+1
+  new[2*count-1,]=c(b[i,],cluster="b",grp=count)
+  new[2*count,]=c(dm[1,],cluster="b",grp=count)
+}
+ggplot(ddd,aes(x=x,y=y,colour=cluster))+
+  coord_fixed(xlim=c(0,40),ylim=c(0,40))+
+  geom_point()+
+  geom_point(data=dm,aes(colour=NULL),shape=3)+
+  geom_line(data=new,aes(group=grp),alpha=0.5)
+```
+
+The Ward distance is the difference between the sum of squared distances in the second case vs. the first case. Here, the distances from the combined mean are a lot bigger than from the individual cluster means, so the Ward distance between the two clusters is large.
+
+But, if we don't have coordinates from which the distances come, how do we define the cluster means, and thus how do we make Ward's method go?
+
+## Re-thinking Ward
+
+Ward, as seen above, is like analysis of variance in that it compares dispersion within clusters (the first Ward graph above) to total dispersion (the second graph). The total dispersion will always be bigger, but if the clusters are close to each other, it will not be much bigger.
+
+I remembered that the variance can also be written as a measure of how dispersed the individuals are *from each other*. As a way of motivating that idea, let's imagine that we have observations $x_i$, $i=1,2,\ldots,n$ on a variable $x$, and let's take the sum of squared differences between each observation and each other observation. I'm including the differences between observations and themselves, and the differences both ways around, to make the algebra easier:
+
+\begin{eqnarray*}
+\sum_i \sum_j (x_i-x_j)^2 &=& 
+\sum_i \sum_j (x_i^2- 2 x_i x_j+ x_j^2) \\
+&=& \sum_i (nx_i^2 -2n x_i \bar{x} + T)\\
+&=& nT - 2n^2 \bar{x}^2 + nT\\
+&=& 2n ( T - n \bar{x}^2)\\
+&=& 2n(n-1)s^2
+\end{eqnarray*}
+
+where $T=\sum_i x_i^2$ and $s^2$ is the usual sample variance.
+
+This shows that there is a simple relationship between the variance and the sum of squared differences between the observations.
+
+Why is that important? Well, the variance requires a mean, but the sum of squared differences does not. This means that a variance is still meaningful if we think (in cluster analysis terms) of dissimilarities between individuals, *even if the mean doesn't make sense*.
+
+## Application to Ward's method
+
+One simple way to measure a dissimilarity between two languages (written in the same alphabet) is to write down their words for 1 through 10, and count up how many of those words *begin with different letters*. I did this for 11 European languages. Here are the results:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/languages.txt"
+number.d=read_table(my_url)
+number.d
+``` 
+
+See the Appendix for how I got these numbers in the first place.
+
+This needs to be turned into a `dist` object for input to `hclust`. The numbers are already dissimilarities, so `as.dist` is needed. First we take off the column of language names:
+
+```{r}
+dd = number.d %>% select(-la) %>% as.dist()
+dd
+```
+
+and then obtain the clustering. This form uses Ward's original method. `r tufte::margin_note("and I now realize that I taught my class the wrong one, since I used ward.D.")`
+
+```{r}
+lang.1=hclust(dd,method="ward.D2")
+```
+
+and then draw a dendrogram:
+
+```{r}
+plot(lang.1)
+```
+
+To me, this suggests three language clusters, these:
+
+```{r}
+plot(lang.1)
+rect.hclust(lang.1,3)
+```
+
+This is rather pleasing from a linguistic point of view. From left to right, we have a cluster of three Romance (Latin-based) languages and the most Latin-like of the Slavic languages; then we have five Germanic languages, `r tufte::margin_note("English counts as a Germanic language from this point of view because the number words are very old, predating the Norman conquest from which most of English's Latin-derived words date.")` and finally the "Finno-Ugric" languages. `r tufte::margin_note("This is a bit of a cheat, since Finnish and Hungarian are not very similar at all, but they are (just about) more like each other than they are like anything else.")`
+
+**** continue with some calculation of within-cluster sums of squares and consideration of height
+
+```{r}
+lang.1$merge
+```
+
+
+
+## Appendix: the languages data
+
+The words for 1--10 in eleven European languages are shown [here](http://www.utsc.utoronto.ca/~butler/d29/one-ten.txt), separated by single spaces:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/one-ten.txt"
+lang=read_delim(my_url," ")
+lang 
+``` 
+
+It would be a lot easier to extract the first letter if the number
+names were all in one column. `r tufte::margin_note("When all you have is gather, everything looks like a wide data frame.")`
+  
+```{r}
+lang.long = lang %>% mutate(number=row_number()) %>%
+    gather(language,name,-number) %>%
+    mutate(first=str_sub(name,1,1))
+lang.long 
+```   
+  
+
+
+
+  
+  - Dissimilarity between English and
+    Norwegian is the number of first letters that are different.
+    
+    
+  - First get the lines for English:
+    
+```{r}
+english = lang.long %>% filter(language=="en")
+english
+```     
+  
+  
+
+  - and then the lines for Norwegian:
+  
+```{r}
+norwegian = lang.long %>% filter(language=="no")
+norwegian
+```   
+
+And now we want to put them side by side, matched by number. This is
+what `left_join` does:
+  
+
+```{r}
+english %>% left_join(norwegian, by="number")
+```   
+
+`first.x` is 1st letter of English word, `first.y` 1st
+letter of Norwegian word.
+
+Create a column saying whether or not the first letters are different, then count them by summing up 1 for `TRUE` and 0 for `FALSE`:
+
+```{r}
+english %>% left_join(norwegian, by="number") %>%
+  mutate(different=(first.x!=first.y)) %>%
+  summarize(diff=sum(different))
+```   
+
+Words for 1 and 8 start with different letter; rest are same.
+
+Write this as a function to do it for any two languages:  
+
+```{r}
+countdiff=function(lang.1,lang.2,d) {
+    lang1d=d %>% filter(language==lang.1)
+    lang2d=d %>% filter(language==lang.2)
+    lang1d %>% left_join(lang2d, by="number") %>%
+        mutate(different=(first.x!=first.y)) %>%
+        summarize(diff=sum(different)) %>% 
+        pull(diff)
+}
+```   
+  
+Test:
+
+```{r}
+countdiff("en","no",lang.long)
+``` 
+
+For all pairs of languages:
+
+- First need all the languages:
+    
+```{r}
+languages=names(lang)
+languages
+```     
+
+- and then all *pairs* of languages:
+  
+```{r}
+pairs=crossing(lang=languages, lang2=languages) 
+```   
+  
+  
+Run `countdiff` for all those language pairs:
+  
+```{r}
+thediffs = pairs %>% 
+    mutate(diff=map2_int(lang,lang2,countdiff,lang.long)) %>% 
+    print(n=12)
+```   
+  
+
+
+Make square table of these by (finally) undoing the `gather`:
+
+
+```{r}
+thediffs %>% spread(lang2,diff)
+```   
+
+And that is the data set we were working with.

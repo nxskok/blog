@@ -3,6 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/2018/03/25/today-on-twitter-i-learned/</loc>
+    <lastmod>2018-03-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/2018/03/22/ward-s-method-and-dissimilarities/</loc>
+    <lastmod>2018-03-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2018/03/21/readr-and-summary/</loc>
     <lastmod>2018-03-21T00:00:00+00:00</lastmod>
   </url>
@@ -282,13 +292,13 @@
   
   <url>
     <loc>/tags/#rstats/</loc>
-    <lastmod>2018-03-21T00:00:00+00:00</lastmod>
+    <lastmod>2018-03-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/#tidyverse/</loc>
-    <lastmod>2018-03-21T00:00:00+00:00</lastmod>
+    <lastmod>2018-03-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -336,7 +346,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2018-03-21T00:00:00+00:00</lastmod>
+    <lastmod>2018-03-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -354,7 +364,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2018-03-21T00:00:00+00:00</lastmod>
+    <lastmod>2018-03-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -366,7 +376,7 @@
   
   <url>
     <loc>/categories/r/</loc>
-    <lastmod>2018-03-21T00:00:00+00:00</lastmod>
+    <lastmod>2018-03-22T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -390,7 +400,7 @@
   
   <url>
     <loc>/categories/statistics/</loc>
-    <lastmod>2018-02-28T00:00:00+00:00</lastmod>
+    <lastmod>2018-03-25T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

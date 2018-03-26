@@ -6,10 +6,20 @@
     <description>Recent content in R on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 21 Mar 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 22 Mar 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Ward&#39;s method and dissimilarities</title>
+      <link>/2018/03/22/ward-s-method-and-dissimilarities/</link>
+      <pubDate>Thu, 22 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/22/ward-s-method-and-dissimilarities/</guid>
+      <description>Introduction I don’t know yet where this post is going. Think of it, for now, as a ramble through cluster analysis. I may eventually figure out what to do with it, but I don’t want to delete what I have written just yet.
+Hierarchical clustering is a way of forming groups or “clusters” of like individuals. The various forms of hierarchical clustering work from distances or dissimilarilities between individuals. The process is to start from each individual in a cluster by itself and then to join the closest pair of clusters one by one until all individuals are in a single cluster.</description>
+    </item>
     
     <item>
       <title>Readr and summary</title>
