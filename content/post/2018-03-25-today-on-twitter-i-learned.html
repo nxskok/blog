@@ -19,7 +19,7 @@ tags:
 <li>from <span class="citation">@pkqstr</span> about <code>separate_rows</code> from <code>tidyr</code>, that does something like <code>separate</code> followed by <code>gather</code>, but better.</li>
 <li>from <span class="citation">@ma_salmon</span> about <code>haven</code> for reading in data files from other software, and I thought about <code>rio</code> that does more or less the same thing, but more generally.</li>
 </ol>
-<p>I didn’t get an answer to Maelle’s question of why <code>haven</code> worked less well for me than <code>rio</code> a long time ago. After all, <code>rio</code> <em>uses</em> <code>haven</code> when <code>haven</code> will work.</p>
+<p>I didn’t get to an answer to Maelle’s question of why <code>haven</code> worked less well for me than <code>rio</code> a long time ago. After all, <code>rio</code> <em>uses</em> <code>haven</code> when <code>haven</code> will work.</p>
 </div>
 <div id="packages" class="section level2">
 <h2>Packages</h2>
@@ -86,7 +86,8 @@ library(tidyverse)</code></pre>
 ## 4     4 c     d     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
 ## 5     5 b     c     e     &lt;NA&gt;  &lt;NA&gt; 
 ## 6     6 e     &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;</code></pre>
-<p>I had to allow for five separate columns because a respondent might have used all the different ways of getting to work this month, but there are a lot of missings because most people used only one or two methods. Undaunted, we <code>gather</code> up the response columns:</p>
+<p>I had to allow for five separate columns because a respondent might have used all the different ways of getting to work this month, but there are a lot of missings because most people used only one or two methods. This is where the warning comes from.</p>
+<p>Undaunted, we <code>gather</code> up the response columns:</p>
 <pre class="r"><code>survey %&gt;% 
   separate(answers,into=c(&quot;a1&quot;,&quot;a2&quot;,&quot;a3&quot;,&quot;a4&quot;,&quot;a5&quot;),sep=&quot;,&quot;) %&gt;% 
   gather(nth_response,response,a1:a5) %&gt;% print(n=Inf)</code></pre>
@@ -166,8 +167,7 @@ library(tidyverse)</code></pre>
 ##  9     4 a2           d       
 ## 10     5 a2           c       
 ## 11     5 a3           e</code></pre>
-<p>I don’t know why this gives me a warning, but it seems to work.
-However, the business of having to name five extra columns that we are not going to use, even though we could do it a lot more succinctly than I did, is unpleasant.</p>
+<p>However, the business of having to name five extra columns that we are not going to use, even though we could do it a lot more succinctly than I did, is unpleasant.</p>
 <p>Enter <code>separate_rows</code>. Let’s remind ourselves of how the original data frame looked:</p>
 <pre class="r"><code>survey </code></pre>
 <pre><code>## # A tibble: 6 x 2
@@ -206,7 +206,7 @@ However, the business of having to name five extra columns that we are not going
 ## 3 c           3
 ## 4 d           2
 ## 5 e           3</code></pre>
-<p>I think my days of using <code>stringr::str_split</code> in situations like this are over.</p>
+<p>I think my days of using <code>stringr::str_split</code>, or even of <code>separate</code> plus (carefully) <code>gather</code>, in situations like this are over.</p>
 </div>
 <div id="readingwriting-data-files-from-other-packages" class="section level2">
 <h2>Reading/writing data files from other packages</h2>

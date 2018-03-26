@@ -18,7 +18,7 @@
       
       <guid>/2018/03/25/today-on-twitter-i-learned/</guid>
       <description>Introduction Today on Twitter I learned (or was reminded about) two #rstats things:
-from @pkqstr about separate_rows from tidyr, that does something like separate followed by gather, but better. from @ma_salmon about haven for reading in data files from other software, and I thought about rio that does more or less the same thing, but more generally.  I didn’t get an answer to Maelle’s question of why haven worked less well for me than rio a long time ago.</description>
+from @pkqstr about separate_rows from tidyr, that does something like separate followed by gather, but better. from @ma_salmon about haven for reading in data files from other software, and I thought about rio that does more or less the same thing, but more generally.  I didn’t get to an answer to Maelle’s question of why haven worked less well for me than rio a long time ago.</description>
     </item>
     
     <item>

@@ -17,7 +17,7 @@ Today on Twitter I learned (or was reminded about) two #rstats things:
 1. from @pkqstr about `separate_rows` from `tidyr`, that does something like `separate` followed by `gather`, but better.
 1. from @ma_salmon about `haven` for reading in data files from other software, and I thought about `rio` that does more or less the same thing, but more generally.
 
-I didn't get an answer to Maelle's question of why `haven` worked less well for me than `rio` a long time ago. After all, `rio` *uses* `haven` when `haven` will work. 
+I didn't get to an answer to Maelle's question of why `haven` worked less well for me than `rio` a long time ago. After all, `rio` *uses* `haven` when `haven` will work. 
 
 ## Packages
 
@@ -67,7 +67,9 @@ Those survey responses need to be separated out, for example to find out how man
 survey %>% separate(answers,into=c("a1","a2","a3","a4","a5"),sep=",")
 ```
 
-I had to allow for five separate columns because a respondent might have used all the different ways of getting to work this month, but there are a lot of missings because most people used only one or two methods. Undaunted, we `gather` up the response columns:
+I had to allow for five separate columns because a respondent might have used all the different ways of getting to work this month, but there are a lot of missings because most people used only one or two methods. This is where the warning comes from. 
+
+Undaunted, we `gather` up the response columns:
 
 ```{r}
 survey %>% 
@@ -92,7 +94,6 @@ survey %>%
   gather(nth_response,response,a1:a5,na.rm=T) 
 ```
 
-I don't know why this gives me a warning, but it seems to work.
 However, the business of having to name five extra columns that we are not going to use, even though we could do it a lot more succinctly than I did, is unpleasant.
 
 Enter `separate_rows`. Let's remind ourselves of how the original data frame looked:
@@ -115,7 +116,7 @@ survey %>% separate_rows(answers,sep=",") %>%
 ```
 
 
-I think my days of using `stringr::str_split` in situations like this are over. 
+I think my days of using `stringr::str_split`, or even of `separate` plus (carefully) `gather`, in situations like this are over. 
 
 
 ## Reading/writing data files from other packages
