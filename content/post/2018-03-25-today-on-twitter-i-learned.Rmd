@@ -118,6 +118,33 @@ survey %>% separate_rows(answers,sep=",") %>%
 
 I think my days of using `stringr::str_split`, or even of `separate` plus (carefully) `gather`, in situations like this are over. 
 
+This is (I am told by @LuisDVerde) another way to do it:
+
+```{r}
+survey %>% unnest(answers=strsplit(answers,","))
+```
+
+It works, but I have no idea why. Let's explore:
+
+```{r}
+survey %>%  mutate(ans2=strsplit(answers,","))
+```
+
+Ah, now I understand. `strsplit` creates an array of pieces, which is perhaps more clearly seen without the data frame:
+
+```{r}
+strsplit(survey$answers,",")
+```
+
+or, more precisely, a list thereof, each array being stored in a list column of the data frame. To unpack that, we need `unnest`:
+
+```{r}
+survey %>%  mutate(ans2=strsplit(answers,",")) %>% 
+  unnest(ans2)
+```
+
+and each ID is repeated once for each element in the arrays in the unnested `ans2`. 
+ 
 
 ## Reading/writing data files from other packages
 

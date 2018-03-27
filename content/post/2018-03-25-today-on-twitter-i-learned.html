@@ -26,12 +26,12 @@ tags:
 <pre class="r"><code>library(rio)
 library(haven)
 library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
 ## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
 ## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
 ## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 </div>
@@ -207,6 +207,70 @@ library(tidyverse)</code></pre>
 ## 4 d           2
 ## 5 e           3</code></pre>
 <p>I think my days of using <code>stringr::str_split</code>, or even of <code>separate</code> plus (carefully) <code>gather</code>, in situations like this are over.</p>
+<p>This is (I am told by <span class="citation">@LuisDVerde</span>) another way to do it:</p>
+<pre class="r"><code>survey %&gt;% unnest(answers=strsplit(answers,&quot;,&quot;))</code></pre>
+<pre><code>## # A tibble: 11 x 2
+##       ID answers
+##    &lt;int&gt; &lt;chr&gt;  
+##  1     1 a      
+##  2     2 b      
+##  3     2 c      
+##  4     3 d      
+##  5     3 e      
+##  6     4 c      
+##  7     4 d      
+##  8     5 b      
+##  9     5 c      
+## 10     5 e      
+## 11     6 e</code></pre>
+<p>It works, but I have no idea why. Let’s explore:</p>
+<pre class="r"><code>survey %&gt;%  mutate(ans2=strsplit(answers,&quot;,&quot;))</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##      ID answers ans2     
+##   &lt;int&gt; &lt;chr&gt;   &lt;list&gt;   
+## 1     1 a       &lt;chr [1]&gt;
+## 2     2 b,c     &lt;chr [2]&gt;
+## 3     3 d,e     &lt;chr [2]&gt;
+## 4     4 c,d     &lt;chr [2]&gt;
+## 5     5 b,c,e   &lt;chr [3]&gt;
+## 6     6 e       &lt;chr [1]&gt;</code></pre>
+<p>Ah, now I understand. <code>strsplit</code> creates an array of pieces, which is perhaps more clearly seen without the data frame:</p>
+<pre class="r"><code>strsplit(survey$answers,&quot;,&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;a&quot;
+## 
+## [[2]]
+## [1] &quot;b&quot; &quot;c&quot;
+## 
+## [[3]]
+## [1] &quot;d&quot; &quot;e&quot;
+## 
+## [[4]]
+## [1] &quot;c&quot; &quot;d&quot;
+## 
+## [[5]]
+## [1] &quot;b&quot; &quot;c&quot; &quot;e&quot;
+## 
+## [[6]]
+## [1] &quot;e&quot;</code></pre>
+<p>or, more precisely, a list thereof, each array being stored in a list column of the data frame. To unpack that, we need <code>unnest</code>:</p>
+<pre class="r"><code>survey %&gt;%  mutate(ans2=strsplit(answers,&quot;,&quot;)) %&gt;% 
+  unnest(ans2)</code></pre>
+<pre><code>## # A tibble: 11 x 3
+##       ID answers ans2 
+##    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;
+##  1     1 a       a    
+##  2     2 b,c     b    
+##  3     2 b,c     c    
+##  4     3 d,e     d    
+##  5     3 d,e     e    
+##  6     4 c,d     c    
+##  7     4 c,d     d    
+##  8     5 b,c,e   b    
+##  9     5 b,c,e   c    
+## 10     5 b,c,e   e    
+## 11     6 e       e</code></pre>
+<p>and each ID is repeated once for each element in the arrays in the unnested <code>ans2</code>.</p>
 </div>
 <div id="readingwriting-data-files-from-other-packages" class="section level2">
 <h2>Reading/writing data files from other packages</h2>
