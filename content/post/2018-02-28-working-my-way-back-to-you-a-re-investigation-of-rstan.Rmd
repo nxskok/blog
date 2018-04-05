@@ -8,8 +8,8 @@ categories:
   - statistics
   - Bayesian
 tags:
-  - '#rstats'
-  - '#rstan'
+  - 'rstats'
+  - 'rstan'
 ---
 
 ## Introduction
