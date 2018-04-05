@@ -6,7 +6,7 @@ slug: installing-r-3-4-on-your-android-phone
 categories:
   - R
 tags:
-  - '#rstats'
+  - 'rstats'
 ---
 
 ## Introduction

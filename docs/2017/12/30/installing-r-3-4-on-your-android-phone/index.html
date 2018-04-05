@@ -105,16 +105,10 @@
 <p>We begin by installing two Android apps, which can both be found on Google Play.</p>
 <p>First, a keyboard that will work nicely for programming called the Hacker’s Keyboard. When this is opened for the first time, you are invited to do two things: one, make it available as an input method (move the grey slider to the right, at which point it becomes coloured), and two, set the input method to be this keyboard. (This is easy to change back and forth, if you are otherwise a fan of SwiftKey as I am.)</p>
 <p>Second, Gnu Root Debian. This is a Linux operating system. R will be run from here, and anything else that will run under Linux will run here (at least in principle). Despite its name, it doesn’t need root access to your phone; the “root” refers to the Linux user that we will be running under. Install it from the store, and then tap Open, at which point it will do a considerable amount more installation involving copying files. When it is done, you’ll see something like this:</p>
-<div class="figure">
-<img src="../../../../debian1.png" />
-
-</div>
+<p><img src="../../../../debian1.png" /></p>
 <p>The last line is a command prompt, at which you are invited to type something to make something happen. Usually on Linux systems the last character of the prompt is a <code>$</code>; when it is a <code>#</code> like this, it is a reminder that you are <code>root</code> or “superuser”, meaning that you can do anything to your Linux installation including destroying it completely. But we are going to be more careful.</p>
 <p>There is no keyboard here, but if you tap the screen, you will get your currently-running keyboard. The hacker’s keyboard works best in landscape mode (unless you have tiny fingers or a stylus), and looks like this:</p>
-<div class="figure">
-<img src="../../../../debian2.png" />
-
-</div>
+<p><img src="../../../../debian2.png" /></p>
 <p>There isn’t much room above (about 5 lines of text), but at least this way you can use the keyboard most effectively.</p>
 <p>When you have a keyboard open, you can switch between them by pulling down from the top left, tapping on Change Keyboard, and selecting the one you want.</p>
 </div>
@@ -133,28 +127,20 @@ apt-get upgrade</code></pre>
 <pre class="bash"><code>apt-get install nano</code></pre>
 <p>and then press the Enter on Hacker’s Keyboard.</p>
 <p>To test it, you can run it with, say, <code>nano x</code>. You’ll see a small amount of editing space above your keyboard, as here:</p>
-<div class="figure">
-<img src="../../../../debian3.png" />
-
-</div>
+<p><img src="../../../../debian3.png" /></p>
 <p>Type some text into the editor window, and then use one of the hints at the bottom of the window to do something with it. The up-arrow means “control”, so for example control-O will save your text (into a file whose default name is the <code>x</code> on the <code>nano x</code> line). Control-X will close and save. You can decide not to save the file, or save it under a different name. After you’ve saved it, at the command line you can type</p>
 <pre class="bash"><code>cat x</code></pre>
 <p>and you should see the text that you saved into the file <code>x</code>.</p>
 </div>
 <div id="why-we-need-an-editor" class="section level2">
 <h2>Why we need an editor</h2>
-<p>If you follow <a href="http://selbydavid.com/2017/12/29/r-android/">David Selby’s instructions</a> to install R, unfortunately what you’ll get is R 3.1.1, not very close to the latest one. The places that Linux distributions keep stuff can have old versions of software, since they don’t get updated very often. Linux distributions also have things called “backports” which contain more recent versions of stuff, but you have to tell <code>apt-get</code> where to find them. The procedure is <a href="https://cran.r-project.org/bin/linux/debian/">described here</a>. The version of Debian Linux that we just installed on our phone is called <code>jessie</code>, so what we have to do is to edit the file called <code>/etc/apt/sources.list</code>, and tell our Debian where to look for an up-to-date version of R. This is done by opening the file in <code>nano</code>:</p>
+<p>If you follow <a href="http://selbydavid.com/2017/12/29/r-android/">David Selby’s instructions</a> to install R, unfortunately what you’ll get is R 3.1.1, not very close to the latest one. The places that Linux distributions keep stuff can have old versions of software, since they don’t get updated very often. Linux distributions also have things called “backports” which contain more recent versions of stuff, but you have to tell <code>apt-get</code> where to find them. The procedure is
+<a href="https://cran.r-project.org/bin/linux/debian/">described here</a>. The version of Debian Linux that we just installed on our phone is called <code>jessie</code>, so what we have to do is to edit the file called <code>/etc/apt/sources.list</code>, and tell our Debian where to look for an up-to-date version of R. This is done by opening the file in <code>nano</code>:</p>
 <pre class="bash"><code>nano /etc/apt/sources.list</code></pre>
 <p>and adding the line shown at the end of the file. Here’s how mine looks at the start:</p>
-<div class="figure">
-<img src="../../../../debian4.png" />
-
-</div>
+<p><img src="../../../../debian4.png" /></p>
 <p>and here’s how it looks at the end, with the new line added at the bottom:</p>
-<div class="figure">
-<img src="../../../../debian5.png" />
-
-</div>
+<p><img src="../../../../debian5.png" /></p>
 <p>Be careful to get the spaces and slashes in the right places. Save the file.</p>
 <p>Now run this line again. This makes sure that Debian now looks for the up-to-date version of R:</p>
 <pre class="bash"><code>apt-get update</code></pre>
