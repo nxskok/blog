@@ -80,7 +80,7 @@
   
   
   &nbsp;<i class="fa fa-clock-o"></i>
-    &nbsp;10 min read
+    &nbsp;11 min read
   
   
   
@@ -101,50 +101,51 @@
 <p>I have long been interested in drawing maps, and when I discovered how to do it in R, I have tried to add it to my statistical repertoire, including drawing things on maps. There are two packages that can be used to obtain maps and draw on them, <code>ggmap</code> which is based on Google Maps, and <code>OpenStreetMap</code> which is based on Open Street Maps (surprisingly enough). They have overlapping capabilities, which we will explore here.</p>
 <p>First, our packages:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
-## ✔ tibble  1.3.4          ✔ dplyr   0.7.4     
-## ✔ tidyr   0.7.2          ✔ stringr 1.2.0     
-## ✔ readr   1.1.1          ✔ forcats 0.2.0</code></pre>
-<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(ggrepel)
-library(ggmap)
-library(OpenStreetMap)</code></pre>
+library(ggmap)</code></pre>
+<pre><code>## Google Maps API Terms of Service: http://developers.google.com/maps/terms.</code></pre>
+<pre><code>## Please cite ggmap if you use it: see citation(&quot;ggmap&quot;) for details.</code></pre>
+<pre class="r"><code>library(OpenStreetMap)</code></pre>
 </div>
 <div id="ggmap" class="section level2">
 <h2><code>ggmap</code></h2>
 <p>This package is perhaps easier to use, since it works along the lines of Google Maps, which many of us are familiar with. You specify a place to be at the centre of your map (in any of the ways Google Maps lets you do that), and also a zoom level. See <a href="https://developers.google.com/maps/documentation/static-maps/intro">here</a> for more details. Typical zoom levels are 5 for a continent, 10 for a city, 15 for streets within a city. <em>The zoom must be an integer</em>. You might have to experiment to find the zoom level that works for you.</p>
 <p>I want to map the area of southwestern Ontario west from Toronto to the US border. I think Stratford, Ontario is about in the middle of that area:</p>
 <pre class="r"><code>ontario=get_map(&quot;Stratford ON&quot;,zoom=8)</code></pre>
-<pre><code>## Map from URL : http://maps.googleapis.com/maps/api/staticmap?center=Stratford+ON&amp;zoom=8&amp;size=640x640&amp;scale=2&amp;maptype=terrain&amp;language=en-EN&amp;sensor=false</code></pre>
-<pre><code>## Information from URL : http://maps.googleapis.com/maps/api/geocode/json?address=Stratford%20ON&amp;sensor=false</code></pre>
+<pre><code>## Source : https://maps.googleapis.com/maps/api/staticmap?center=Stratford+ON&amp;zoom=8&amp;size=640x640&amp;scale=2&amp;maptype=terrain&amp;language=en-EN</code></pre>
+<pre><code>## Source : https://maps.googleapis.com/maps/api/geocode/json?address=Stratford%20ON</code></pre>
 <pre class="r"><code>ggmap(ontario)</code></pre>
-<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-2-1.png" width="672" /></p>
 <p>The map <em>always comes out square</em>. My guess at the zoom came out about right. Note that the axis scales are degrees.</p>
 <p>The function <code>ggmap</code> plots the map as a <code>ggplot</code>, which lets you add things to it (as we see later).</p>
 </div>
 <div id="openstreetmap" class="section level2">
 <h2><code>OpenStreetMap</code></h2>
 <p>Google Maps has a limit to the number of queries you are allowed to make of its static maps. It is perhaps better, therefore, to use an open service such as Open Street Maps. This is done using the package <code>OpenStreetMap</code>. The easiest way to get a map is to specify the latitude and longitude of its top left and bottom right points. In order to do <em>that</em>, there is a function <code>launchMapHelper</code> which interactively launches a Java map, which you can scroll (right-drag) and zoom (left-double-click) until you get the area you want. There is also a zoom controller at the top left. When you are happy, right-click at the top left corner of your map to get its lat and long (which appear at the bottom) and similarly at the bottom right, like this:</p>
-<div class="figure">
-<img src="../../../../Screenshot_Ontario.png" />
-
-</div>
+<p><img src="../../../../Screenshot_Ontario.png" /></p>
 <p>Then use those top-left and bottom-right points to get an OSM map, thus:</p>
 <pre class="r"><code>ontario2=openmap(c(44.37,-83.40),c(41.96,-78.38),type=&quot;osm&quot;)</code></pre>
 <p>There are two ways to plot it, as a base graph:</p>
 <pre class="r"><code>plot(ontario2)</code></pre>
-<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-4-1.png" width="672" /></p>
 <p>or as a <code>ggplot</code> graph:</p>
 <pre class="r"><code>autoplot(ontario2)</code></pre>
-<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-5-1.png" width="672" /></p>
 <p>I find that the <code>ggplot</code> display is less clear.</p>
-<p>The second of these shows that we have a different coordinate system now. According to <a href="http://blog.fellstat.com/?cat=15">this site</a>, this is a “special Mercator projection”, <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Of which more later.</span> and the way to put longitude and latitude on the axes is this:</p>
+<p>The second of these shows that we have a different coordinate system now. According to
+<a href="http://blog.fellstat.com/?cat=15">this site</a>, this is a “special Mercator projection”,
+<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Of which more later.</span> and the way to put longitude and latitude on the axes is this:</p>
 <pre class="r"><code>ontario3=openproj(ontario2)
 autoplot(ontario3)</code></pre>
-<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-6-1.png" width="672" /></p>
 <p>But now the aspect ratio is messed up, since east-west is exaggerated. I think this is because one degree is the same on this map whether it is longitude or latitude. One latitude degree is always 60 nautical miles, but one degree of longitude is only 60 nautical miles at the equator, and at this latitude it is smaller by a factor of</p>
 <pre class="r"><code>cos(43*pi/180)</code></pre>
 <pre><code>## [1] 0.7313537</code></pre>
@@ -231,7 +232,8 @@ windsor</code></pre>
 </div>
 <div id="adding-the-points-to-the-map" class="section level3">
 <h3>Adding the points to the map</h3>
-<p>Starting with the <code>ggmap</code> map: we first use <code>ggmap</code> to plot the map itself, and then we add points and lines to it in the usual way. The only problem is that we would normally specify the data frame and default aesthetics on the <code>ggplot</code> command, and there isn’t one, so we have to specify them on the how-to-plot lines. Also, we seem to need to repeat them, since they appear not to get inherited. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I think they only get inherited from a ggplot.</span></p>
+<p>Starting with the <code>ggmap</code> map: we first use <code>ggmap</code> to plot the map itself, and then we add points and lines to it in the usual way. The only problem is that we would normally specify the data frame and default aesthetics on the <code>ggplot</code> command, and there isn’t one, so we have to specify them on the how-to-plot lines. Also, we seem to need to repeat them, since they appear not to get inherited.
+<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I think they only get inherited from a ggplot.</span></p>
 <pre class="r"><code>ggmap(ontario) +
   geom_point(data=via,aes(x=lon,y=lat,colour=route)) +
   geom_line(data=via,aes(x=lon,y=lat,colour=route)) +
@@ -239,13 +241,17 @@ windsor</code></pre>
 <pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
 <pre><code>## Warning: Removed 1 rows containing missing values (geom_path).</code></pre>
 <pre><code>## Warning: Removed 1 rows containing missing values (geom_text_repel).</code></pre>
-<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<pre><code>## Warning in min(x): no non-missing arguments to min; returning Inf</code></pre>
+<pre><code>## Warning in max(x): no non-missing arguments to max; returning -Inf</code></pre>
+<pre><code>## Warning in min(x): no non-missing arguments to min; returning Inf</code></pre>
+<pre><code>## Warning in max(x): no non-missing arguments to max; returning -Inf</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-11-1.png" width="672" /></p>
 <p>The warnings about missing points are because of Windsor, which is off the bottom left corner of the map. Toronto and London are named twice, once in red and once in blue, because they are on both routes.</p>
 <p>The <code>OpenStreetMap</code> map goes the same kind of way:</p>
 <pre class="r"><code>autoplot(ontario3) + geom_point(data=via,aes(x=lon,y=lat,colour=route)) +
   geom_line(data=via,aes(x=lon,y=lat,colour=route)) +
   geom_text_repel(data=via,aes(x=lon,y=lat,label=stations,colour=route),size=2)</code></pre>
-<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Once again, something to plot the map, and the usual <code>geom_point</code> etc to add points to the map.</p>
 <p>For labelling points on a <code>ggplot</code> I like <code>geom_text_repel</code> from package <code>ggrepel</code>. This labels points in such a way that they don’t overplot each other. On the second (smaller) map, I made the label text smaller, by putting a <code>size</code> <em>outside</em> the <code>aes</code> (this is easy to forget).</p>
 </div>
@@ -323,7 +329,7 @@ via_mercator</code></pre>
 ## will replace the existing scale.</code></pre>
 <pre><code>## Scale for &#39;y&#39; is already present. Adding another scale for &#39;y&#39;, which
 ## will replace the existing scale.</code></pre>
-<p><img src="../../../../post/2017-12-24-drawing-maps-in-r-with-ggmap-and-openstreetmap_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-15-1.png" width="672" /></p>
 <p>The axis scales are now more or less meaningless (unless you have experience with reading this scale), so I got rid of them (the last two lines of the code).</p>
 </div>
 </section>

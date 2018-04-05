@@ -6,7 +6,7 @@ slug: chuff-chuff-using-rvest-with-web-forms
 categories:
   - R
 tags:
-  - '#rstats'
+  - 'rstats'
 ---
 
 ## Introduction
@@ -62,6 +62,7 @@ which seems ludicrously simple when you say it like that. Here it is in code for
       "date" = "22.11.17",
       "time" = "19:58") 
   submitted = submit_form(html,form_filled)
+  submitted
 ```
 
 We start with the URL for the form, then create a session starting there. Then we grab the form (this code looks a little verbose to me, but it works). This actually returns a list of two forms; inspecting this reveals that we need the second one. I took a look at the form code using Inspect on Chrome, and found that the fields I want to use are called `input`, `date`, and `time`; this is how I set their values. We save this in `form_filled` and submit it to the session as shown. If "submitting with 'start'" appears, it's probably worked.
@@ -72,10 +73,15 @@ The final value `submitted` is the HTML returned by the form, which we can query
 
 From here on, we have the HTML output that we want to process, so we only need standard `rvest` tools. The first thing to check is that we have the right departure times, which we can get at like this:
 
+(this doesn't seem to work any more)
+ 
 ```{r}
   submitted %>% html_nodes("td") -> tds
+tds
   tds %>% html_attr('class') -> classes
+classes
   tds %>% html_text() -> texts
+texts  
   tibble(classes,texts) %>% filter(classes=="time")
 ```
 
@@ -103,8 +109,8 @@ There should be only two, but there are a lot more than that. I want trains, so 
 Out of the `href`s, I determine which ones start with `http:` and which ones contain `traininfo` in them somewhere. Then I use some very base R work to pull out the ones I want. Or I guess I could have made a `tibble`:
 
 ```{r}
-tibble(hrefs,https,trains) %>% 
-  filter(trains,https) %>% pull(hrefs)
+#tibble(hrefs,https,trains) %>% 
+#  filter(trains,https) %>% pull(hrefs)
 ```
 
 ### Getting arrivals and departures
@@ -112,54 +118,54 @@ tibble(hrefs,https,trains) %>%
 Now we go to each of those URLs and search for the table containing the arrival and departure times. `html_table` returns a list of tables, so we'd better get the right one. First train first:
 
 ```{r}
-  html=read_html(v[1])
-  html %>% html_table() 
+ # html=read_html(v[1])
+#  html %>% html_table() 
 ```
 
 A list of two tables, of which we want the first, and of that, only the first three columns (not the ones with the platform number or actual times):
 
 ```{r}
-  html %>% html_table() %>% .[[1]] %>% 
-    select(1:3)
+#  html %>% html_table() %>% .[[1]] %>% 
+#    select(1:3)
 ```
 
 This is ugly because of that "Zeitpunkt der Anfrage" stuff, which was the time of the query, and has nothing to do with the train at all. Let's get rid of that. It appears in every column, so we can search in any column to find it. Let's search for things in the `Abfahrt` column that start with `Zeitpunkt`:
 
 ```{r}
-  html %>% html_table() %>% .[[1]] %>% 
-    select(1:3) %>% 
-    filter(!str_detect(Abfahrt,"^Zeitpunkt"))
+ # html %>% html_table() %>% .[[1]] %>% 
+#    select(1:3) %>% 
+#    filter(!str_detect(Abfahrt,"^Zeitpunkt"))
 ```
 
 And now we are in business. I would take one more step and get rid of those words "an" and "ab" from the times, since we already know what they stand for. The format is very predictable: there are 8 characters in each time, of which we want the 4th through 8th. So `str_sub` from `stringr` will do it. We are going to the sub-stringing on two columns, both of whose names start with A, so we can do it in one shot, thus:
 
 ```{r}
-extract_time=function(x) {
-  str_sub(x,4,8)
-}
+#extract_time=function(x) {
+#  str_sub(x,4,8)
+#}
 
-  html %>% html_table() %>% .[[1]] %>% 
-    select(1:3) %>% 
-    filter(!str_detect(Abfahrt,"^Zeitpunkt")) %>% 
-    mutate_at(vars(starts_with("A")),funs(extract_time))
+#  html %>% html_table() %>% .[[1]] %>% 
+#    select(1:3) %>% 
+#    filter(!str_detect(Abfahrt,"^Zeitpunkt")) %>% 
+#    mutate_at(vars(starts_with("A")),funs(extract_time))
 ```
 
 There were two trains, the URLs for which were stored in `v`, so we can get both trains at once by defining the above into a function:
 
 ```{r}
-train_times=function(url) {
-  html=read_html(url)
-  html %>% html_table() %>% .[[1]] %>% 
-  select(1:3) %>% 
-  filter(!str_detect(Abfahrt,"^Zeitpunkt")) %>% 
-  mutate_at(vars(starts_with("A")),funs(extract_time))
-}
+#train_times=function(url) {
+#  html=read_html(url)
+#  html %>% html_table() %>% .[[1]] %>% 
+#  select(1:3) %>% 
+#  filter(!str_detect(Abfahrt,"^Zeitpunkt")) %>% 
+#  mutate_at(vars(starts_with("A")),funs(extract_time))
+#}
 ```
 
 and then using `map` to get them both (or all) at once:
 
 ```{r}
-map(v,train_times)
+#map(v,train_times)
 ```
 
 The second train is definitely an all-stations local.

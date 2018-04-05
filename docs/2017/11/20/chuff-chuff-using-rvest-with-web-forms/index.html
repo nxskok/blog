@@ -80,7 +80,7 @@
   
   
   &nbsp;<i class="fa fa-clock-o"></i>
-    &nbsp;12 min read
+    &nbsp;10 min read
   
   
   
@@ -106,20 +106,12 @@
 <div id="the-interface" class="section level2">
 <h2>The interface</h2>
 <p>Here is where this discussion starts:</p>
-<div class="figure">
-<img src="../../../../Screenshot_2017-11-20_16-00-33.png" />
-
-</div>
+<p><img src="../../../../Screenshot_2017-11-20_16-00-33.png" /></p>
 <p>This is not the journey planner itself, but gives a station departure board for the next hour. That is what I wanted to play with. Required input is a place such as <code>Paignton</code> that goes into the Bahnhof/Haltestelle box (you can get the form in English too, but I like the German one better). The date and time default to the current date and time (in local time to the station whose departures you want to see), but you can change them if you wish.</p>
-<div class="figure">
-<img src="../../../../Screenshot_2017-11-20_16-02-29.png" />
-
-</div>
-<p>I entered <code>Paignton</code> as the place to search for, and accepted the then-current date and time. This shows two trains departing Paignton in the hour after 19:58, one to Birmingham New Street, departing at 20:14 (in the left column) and one to Exmouth at 20:35. This is like the Departure Board in Google Maps (if you click on a transit terminal), but more interesting. The column under Unterwegshaltestellen (“under-way-stopping-places”) shows at least some of the places the train stops on the way to its final destination. The column Zug (“train”) shows the type of train (D seems to be a long-distance train and NV a local one) and would also display the train numbers in place of the three dashes, if the UK had joined the rest of the world and used numbers to distinguish each of its trains. Nonetheless, clicking on one of the things in the Zug column, say for example for the train to Birmingham, gives this:</p>
-<div class="figure">
-<img src="../../../../Screenshot_2017-11-20_16-04-26.png" />
-
-</div>
+<p><img src="../../../../Screenshot_2017-11-20_16-02-29.png" /></p>
+<p>I entered <code>Paignton</code> as the place to search for, and accepted the then-current date and time. This shows two trains departing Paignton in the hour after 19:58, one to Birmingham New Street, departing at 20:14 (in the left column) and one to Exmouth at 20:35. This is like the Departure Board in Google Maps (if you click on a transit terminal), but more interesting.
+The column under Unterwegshaltestellen (“under-way-stopping-places”) shows at least some of the places the train stops on the way to its final destination. The column Zug (“train”) shows the type of train (D seems to be a long-distance train and NV a local one) and would also display the train numbers in place of the three dashes, if the UK had joined the rest of the world and used numbers to distinguish each of its trains. Nonetheless, clicking on one of the things in the Zug column, say for example for the train to Birmingham, gives this:</p>
+<p><img src="../../../../Screenshot_2017-11-20_16-04-26.png" /></p>
 <p>These are all the stops that this train makes, rather than the possibly-abbreviated list on the previous display. This train starts from Paignton (it is the end of the line) and stops at the places shown, with scheduled arrival times (“an”) and departure times (“ab”) for each. The terminal stations have only a departure or an arrival. There is an extra line, the one in red, that indicates when the query was made. I guess this is taken to be 22:03 CET which is 21:03 in the UK, which is why it appears where it does on the table. For trains in Germany, the last two columns are also used: Gleis is the track/platform at which the train stopped or will stop, and Aktuelles is the observed or predicted actual time at which the train appeared.</p>
 <p>I want, given a station and a time and date, to produce tables like this last one for all the trains that stop at my chosen station in the given hour.</p>
 </div>
@@ -135,11 +127,11 @@
 </ul>
 <p>which seems ludicrously simple when you say it like that. Here it is in code for a query like the one above. (It’s the same trains on a different day because I wanted to catch and deal with a problem.)</p>
 <pre class="r"><code>  library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.0 ──</code></pre>
-<pre><code>## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
-## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
-## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
-## ✔ readr   1.1.1     ✔ forcats 0.2.0</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
 <pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
@@ -163,203 +155,104 @@
       &quot;time&quot; = &quot;19:58&quot;) 
   submitted = submit_form(html,form_filled)</code></pre>
 <pre><code>## Submitting with &#39;start&#39;</code></pre>
+<pre class="r"><code>  submitted</code></pre>
+<pre><code>## &lt;session&gt; https://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=15082&amp;country=DEU&amp;protocol=https:&amp;rt=1&amp;rtMode=&amp;
+##   Status: 200
+##   Type:   text/html; charset=ISO-8859-1
+##   Size:   23635</code></pre>
 <p>We start with the URL for the form, then create a session starting there. Then we grab the form (this code looks a little verbose to me, but it works). This actually returns a list of two forms; inspecting this reveals that we need the second one. I took a look at the form code using Inspect on Chrome, and found that the fields I want to use are called <code>input</code>, <code>date</code>, and <code>time</code>; this is how I set their values. We save this in <code>form_filled</code> and submit it to the session as shown. If “submitting with ‘start’” appears, it’s probably worked.</p>
 <p>The final value <code>submitted</code> is the HTML returned by the form, which we can query in different ways. Saving it means that I don’t have to submit the query again.</p>
 </div>
 <div id="understanding-the-output" class="section level3">
 <h3>Understanding the output</h3>
 <p>From here on, we have the HTML output that we want to process, so we only need standard <code>rvest</code> tools. The first thing to check is that we have the right departure times, which we can get at like this:</p>
+<p>(this doesn’t seem to work any more)</p>
 <pre class="r"><code>  submitted %&gt;% html_nodes(&quot;td&quot;) -&gt; tds
-  tds %&gt;% html_attr(&#39;class&#39;) -&gt; classes
-  tds %&gt;% html_text() -&gt; texts
-  tibble(classes,texts) %&gt;% filter(classes==&quot;time&quot;)</code></pre>
-<pre><code>## # A tibble: 4 x 2
-##   classes        texts
-##     &lt;chr&gt;        &lt;chr&gt;
-## 1    time &quot;\nfrüher\n&quot;
-## 2    time        20:14
-## 3    time        20:35
-## 4    time &quot;\nspäter\n&quot;</code></pre>
+tds</code></pre>
+<pre><code>## {xml_nodeset (20)}
+##  [1] &lt;td&gt; &lt;/td&gt;
+##  [2] &lt;td&gt;&lt;label for=&quot;prod_0&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+##  [3] &lt;td&gt;&lt;label for=&quot;prod_1&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+##  [4] &lt;td&gt;&lt;label for=&quot;prod_2&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+##  [5] &lt;td&gt;&lt;label for=&quot;prod_3&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+##  [6] &lt;td&gt;&lt;label for=&quot;prod_4&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+##  [7] &lt;td&gt;&lt;label for=&quot;prod_5&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+##  [8] &lt;td&gt;&lt;label for=&quot;prod_6&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+##  [9] &lt;td&gt;&lt;label for=&quot;prod_7&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+## [10] &lt;td&gt;&lt;label for=&quot;prod_8&quot;&gt;&lt;img src=&quot;https://www.img-bahn.de/s3/prod/v ...
+## [11] &lt;td&gt;\n&lt;label class=&quot;front&quot; for=&quot;prod_0&quot;&gt;Verkehrsmittel&lt;/label&gt;\n&lt;/td&gt;
+## [12] &lt;td&gt;\n&lt;input id=&quot;prod_0&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [13] &lt;td&gt;\n&lt;input id=&quot;prod_1&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [14] &lt;td&gt;\n&lt;input id=&quot;prod_2&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [15] &lt;td&gt;\n&lt;input id=&quot;prod_3&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [16] &lt;td&gt;\n&lt;input id=&quot;prod_4&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [17] &lt;td&gt;\n&lt;input id=&quot;prod_5&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [18] &lt;td&gt;\n&lt;input id=&quot;prod_6&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [19] &lt;td&gt;\n&lt;input id=&quot;prod_7&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...
+## [20] &lt;td&gt;\n&lt;input id=&quot;prod_8&quot; class=&quot;checkbox &quot; type=&quot;checkbox&quot; name=&quot;GU ...</code></pre>
+<pre class="r"><code>  tds %&gt;% html_attr(&#39;class&#39;) -&gt; classes
+classes</code></pre>
+<pre><code>##  [1] NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA NA</code></pre>
+<pre class="r"><code>  tds %&gt;% html_text() -&gt; texts
+texts  </code></pre>
+<pre><code>##  [1] &quot; &quot;                  &quot;&quot;                   &quot;&quot;                  
+##  [4] &quot;&quot;                   &quot;&quot;                   &quot;&quot;                  
+##  [7] &quot;&quot;                   &quot;&quot;                   &quot;&quot;                  
+## [10] &quot;&quot;                   &quot;\nVerkehrsmittel\n&quot; &quot;\n&quot;                
+## [13] &quot;\n&quot;                 &quot;\n&quot;                 &quot;\n&quot;                
+## [16] &quot;\n&quot;                 &quot;\n&quot;                 &quot;\n&quot;                
+## [19] &quot;\n&quot;                 &quot;\n&quot;</code></pre>
+<pre class="r"><code>  tibble(classes,texts) %&gt;% filter(classes==&quot;time&quot;)</code></pre>
+<pre><code>## # A tibble: 0 x 2
+## # ... with 2 variables: classes &lt;chr&gt;, texts &lt;chr&gt;</code></pre>
 <p>Since the information we want is in table cells, we pull out all the <code>td</code> elements from the returned HTML, their text and their class attributes. I discovered that the departure times have a <code>class</code> attribute of <code>time</code>, so I assemble the classes and times into a tibble and display only those rows that have the right class attribute. We see the two departure times, along with the clickable links saying “earlier” or “later” that in real life you can use to navigate to the previous or next hour.</p>
-<p>Anyway, so far so good. Can we get all the stops of the trains to Birmingham (the first one) and to Exmouth (the second one)? The things I want are hyperlinks which I then have to follow, so the first thing is to get the hyperlinks. This can be done by searching the <code>td</code> elements for contained <code>a href</code>s:</p>
+<p>Anyway, so far so good. Can we get all the stops of the trains to Birmingham (the first one) and to Exmouth (the second one)?
+The things I want are hyperlinks which I then have to follow, so the first thing is to get the hyperlinks. This can be done by searching the <code>td</code> elements for contained <code>a href</code>s:</p>
 <pre class="r"><code>  submitted %&gt;% html_nodes(&quot;td&quot;) %&gt;% 
     html_nodes(&quot;a&quot;) %&gt;% html_attr(&quot;href&quot;) -&gt; hrefs
   hrefs</code></pre>
-<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=15082&amp;rt=1&amp;input=Paignton%237001811&amp;boardType=dep&amp;time=19:58%2D60&amp;productsFilter=1111111111111111&amp;&amp;&amp;date=22.11.17&amp;selectDate=&amp;maxJourneys=&amp;rtMode=&amp;start=yes&quot; 
-## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                          
-## [3] &quot;/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                                                      
-## [4] &quot;/bin/bhftafel.exe/dn?input=Birmingham New Street%237000222&amp;boardType=dep&amp;time=23:43&amp;productsFilter=1111111111111111&amp;&quot;                                                                                             
-## [5] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                          
-## [6] &quot;/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;                                                                      
-## [7] &quot;/bin/bhftafel.exe/dn?input=Exmouth%237000821&amp;boardType=dep&amp;time=22:03&amp;productsFilter=1111111111111111&amp;&quot;                                                                                                           
-## [8] &quot;http://reiseauskunft.bahn.de/bin/bhftafel.exe/dn?ld=15082&amp;rt=1&amp;input=Paignton%237001811&amp;boardType=dep&amp;time=19:58%2B60&amp;productsFilter=1111111111111111&amp;&amp;&amp;date=22.11.17&amp;&amp;selectDate=&amp;maxJourneys=&amp;rtMode=&amp;start=yes&quot;</code></pre>
+<pre><code>## character(0)</code></pre>
 <p>There should be only two, but there are a lot more than that. I want trains, so the things I want have <code>traininfo</code> in them, and it’ll be much more convenient if I can grab the ones that are actual URLs, rather than being relative to some root that I’d have to figure out. Some <code>stringr</code> ideas help here. <code>str_detect</code> returns TRUE or FALSE according to whether the pattern matches or not:</p>
 <pre class="r"><code>  hrefs %&gt;% str_detect(&quot;^http:&quot;) -&gt; https
   hrefs %&gt;% str_detect(&quot;traininfo&quot;) -&gt; trains
   v = hrefs[trains &amp; https]
   v</code></pre>
-<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;
-## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;</code></pre>
+<pre><code>## character(0)</code></pre>
 <p>Out of the <code>href</code>s, I determine which ones start with <code>http:</code> and which ones contain <code>traininfo</code> in them somewhere. Then I use some very base R work to pull out the ones I want. Or I guess I could have made a <code>tibble</code>:</p>
-<pre class="r"><code>tibble(hrefs,https,trains) %&gt;% 
-  filter(trains,https) %&gt;% pull(hrefs)</code></pre>
-<pre><code>## [1] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/963243/400373/842738/100288/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:14&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;
-## [2] &quot;http://reiseauskunft.bahn.de/bin/traininfo.exe/dn/300657/151859/990356/394959/80?ld=15082&amp;rt=1&amp;date=22.11.17&amp;time=20:35&amp;station_evaId=7001811&amp;station_type=dep&amp;rtMode=&amp;&quot;</code></pre>
+<pre class="r"><code>#tibble(hrefs,https,trains) %&gt;% 
+#  filter(trains,https) %&gt;% pull(hrefs)</code></pre>
 </div>
 <div id="getting-arrivals-and-departures" class="section level3">
 <h3>Getting arrivals and departures</h3>
 <p>Now we go to each of those URLs and search for the table containing the arrival and departure times. <code>html_table</code> returns a list of tables, so we’d better get the right one. First train first:</p>
-<pre class="r"><code>  html=read_html(v[1])
-  html %&gt;% html_table() </code></pre>
-<pre><code>## [[1]]
-##               Bahnhof / Haltestelle                          Ankunft
-## 1  Zeitpunkt der Anfrage: 20:58 Uhr Zeitpunkt der Anfrage: 20:58 Uhr
-## 2                          Paignton                                 
-## 3                           Torquay                         an 20:18
-## 4                      Newton Abbot                         an 20:30
-## 5                 Exeter St. Davids                         an 20:50
-## 6                  Tiverton Parkway                         an 21:04
-## 7                           Taunton                         an 21:18
-## 8              Bristol Temple Meads                         an 21:52
-## 9                   Bristol Parkway                         an 22:08
-## 10                   Cheltenham Spa                         an 22:41
-## 11            Birmingham New Street                         an 23:43
-##                             Abfahrt                            Gleis
-## 1  Zeitpunkt der Anfrage: 20:58 Uhr Zeitpunkt der Anfrage: 20:58 Uhr
-## 2                          ab 20:14                                 
-## 3                          ab 20:20                                 
-## 4                          ab 20:31                                 
-## 5                          ab 20:52                                 
-## 6                          ab 21:05                                 
-## 7                          ab 21:19                                 
-## 8                          ab 22:00                                 
-## 9                          ab 22:10                                 
-## 10                         ab 22:42                                 
-## 11                                                                  
-##                           Aktuelles
-## 1  Zeitpunkt der Anfrage: 20:58 Uhr
-## 2                                  
-## 3                                  
-## 4                                  
-## 5                                  
-## 6                                  
-## 7                                  
-## 8                                  
-## 9                                  
-## 10                                 
-## 11                                 
-## 
-## [[2]]
-##              X1                                             X2
-## 1 Verkehrstage: nicht täglich, 22. Nov bis 8. Dez 2017 Mo - Fr
-## 2  Bemerkungen:                Reservierung möglich\nSitzwagen</code></pre>
+<pre class="r"><code> # html=read_html(v[1])
+#  html %&gt;% html_table() </code></pre>
 <p>A list of two tables, of which we want the first, and of that, only the first three columns (not the ones with the platform number or actual times):</p>
-<pre class="r"><code>  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
-    select(1:3)</code></pre>
-<pre><code>##               Bahnhof / Haltestelle                          Ankunft
-## 1  Zeitpunkt der Anfrage: 20:58 Uhr Zeitpunkt der Anfrage: 20:58 Uhr
-## 2                          Paignton                                 
-## 3                           Torquay                         an 20:18
-## 4                      Newton Abbot                         an 20:30
-## 5                 Exeter St. Davids                         an 20:50
-## 6                  Tiverton Parkway                         an 21:04
-## 7                           Taunton                         an 21:18
-## 8              Bristol Temple Meads                         an 21:52
-## 9                   Bristol Parkway                         an 22:08
-## 10                   Cheltenham Spa                         an 22:41
-## 11            Birmingham New Street                         an 23:43
-##                             Abfahrt
-## 1  Zeitpunkt der Anfrage: 20:58 Uhr
-## 2                          ab 20:14
-## 3                          ab 20:20
-## 4                          ab 20:31
-## 5                          ab 20:52
-## 6                          ab 21:05
-## 7                          ab 21:19
-## 8                          ab 22:00
-## 9                          ab 22:10
-## 10                         ab 22:42
-## 11</code></pre>
+<pre class="r"><code>#  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
+#    select(1:3)</code></pre>
 <p>This is ugly because of that “Zeitpunkt der Anfrage” stuff, which was the time of the query, and has nothing to do with the train at all. Let’s get rid of that. It appears in every column, so we can search in any column to find it. Let’s search for things in the <code>Abfahrt</code> column that start with <code>Zeitpunkt</code>:</p>
-<pre class="r"><code>  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
-    select(1:3) %&gt;% 
-    filter(!str_detect(Abfahrt,&quot;^Zeitpunkt&quot;))</code></pre>
-<pre><code>##    Bahnhof / Haltestelle  Ankunft  Abfahrt
-## 1               Paignton          ab 20:14
-## 2                Torquay an 20:18 ab 20:20
-## 3           Newton Abbot an 20:30 ab 20:31
-## 4      Exeter St. Davids an 20:50 ab 20:52
-## 5       Tiverton Parkway an 21:04 ab 21:05
-## 6                Taunton an 21:18 ab 21:19
-## 7   Bristol Temple Meads an 21:52 ab 22:00
-## 8        Bristol Parkway an 22:08 ab 22:10
-## 9         Cheltenham Spa an 22:41 ab 22:42
-## 10 Birmingham New Street an 23:43</code></pre>
+<pre class="r"><code> # html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
+#    select(1:3) %&gt;% 
+#    filter(!str_detect(Abfahrt,&quot;^Zeitpunkt&quot;))</code></pre>
 <p>And now we are in business. I would take one more step and get rid of those words “an” and “ab” from the times, since we already know what they stand for. The format is very predictable: there are 8 characters in each time, of which we want the 4th through 8th. So <code>str_sub</code> from <code>stringr</code> will do it. We are going to the sub-stringing on two columns, both of whose names start with A, so we can do it in one shot, thus:</p>
-<pre class="r"><code>extract_time=function(x) {
-  str_sub(x,4,8)
-}
+<pre class="r"><code>#extract_time=function(x) {
+#  str_sub(x,4,8)
+#}
 
-  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
-    select(1:3) %&gt;% 
-    filter(!str_detect(Abfahrt,&quot;^Zeitpunkt&quot;)) %&gt;% 
-    mutate_at(vars(starts_with(&quot;A&quot;)),funs(extract_time))</code></pre>
-<pre><code>##    Bahnhof / Haltestelle Ankunft Abfahrt
-## 1               Paignton           20:14
-## 2                Torquay   20:18   20:20
-## 3           Newton Abbot   20:30   20:31
-## 4      Exeter St. Davids   20:50   20:52
-## 5       Tiverton Parkway   21:04   21:05
-## 6                Taunton   21:18   21:19
-## 7   Bristol Temple Meads   21:52   22:00
-## 8        Bristol Parkway   22:08   22:10
-## 9         Cheltenham Spa   22:41   22:42
-## 10 Birmingham New Street   23:43</code></pre>
+#  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
+#    select(1:3) %&gt;% 
+#    filter(!str_detect(Abfahrt,&quot;^Zeitpunkt&quot;)) %&gt;% 
+#    mutate_at(vars(starts_with(&quot;A&quot;)),funs(extract_time))</code></pre>
 <p>There were two trains, the URLs for which were stored in <code>v</code>, so we can get both trains at once by defining the above into a function:</p>
-<pre class="r"><code>train_times=function(url) {
-  html=read_html(url)
-  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
-  select(1:3) %&gt;% 
-  filter(!str_detect(Abfahrt,&quot;^Zeitpunkt&quot;)) %&gt;% 
-  mutate_at(vars(starts_with(&quot;A&quot;)),funs(extract_time))
-}</code></pre>
+<pre class="r"><code>#train_times=function(url) {
+#  html=read_html(url)
+#  html %&gt;% html_table() %&gt;% .[[1]] %&gt;% 
+#  select(1:3) %&gt;% 
+#  filter(!str_detect(Abfahrt,&quot;^Zeitpunkt&quot;)) %&gt;% 
+#  mutate_at(vars(starts_with(&quot;A&quot;)),funs(extract_time))
+#}</code></pre>
 <p>and then using <code>map</code> to get them both (or all) at once:</p>
-<pre class="r"><code>map(v,train_times)</code></pre>
-<pre><code>## [[1]]
-##    Bahnhof / Haltestelle Ankunft Abfahrt
-## 1               Paignton           20:14
-## 2                Torquay   20:18   20:20
-## 3           Newton Abbot   20:30   20:31
-## 4      Exeter St. Davids   20:50   20:52
-## 5       Tiverton Parkway   21:04   21:05
-## 6                Taunton   21:18   21:19
-## 7   Bristol Temple Meads   21:52   22:00
-## 8        Bristol Parkway   22:08   22:10
-## 9         Cheltenham Spa   22:41   22:42
-## 10 Birmingham New Street   23:43        
-## 
-## [[2]]
-##    Bahnhof / Haltestelle Ankunft Abfahrt
-## 1               Paignton           20:35
-## 2                Torquay   20:39   20:40
-## 3                  Torre   20:42   20:43
-## 4           Newton Abbot   20:51   20:53
-## 5             Teignmouth   21:00   21:00
-## 6                Dawlish   21:05   21:05
-## 7         Dawlish Warren   21:09   21:10
-## 8              Starcross   21:14   21:14
-## 9      Exeter St. Thomas   21:23   21:23
-## 10     Exeter St. Davids   21:28   21:31
-## 11        Exeter Central   21:34   21:34
-## 12         St James Park   21:36   21:36
-## 13        Polsloe Bridge   21:39   21:39
-## 14                 Digby   21:43   21:43
-## 15              Newcourt   21:46   21:46
-## 16               Topsham   21:50   21:50
-## 17                 Exton   21:53   21:53
-## 18    Lympstone Commando   21:55   21:55
-## 19     Lympstone Village   21:58   21:58
-## 20               Exmouth   22:03</code></pre>
+<pre class="r"><code>#map(v,train_times)</code></pre>
 <p>The second train is definitely an all-stations local.</p>
 </div>
 </div>

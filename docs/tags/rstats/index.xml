@@ -109,6 +109,15 @@ There are two major tools that environmental scientists typically use to assess 
     </item>
     
     <item>
+      <title>Chuff chuff: using rvest with web forms</title>
+      <link>/2017/11/20/chuff-chuff-using-rvest-with-web-forms/</link>
+      <pubDate>Mon, 20 Nov 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/11/20/chuff-chuff-using-rvest-with-web-forms/</guid>
+      <description>Introduction We are very accustomed to journey planners that help us navigate across the city, the country or the world. Google’s transit directions are an example: you enter a start and an end point, and it tells you which vehicles to get and where to transfer to another one. Nowadays, this is a commonplace. But back in 1989, the idea of “shortest path” was an idea in the minds of graph theorists, not a practical way to get from one place to another.</description>
+    </item>
+    
+    <item>
       <title>Scraping Manhattan with rvest</title>
       <link>/2017/09/18/scraping-a-bar-chart-with-rvest/</link>
       <pubDate>Mon, 18 Sep 2017 00:00:00 +0000</pubDate>
