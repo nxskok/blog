@@ -338,12 +338,6 @@
   </url>
   
   <url>
-    <loc>/</loc>
-    <lastmod>2018-04-05T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
     <loc>/categories/maps/</loc>
     <lastmod>2017-12-24T00:00:00+00:00</lastmod>
     <priority>0</priority>
@@ -369,6 +363,12 @@
   
   <url>
     <loc>/categories/r/</loc>
+    <lastmod>2018-04-05T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/</loc>
     <lastmod>2018-04-05T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
