@@ -22,8 +22,7 @@ Is it possible to make an ANOVA that can allow for the groups to have different 
 
 If you have done statistical theory, you probably derived the pooled two-sample $t$-test. This is for comparing the means of two populations based on samples from each. The assumptions are the same as for the ANOVA: normally-distributed data, with equal variances in the two groups. Since the two within-group variances are the same, there is only one "error variance" $\sigma^2$ to estimate, and this is estimated by $s_p^2$, which is a weighted average of the sample variances from the two groups. The test statistic is then 
 
-$$ t =  { \bar{x}_1 - \bar{x}_2 \over
-          s_p \sqrt{{1\over n_1}+ {1\over n_2}}} $$
+$$ t =  { \bar{x}_1 - \bar{x}_2 \over s_p \sqrt{{1\over n_1}+ {1\over n_2}}} $$
           
 and since there is *one* population variance $\sigma^2$ estimated by a sample variance $s_p^2$, the test statistic $t$ does indeed have a exact $t$ distribution with as many degrees of freedom as $s_p^2$ does, namely $n_1+n_2-2$. 
 

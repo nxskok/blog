@@ -106,26 +106,26 @@
 <div id="pooled-and-welch-satterthwaite-t-tests" class="section level2">
 <h2>Pooled and Welch-Satterthwaite <span class="math inline">\(t\)</span>-tests</h2>
 <p>If you have done statistical theory, you probably derived the pooled two-sample <span class="math inline">\(t\)</span>-test. This is for comparing the means of two populations based on samples from each. The assumptions are the same as for the ANOVA: normally-distributed data, with equal variances in the two groups. Since the two within-group variances are the same, there is only one “error variance” <span class="math inline">\(\sigma^2\)</span> to estimate, and this is estimated by <span class="math inline">\(s_p^2\)</span>, which is a weighted average of the sample variances from the two groups. The test statistic is then</p>
-<p><span class="math display">\[ t =  { \bar{x}_1 - \bar{x}_2 \over
-          s_p \sqrt{{1\over n_1}+ {1\over n_2}}} \]</span></p>
+<p><span class="math display">\[ t =  { \bar{x}_1 - \bar{x}_2 \over s_p \sqrt{{1\over n_1}+ {1\over n_2}}} \]</span></p>
 <p>and since there is <em>one</em> population variance <span class="math inline">\(\sigma^2\)</span> estimated by a sample variance <span class="math inline">\(s_p^2\)</span>, the test statistic <span class="math inline">\(t\)</span> does indeed have a exact <span class="math inline">\(t\)</span> distribution with as many degrees of freedom as <span class="math inline">\(s_p^2\)</span> does, namely <span class="math inline">\(n_1+n_2-2\)</span>.</p>
 <p>What if the two groups have unequal variances? Welch and Satterthwaite (independently, as far as I know) had the idea of estimating the two separate <span class="math inline">\(\sigma^2\)</span>’s by the two sample variances and calculating this <span class="math inline">\(t\)</span>-statistic instead:</p>
 <p><span class="math display">\[ t =  { \bar{x}_1 - \bar{x}_2 \over
-          \sqrt{{s_1^2\over n_1}+ {s_2^2\over n_2}}} \]</span> which is the obvious thing. Unfortunately, however, this does <em>not</em> have a <span class="math inline">\(t\)</span> distribution, because <em>two</em> population variances have been estimated by sample variances.</p>
-<p>Welch and Satterthwaite noticed that this <span class="math inline">\(t\)</span> does have a distribution that looks very like a <span class="math inline">\(t\)</span>, so they hit upon the idea of approximating it by a <span class="math inline">\(t\)</span>. They worked out the variance of this <span class="math inline">\(t\)</span> under the null hypothesis of equal means, and compared this to the variance of a <span class="math inline">\(t\)</span> distribution, which depends on its degrees of freedom. This allows a “method of moments” approximation of the degrees of freedom, which is the very complicated formula in a footnote in DeVeaux et al. The complication doesn’t matter in practice, though, since you let your software work out the (fractional) degrees of freedom and get a P-value. If you’re stuck doing this by hand, a “conservative” approximation to the df is the smaller sample size minus 1.</p>
+          \sqrt{{s_1^2\over n_1}+ {s_2^2\over n_2}}} \]</span>
+which is the obvious thing. Unfortunately, however, this does <em>not</em> have a <span class="math inline">\(t\)</span> distribution, because <em>two</em> population variances have been estimated by sample variances.</p>
+<p>Welch and Satterthwaite noticed that this <span class="math inline">\(t\)</span> does have a distribution that looks very like a <span class="math inline">\(t\)</span>, so they hit upon the idea of approximating it by a <span class="math inline">\(t\)</span>. They worked out the variance of this <span class="math inline">\(t\)</span> under the null hypothesis of equal means, and compared this to the variance of a <span class="math inline">\(t\)</span> distribution, which depends on its degrees of freedom. This allows a “method of moments” approximation of the degrees of freedom, which is the very complicated formula in a footnote in DeVeaux et al. The complication doesn’t matter in practice, though, since you let your software work out the (fractional) degrees of freedom and get a P-value. If you’re stuck doing this by hand, a “conservative” approximation to the df is the smaller sample size minus 1.</p>
 <p>In practice, it is probably good to use the Welch-Satterthwaite <span class="math inline">\(t\)</span>-test as a default without thinking too hard about it, because the two group variances are not usually “approximately equal”, and it doesn’t make too much sense to act as if they are. That said, the Welch-Satterthwaite and pooled <span class="math inline">\(t\)</span>-tests often give similar results, as in the example below.</p>
-<p>Some researchers are investigating a new method for teaching children to read. There are 44 children in their study; they randomly assign about half of the children to the new reading method (“treatment”) and about half to the standard reading method (“control”). The response variable was the score on a reading test, administered at the end of the study. The groups came out slightly unequal in size. Evidently, once a child has learned to read, they cannot learn to read again, so the design for this study had to be two independent samples rather than something like matched pairs.</p>
+<p>Some researchers are investigating a new method for teaching children to read. There are 44 children in their study; they randomly assign about half of the children to the new reading method (“treatment”) and about half to the standard reading method (“control”). The response variable was the score on a reading test, administered at the end of the study.
+The groups came out slightly unequal in size. Evidently, once a child has learned to read, they cannot learn to read again, so the design for this study had to be two independent samples rather than something like matched pairs.</p>
 <p>Let’s load the Tidyverse:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## Loading tidyverse: ggplot2
-## Loading tidyverse: tibble
-## Loading tidyverse: tidyr
-## Loading tidyverse: readr
-## Loading tidyverse: purrr
-## Loading tidyverse: dplyr</code></pre>
-<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
-<pre><code>## filter(): dplyr, stats
-## lag():    dplyr, stats</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <p>and then read in the data, values separated by spaces:</p>
 <pre class="r"><code>drp=read_delim(&quot;drp.txt&quot;,&quot; &quot;)</code></pre>
 <pre><code>## Parsed with column specification:
@@ -137,10 +137,10 @@
 <pre class="r"><code>drp %&gt;% group_by(group) %&gt;% 
   summarize(mean=mean(score),sd=sd(score))</code></pre>
 <pre><code>## # A tibble: 2 x 3
-##   group     mean       sd
-##   &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-## 1     c 41.52174 17.14873
-## 2     t 51.47619 11.00736</code></pre>
+##   group  mean    sd
+##   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 c      41.5  17.1
+## 2 t      51.5  11.0</code></pre>
 <p>The means are 10 points different, and the immediate question is whether these are far enough apart to be significantly different. Note also, though, that the sample standard deviations are not that similar either. R’s <code>t.test</code> does the Welch-Satterthwaite test by default:</p>
 <pre class="r"><code>t.test(score~group,data=drp,alternative=&quot;less&quot;)</code></pre>
 <pre><code>## 
@@ -182,7 +182,7 @@
 ## )</code></pre>
 <p>Let’s look at boxplots by group:</p>
 <pre class="r"><code>ggplot(rats,aes(x=group,y=density))+geom_boxplot()</code></pre>
-<p><img src="../../../../post/welch_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-7-1.png" width="672" /></p>
 <p>The control group has outliers, and the low-jumping group has larger spread than the high-jumping group (whose distribution looks skewed). Ignoring the apparent non-normality, what happens when we account for the differences in spread?</p>
 <p>First, the regular ANOVA, which we are not at all sure we should trust:</p>
 <pre class="r"><code>rats.1=aov(density~group,data=rats)
@@ -234,10 +234,10 @@ with(rats,oneway(x=group,y=density,posthoc=&quot;games-howell&quot;))</code></pr
 ## 
 ## ### Post hoc test: games-howell
 ## 
-##                   diff  ci.lo ci.hi    t    df    p p.adjusted
-## Highjump-Control  37.6  11.28 63.92 3.72 14.83 0.01       .017
-## Lowjump-Control   11.4 -15.90 38.70 1.08 16.19 0.54       .542
-## Lowjump-Highjump -26.2 -46.80 -5.60 3.25 17.60 0.01       .024</code></pre>
+##                   diff  ci.lo ci.hi    t    df    p
+## Highjump-Control  37.6  11.28 63.92 3.72 14.83 .006
+## Lowjump-Control   11.4 -15.90 38.70 1.08 16.19 .542
+## Lowjump-Highjump -26.2 -46.80 -5.60 3.25 17.60 .012</code></pre>
 <p>Note that the ANOVA at the top is the standard <span class="math inline">\(F\)</span>-test, not the Welch ANOVA, but the Games-Howell below is correct. The Games-Howell adjusted P-values differ slightly from Tukey, but tell exactly the same story: no difference between low jump and control, but high jump is better than both. We can therefore be more confident that the conclusions we drew before are not dependent on the unequal spreads.</p>
 <p>The warning, by the way, is that the variable <code>group</code> is character rather than a factor (since <code>read_delim</code> does not turn strings into factors when reading from a file). Since the <code>group</code> column does successfully distinguish the groups, the warning can be ignored.</p>
 </div>
