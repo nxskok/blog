@@ -6,24 +6,15 @@
     <description>Recent content in Tags on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 28 Feb 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 20 Nov 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>#Rstan</title>
-      <link>/tags/#rstan/</link>
-      <pubDate>Wed, 28 Feb 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/tags/#rstan/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>#Rstats</title>
       <link>/tags/#rstats/</link>
-      <pubDate>Sun, 25 Mar 2018 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 20 Nov 2017 00:00:00 +0000</pubDate>
       
       <guid>/tags/#rstats/</guid>
       <description></description>
@@ -32,7 +23,7 @@
     <item>
       <title>#Tidyverse</title>
       <link>/tags/#tidyverse/</link>
-      <pubDate>Sun, 25 Mar 2018 00:00:00 +0000</pubDate>
+      <pubDate>Sat, 20 Jan 2018 00:00:00 +0000</pubDate>
       
       <guid>/tags/#tidyverse/</guid>
       <description></description>
@@ -66,6 +57,24 @@
     </item>
     
     <item>
+      <title>Rstan</title>
+      <link>/tags/rstan/</link>
+      <pubDate>Wed, 28 Feb 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/rstan/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Rstats</title>
+      <link>/tags/rstats/</link>
+      <pubDate>Sun, 25 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/rstats/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Rstats Tidyverse</title>
       <link>/tags/rstats-tidyverse/</link>
       <pubDate>Sun, 18 Feb 2018 00:00:00 +0000</pubDate>
@@ -80,6 +89,15 @@
       <pubDate>Sun, 07 May 2017 00:00:00 +0000</pubDate>
       
       <guid>/tags/sports/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Tidyverse</title>
+      <link>/tags/tidyverse/</link>
+      <pubDate>Sun, 25 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/tidyverse/</guid>
       <description></description>
     </item>
     

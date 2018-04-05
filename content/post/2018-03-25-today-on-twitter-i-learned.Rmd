@@ -6,8 +6,8 @@ slug: today-on-twitter-i-learned
 categories:
   - statistics
 tags:
-  - '#rstats'
-  - '#tidyverse'
+  - 'rstats'
+  - 'tidyverse'
 ---
 
 ## Introduction

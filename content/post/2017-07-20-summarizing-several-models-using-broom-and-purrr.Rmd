@@ -6,7 +6,7 @@ slug: summarizing-several-models-using-broom-and-purrr
 categories:
   - statistics
 tags:
-  - '#rstats'
+  - 'rstats'
 ---
 
 ## Introduction

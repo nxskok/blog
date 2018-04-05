@@ -7,7 +7,7 @@ categories:
   - Statistics
   - R
 tags: 
-  - "#rstats"
+  - "rstats"
 ---
 
 ## Introduction

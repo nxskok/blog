@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rstats on Ken&#39;s Blog</title>
+    <link>/tags/rstats/</link>
+    <description>Recent content in Rstats on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 25 Mar 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/rstats/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Today on Twitter I learned...</title>
+      <link>/2018/03/25/today-on-twitter-i-learned/</link>
+      <pubDate>Sun, 25 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/25/today-on-twitter-i-learned/</guid>
+      <description>Introduction Today on Twitter I learned (or was reminded about) two #rstats things:
+from @pkqstr about separate_rows from tidyr, that does something like separate followed by gather, but better. from @ma_salmon about haven for reading in data files from other software, and I thought about rio that does more or less the same thing, but more generally.  I didn’t come up with an answer to Maëlle’s question of why haven worked less well for me than rio a long time ago.</description>
+    </item>
+    
+    <item>
+      <title>Ward&#39;s method and dissimilarities</title>
+      <link>/2018/03/22/ward-s-method-and-dissimilarities/</link>
+      <pubDate>Thu, 22 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/22/ward-s-method-and-dissimilarities/</guid>
+      <description>Introduction I don’t know yet where this post is going. Think of it, for now, as a ramble through cluster analysis. I may eventually figure out what to do with it, but I don’t want to delete what I have written just yet.
+Hierarchical clustering is a way of forming groups or “clusters” of like individuals. The various forms of hierarchical clustering work from distances or dissimilarilities between individuals. The process is to start from each individual in a cluster by itself and then to join the closest pair of clusters one by one until all individuals are in a single cluster.</description>
+    </item>
+    
+    <item>
+      <title>Readr and summary</title>
+      <link>/2018/03/21/readr-and-summary/</link>
+      <pubDate>Wed, 21 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/21/readr-and-summary/</guid>
+      <description>Packages In this post I use these packages (the last one at the end):
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() library(skimr) ## ## Attaching package: &amp;#39;skimr&amp;#39; ## The following objects are masked from &amp;#39;package:dplyr&amp;#39;: ## ## contains, ends_with, everything, matches, num_range, one_of, ## starts_with  Introduction The readr file-reading functions read text as text without turning it into factors.</description>
+    </item>
+    
+    <item>
+      <title>Working my way back to you, a re-investigation of rstan</title>
+      <link>/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/</link>
+      <pubDate>Wed, 28 Feb 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/</guid>
+      <description>Introduction I learned Stan a while back, when I was fitting some Bayesian models. I wanted to fix up one of them, and I realized that I had forgotten most of what I knew about Stan, so I had to go back and learn it again.
+A Bayesian model has two parts: a prior distribution, which summarizes your belief about the parameters you are trying to estimate before you look at any data, and a model that asserts the data-generating mechanism conditional on the parameter value(s).</description>
+    </item>
+    
+    <item>
+      <title>Making a lot of plots all at once, the tidyverse way</title>
+      <link>/2018/02/23/making-a-lot-of-plots-all-at-once-the-tidyverse-way/</link>
+      <pubDate>Fri, 23 Feb 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/02/23/making-a-lot-of-plots-all-at-once-the-tidyverse-way/</guid>
+      <description>Introduction I was thinking the other day about how you might come up with a bunch of separate-but-related plots, without plotting them one by one, for example to show a class.
+By way of example, suppose we want to plot a number of Poisson distributions with different means, so that we can compare their shapes. The textbook says that a Poisson with a large mean is “approximately normal”, but that is just words until you see it on a picture.</description>
+    </item>
+    
+    <item>
+      <title>Tidy simple effects in analysis of variance</title>
+      <link>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</link>
+      <pubDate>Tue, 30 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</guid>
+      <description>Introduction In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an interaction.</description>
+    </item>
+    
+    <item>
+      <title>Drawing a network with ggraph and tidygraph</title>
+      <link>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</link>
+      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</guid>
+      <description>Introduction Thomas Lin Pedersen is the author of a lot of packages, including two that deal with graphs (in the sense of networks), tidygraph for storing and handling graphs, and ggraph for drawing them, ggplot-style. I have a feeling I will be spending a lot of time with tidygraph, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.</description>
+    </item>
+    
+    <item>
+      <title>Installing R 3.4 on your Android phone</title>
+      <link>/2017/12/30/installing-r-3-4-on-your-android-phone/</link>
+      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/30/installing-r-3-4-on-your-android-phone/</guid>
+      <description>Introduction David Selby, on his blog, explains how to get R up and running on your Android phone (and, by way of proof, wrote the blog post concerned on his phone). Unfortunately, however, he was only able to install R 3.1.1, which means that some of the latest tidyverse goodies are not available. Can we do better? It is possible. Maybe.
+ Installation on the Android phone We begin by installing two Android apps, which can both be found on Google Play.</description>
+    </item>
+    
+    <item>
+      <title>Drawing maps in R with &#34;ggmap&#34; and &#34;OpenStreetMap&#34;</title>
+      <link>/2017/12/24/drawing-maps-in-r-with-ggmap-and-openstreetmap/</link>
+      <pubDate>Sun, 24 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/24/drawing-maps-in-r-with-ggmap-and-openstreetmap/</guid>
+      <description>Introduction I have long been interested in drawing maps, and when I discovered how to do it in R, I have tried to add it to my statistical repertoire, including drawing things on maps. There are two packages that can be used to obtain maps and draw on them, ggmap which is based on Google Maps, and OpenStreetMap which is based on Open Street Maps (surprisingly enough). They have overlapping capabilities, which we will explore here.</description>
+    </item>
+    
+    <item>
+      <title>Testing for time trend</title>
+      <link>/2017/12/16/testing-for-time-trend/</link>
+      <pubDate>Sat, 16 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/16/testing-for-time-trend/</guid>
+      <description>Introduction One of the things my environmental science colleagues spend much of their time doing is assessing whether something is changing over time. Most commonly, the depressing conclusion from one of their investigations is “climate change”. One of the studies I was part of concerned temporal trends in sea ice in Hudson Bay. We will see some of that data later on.
+There are two major tools that environmental scientists typically use to assess trend:</description>
+    </item>
+    
+    <item>
+      <title>Scraping Manhattan with rvest</title>
+      <link>/2017/09/18/scraping-a-bar-chart-with-rvest/</link>
+      <pubDate>Mon, 18 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/09/18/scraping-a-bar-chart-with-rvest/</guid>
+      <description>Introduction In cricket, a Manhattan chart records how many runs a team score in each over (and how many wickets fall). An example is here (scroll down to find it). Is it possible to extract the numbers of runs and wickets for each team from this graph?
+The answer turns out to be “yes”, because this graph is an SVG graphic, and the data used to create it is embedded in the HTML code, so it is “simply” a matter of pulling it out.</description>
+    </item>
+    
+    <item>
+      <title>A brief foray into list-columns</title>
+      <link>/2017/07/25/a-brief-foray-into-list-columns/</link>
+      <pubDate>Tue, 25 Jul 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/07/25/a-brief-foray-into-list-columns/</guid>
+      <description>Introduction Let’s suppose we are trying to find the median of a bunch of binomial distributions. ⊕This is a simplified version of an actual problem I had, but that one fails for some unconnected (and thus far unknown) reason, so I don’t want to show you that.
+To be specific, let’s suppose we have these values of \(n\):
+n=c(10,15,20) and these values of \(p\):
+p=c(0.25,0.3,0.42) We’ll need the tidyverse, as usual:</description>
+    </item>
+    
+    <item>
+      <title>Summarizing several models using broom and purrr</title>
+      <link>/2017/07/20/summarizing-several-models-using-broom-and-purrr/</link>
+      <pubDate>Thu, 20 Jul 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/07/20/summarizing-several-models-using-broom-and-purrr/</guid>
+      <description>Introduction broom is supposed to be a powerful way to summarize several models at once, and so it is. The trouble is, the examples show how to fit the same model to different subsets of a data set. I had something different in mind: I had one data set, and three different models on that same data. Could I do something similar there? It wasn’t clear to me how.
+ Illustrative data The data here came from Albright’s book.</description>
+    </item>
+    
+  </channel>
+</rss>

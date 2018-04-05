@@ -115,12 +115,12 @@
 <p>Let’s make things easy for ourselves by generating some data that actually <em>is</em> from a Poisson distribution with a mean that we know, and see whether the estimation process recovers the true mean. (This is a good way of developing Stan code: try it out first on data known to be from the model you are trying to fit, and when that seems to be behaving itself, run the same code on your actual data.)</p>
 <p>Stan runs either independently (via the command-line version of Stan called <code>cmdstan</code>) or connected with other languages such as R, Python, <a href="http://mc-stan.org/users/interfaces/index.html">and others</a>. We will use the R interface, which works via the package <code>rstan</code>. I probably need the <code>tidyverse</code> as well, and I will be reading an Excel sheet in later:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
 ## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
 ## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
 ## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(readxl)
@@ -274,15 +274,15 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.01332 seconds (Warm-up)
-##                0.012713 seconds (Sampling)
-##                0.026033 seconds (Total)
+##  Elapsed Time: 0.013411 seconds (Warm-up)
+##                0.01294 seconds (Sampling)
+##                0.026351 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;97d657b45f98f78c52f7aedd24c13437&#39; NOW (CHAIN 2).
 ## 
-## Gradient evaluation took 7e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+## Gradient evaluation took 6e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.06 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -299,15 +299,15 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.012966 seconds (Warm-up)
-##                0.012852 seconds (Sampling)
-##                0.025818 seconds (Total)
+##  Elapsed Time: 0.013146 seconds (Warm-up)
+##                0.013188 seconds (Sampling)
+##                0.026334 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;97d657b45f98f78c52f7aedd24c13437&#39; NOW (CHAIN 3).
 ## 
-## Gradient evaluation took 4e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.04 seconds.
+## Gradient evaluation took 5e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -324,15 +324,15 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.013738 seconds (Warm-up)
-##                0.012383 seconds (Sampling)
-##                0.026121 seconds (Total)
+##  Elapsed Time: 0.012978 seconds (Warm-up)
+##                0.012458 seconds (Sampling)
+##                0.025436 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;97d657b45f98f78c52f7aedd24c13437&#39; NOW (CHAIN 4).
 ## 
-## Gradient evaluation took 8e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+## Gradient evaluation took 5e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -349,9 +349,9 @@ generated quantities {
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.02142 seconds (Warm-up)
-##                0.017191 seconds (Sampling)
-##                0.038611 seconds (Total)</code></pre>
+##  Elapsed Time: 0.01295 seconds (Warm-up)
+##                0.013637 seconds (Sampling)
+##                0.026587 seconds (Total)</code></pre>
 <p>The sampling process is tweakable. I used the default four chains of length 2000, with the first half of each chain being warmup and the second half being actual sampling. (“Warmup” is not the same as “burn-in” that you might be familiar with from Metropolis-Hastings.)</p>
 <p>Looking at <code>pp1</code> gives us some information about the simulation:</p>
 <pre class="r"><code>pp1</code></pre>
@@ -364,7 +364,7 @@ generated quantities {
 ## x_new   3.20    0.03 1.81  0.00  2.00  3.00  4.00  7.00  3889    1
 ## lp__   28.08    0.02 0.70 26.00 27.91 28.35 28.53 28.59  1828    1
 ## 
-## Samples were drawn using NUTS(diag_e) at Sun Mar 25 22:59:11 2018.
+## Samples were drawn using NUTS(diag_e) at Wed Apr  4 21:55:58 2018.
 ## For each parameter, n_eff is a crude measure of effective sample size,
 ## and Rhat is the potential scale reduction factor on split chains (at 
 ## convergence, Rhat=1).</code></pre>
@@ -445,8 +445,8 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 <pre><code>## 
 ## SAMPLING FOR MODEL &#39;97d657b45f98f78c52f7aedd24c13437&#39; NOW (CHAIN 1).
 ## 
-## Gradient evaluation took 1.2e-05 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
+## Gradient evaluation took 1.1e-05 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.11 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -463,9 +463,9 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.09989 seconds (Warm-up)
-##                0.11007 seconds (Sampling)
-##                0.20996 seconds (Total)
+##  Elapsed Time: 0.100704 seconds (Warm-up)
+##                0.11014 seconds (Sampling)
+##                0.210844 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;97d657b45f98f78c52f7aedd24c13437&#39; NOW (CHAIN 2).
@@ -488,15 +488,15 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.036577 seconds (Warm-up)
-##                0.031676 seconds (Sampling)
-##                0.068253 seconds (Total)
+##  Elapsed Time: 0.03879 seconds (Warm-up)
+##                0.034726 seconds (Sampling)
+##                0.073516 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;97d657b45f98f78c52f7aedd24c13437&#39; NOW (CHAIN 3).
 ## 
-## Gradient evaluation took 1.2e-05 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
+## Gradient evaluation took 1e-05 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -513,9 +513,9 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.03631 seconds (Warm-up)
-##                0.03657 seconds (Sampling)
-##                0.07288 seconds (Total)
+##  Elapsed Time: 0.038466 seconds (Warm-up)
+##                0.043312 seconds (Sampling)
+##                0.081778 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;97d657b45f98f78c52f7aedd24c13437&#39; NOW (CHAIN 4).
@@ -538,9 +538,9 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.035398 seconds (Warm-up)
-##                0.035823 seconds (Sampling)
-##                0.071221 seconds (Total)</code></pre>
+##  Elapsed Time: 0.038784 seconds (Warm-up)
+##                0.039421 seconds (Sampling)
+##                0.078205 seconds (Total)</code></pre>
 <pre class="r"><code>pp2</code></pre>
 <pre><code>## Inference for Stan model: 97d657b45f98f78c52f7aedd24c13437.
 ## 4 chains, each with iter=2000; warmup=1000; thin=1; 
@@ -555,7 +555,7 @@ pp2=sampling(x_compiled,data=my_data_2)</code></pre>
 ## x_new     1
 ## lp__      1
 ## 
-## Samples were drawn using NUTS(diag_e) at Sun Mar 25 22:59:16 2018.
+## Samples were drawn using NUTS(diag_e) at Wed Apr  4 21:56:02 2018.
 ## For each parameter, n_eff is a crude measure of effective sample size,
 ## and Rhat is the potential scale reduction factor on split chains (at 
 ## convergence, Rhat=1).</code></pre>

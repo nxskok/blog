@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tidyverse on Ken&#39;s Blog</title>
+    <link>/tags/tidyverse/</link>
+    <description>Recent content in Tidyverse on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 25 Mar 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/tidyverse/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Today on Twitter I learned...</title>
+      <link>/2018/03/25/today-on-twitter-i-learned/</link>
+      <pubDate>Sun, 25 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/25/today-on-twitter-i-learned/</guid>
+      <description>Introduction Today on Twitter I learned (or was reminded about) two #rstats things:
+from @pkqstr about separate_rows from tidyr, that does something like separate followed by gather, but better. from @ma_salmon about haven for reading in data files from other software, and I thought about rio that does more or less the same thing, but more generally.  I didn’t come up with an answer to Maëlle’s question of why haven worked less well for me than rio a long time ago.</description>
+    </item>
+    
+    <item>
+      <title>Readr and summary</title>
+      <link>/2018/03/21/readr-and-summary/</link>
+      <pubDate>Wed, 21 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/03/21/readr-and-summary/</guid>
+      <description>Packages In this post I use these packages (the last one at the end):
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() library(skimr) ## ## Attaching package: &amp;#39;skimr&amp;#39; ## The following objects are masked from &amp;#39;package:dplyr&amp;#39;: ## ## contains, ends_with, everything, matches, num_range, one_of, ## starts_with  Introduction The readr file-reading functions read text as text without turning it into factors.</description>
+    </item>
+    
+    <item>
+      <title>Making a lot of plots all at once, the tidyverse way</title>
+      <link>/2018/02/23/making-a-lot-of-plots-all-at-once-the-tidyverse-way/</link>
+      <pubDate>Fri, 23 Feb 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/02/23/making-a-lot-of-plots-all-at-once-the-tidyverse-way/</guid>
+      <description>Introduction I was thinking the other day about how you might come up with a bunch of separate-but-related plots, without plotting them one by one, for example to show a class.
+By way of example, suppose we want to plot a number of Poisson distributions with different means, so that we can compare their shapes. The textbook says that a Poisson with a large mean is “approximately normal”, but that is just words until you see it on a picture.</description>
+    </item>
+    
+    <item>
+      <title>Tidy simple effects in analysis of variance</title>
+      <link>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</link>
+      <pubDate>Tue, 30 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/01/30/tidy-simple-effects-in-analysis-of-variance/</guid>
+      <description>Introduction In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an interaction.</description>
+    </item>
+    
+    <item>
+      <title>Drawing a network with ggraph and tidygraph</title>
+      <link>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</link>
+      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</guid>
+      <description>Introduction Thomas Lin Pedersen is the author of a lot of packages, including two that deal with graphs (in the sense of networks), tidygraph for storing and handling graphs, and ggraph for drawing them, ggplot-style. I have a feeling I will be spending a lot of time with tidygraph, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.</description>
+    </item>
+    
+    <item>
+      <title>Drawing maps in R with &#34;ggmap&#34; and &#34;OpenStreetMap&#34;</title>
+      <link>/2017/12/24/drawing-maps-in-r-with-ggmap-and-openstreetmap/</link>
+      <pubDate>Sun, 24 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/24/drawing-maps-in-r-with-ggmap-and-openstreetmap/</guid>
+      <description>Introduction I have long been interested in drawing maps, and when I discovered how to do it in R, I have tried to add it to my statistical repertoire, including drawing things on maps. There are two packages that can be used to obtain maps and draw on them, ggmap which is based on Google Maps, and OpenStreetMap which is based on Open Street Maps (surprisingly enough). They have overlapping capabilities, which we will explore here.</description>
+    </item>
+    
+  </channel>
+</rss>
