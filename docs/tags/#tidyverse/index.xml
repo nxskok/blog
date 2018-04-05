@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>#Tidyverse on Ken&#39;s Blog</title>
+    <link>/tags/#tidyverse/</link>
+    <description>Recent content in #Tidyverse on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 20 Jan 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/#tidyverse/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Displaying grouped bar charts in ggplot</title>
+      <link>/2018/01/20/displaying-grouped-bar-charts-in-ggplot/</link>
+      <pubDate>Sat, 20 Jan 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/01/20/displaying-grouped-bar-charts-in-ggplot/</guid>
+      <description>Introduction When you have two categorical variables to plot, grouped bar charts are one possible visualization. I learned something new about them today, from Hadley Wickham himself (well, via a tweet, anyway).
+As an example, let’s use some data from the Australian Institute for Sport:
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.1 ✔ dplyr 0.7.4 ## ✔ tidyr 0.</description>
+    </item>
+    
+  </channel>
+</rss>

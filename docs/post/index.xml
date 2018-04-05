@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Ken&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 25 Mar 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 05 Apr 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>R, it&#39;s OK I guess</title>
+      <link>/2018/04/05/r-it-s-ok-i-guess/</link>
+      <pubDate>Thu, 05 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/04/05/r-it-s-ok-i-guess/</guid>
+      <description>On a dare from @dataandme and @littlemissdata, last night I bought the domain ritsokiguess.site, and now this blog lives there (as well as at the old nxskok.github.io, which is the “actual” home for the site). I used, extensively, the guide here, for which many thanks. There seems to need to be a two-way connection between where the static website actually lives, and where it looks to the outside world as if it lives.</description>
+    </item>
     
     <item>
       <title>Today on Twitter I learned...</title>
