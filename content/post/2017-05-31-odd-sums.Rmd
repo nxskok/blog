@@ -61,7 +61,7 @@ A second insight is that we can exchange any rows or any columns without affecti
 That means we have numbers of two classes, odd and even, with four of each. We also have two "boxes", box 1 being the first row and column, and box 2 being elsewhere. We need all four of the odd numbers to be in box 1 and all four of the even numbers to be in box 2. This is a hypergeometric probability:
 
 $$
-{{ 4 \choose 4 } {4 \choose 0} \over {8 \choose 4} }
+{ 4 \choose 4 } {4 \choose 0} \over {8 \choose 4} }
 $$
 
 which is
