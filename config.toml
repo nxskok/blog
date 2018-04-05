@@ -1,11 +1,11 @@
-baseurl = "https://nxskok.github.io/blog/"
+baseurl = "https://nxskok.github.io"
 publishDir = "docs"
 relativeurls = true
 languageCode = "en-us"
 title = "R, it's OK I guess"
 theme = "tuftesque"
 googleAnalytics = ""
-disqusShortname = "kens-blog-2"
+disqusShortname = "rokiguess"
 ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
 
 [permalinks]
