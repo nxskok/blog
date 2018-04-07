@@ -75,7 +75,7 @@ and now we have something tidy that we can work with.
 
 To illustrate that Simpson's paradox applies to these data, let's compare the proportion of flights delayed for each airline altogether with the proportions of flights delayed for each airline at each airport.
 
-Starting with the total flights delayed and on time for each airline. We need to add up what's contained in the `frequency` column, not just count the number of rows:
+Starting with the total flights delayed and on time for each airline: we need to add up what's contained in the `frequency` column, not just count the number of rows:
 
 
 ```{r}
@@ -134,7 +134,7 @@ So let's start with our data:
 airlines.1=glm(frequency~airport*airline*status,data=airlines,family="poisson")
 ```
 
-Looking at the output from this is not very illumating. The most helpful thing is to see what can be dropped, using `drop1`:
+Looking at the output from this is not very illuminating. The most helpful thing is to see what can be dropped, using `drop1`:
 
 ```{r}
 drop1(airlines.1,test="Chisq")

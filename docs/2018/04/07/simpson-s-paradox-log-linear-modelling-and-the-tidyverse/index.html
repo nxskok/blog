@@ -206,7 +206,7 @@ airlines</code></pre>
 <div id="simpsons-paradox" class="section level2">
 <h2>Simpson’s paradox</h2>
 <p>To illustrate that Simpson’s paradox applies to these data, let’s compare the proportion of flights delayed for each airline altogether with the proportions of flights delayed for each airline at each airport.</p>
-<p>Starting with the total flights delayed and on time for each airline. We need to add up what’s contained in the <code>frequency</code> column, not just count the number of rows:</p>
+<p>Starting with the total flights delayed and on time for each airline: we need to add up what’s contained in the <code>frequency</code> column, not just count the number of rows:</p>
 <pre class="r"><code>airlines %&gt;% count(airline,status,wt=frequency)</code></pre>
 <pre><code>## # A tibble: 4 x 3
 ##   airline status      n
@@ -266,7 +266,7 @@ airlines</code></pre>
 <p>The idea of log-linear modelling is that you start by modelling the frequency in terms of all possible interactions, and then you see which of the interactions you can remove (because they are not significant). When everything remaining is significant, you stop, and the resulting model tells you what combinations of things are associated. You then look at those tables to understand what kind of associations there are.</p>
 <p>So let’s start with our data:</p>
 <pre class="r"><code>airlines.1=glm(frequency~airport*airline*status,data=airlines,family=&quot;poisson&quot;)</code></pre>
-<p>Looking at the output from this is not very illumating. The most helpful thing is to see what can be dropped, using <code>drop1</code>:</p>
+<p>Looking at the output from this is not very illuminating. The most helpful thing is to see what can be dropped, using <code>drop1</code>:</p>
 <pre class="r"><code>drop1(airlines.1,test=&quot;Chisq&quot;)</code></pre>
 <pre><code>## Single term deletions
 ## 
