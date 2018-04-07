@@ -1,0 +1,329 @@
+---
+title: Simpson's paradox, log-linear modelling, and the tidyverse
+author: Ken
+date: '2018-04-07'
+slug: simpson-s-paradox-log-linear-modelling-and-the-tidyverse
+categories:
+  - R
+  - statistics
+tags:
+  - R
+  - tidyverse
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I have some data on punctuality of arrivals at five different airports for two different airlines, thus:</p>
+<pre><code>                Alaska Airlines        America West
+airport       ontime     delayed    ontime    delayed
+LosAngeles       497          62       694        117
+Phoenix          221          12      4840        415
+SanDiego         212          20       383         65
+SanFrancisco     503         102       320        129
+Seattle         1841         305       201         61</code></pre>
+<p>There are three variables: airport, airline and whatever the name is of the variable containing <code>ontime</code> and <code>delayed</code> (I’ll call it <code>status</code>). This is a common format for contingency tables with three categorical variables; there are two rows of headings. This is hard to deal with (I haven’t worked out how), so I did some editing (on a <em>copy</em> of my data file) and got to this:</p>
+<pre><code>airport      aa_ontime aa_delayed aw_ontime aw_delayed
+LosAngeles       497          62       694        117
+Phoenix          221          12      4840        415
+SanDiego         212          20       383         65
+SanFrancisco     503         102       320        129
+Seattle         1841         305       201         61</code></pre>
+<p>This is easier since there is only one row of headings, with the airline and status together.</p>
+</div>
+<div id="reading-in-and-organizing-the-data" class="section level2">
+<h2>Reading in and organizing the data</h2>
+<p>Packages first:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<p>The data in the above format are at the URL below:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/d29/airlines.txt&quot;
+airlines0=read_table(my_url)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   airport = col_character(),
+##   aa_ontime = col_integer(),
+##   aa_delayed = col_integer(),
+##   aw_ontime = col_integer(),
+##   aw_delayed = col_integer()
+## )</code></pre>
+<pre class="r"><code>airlines0</code></pre>
+<pre><code>## # A tibble: 5 x 5
+##   airport      aa_ontime aa_delayed aw_ontime aw_delayed
+##   &lt;chr&gt;            &lt;int&gt;      &lt;int&gt;     &lt;int&gt;      &lt;int&gt;
+## 1 LosAngeles         497         62       694        117
+## 2 Phoenix            221         12      4840        415
+## 3 SanDiego           212         20       383         65
+## 4 SanFrancisco       503        102       320        129
+## 5 Seattle           1841        305       201         61</code></pre>
+<p>This is not tidy. The airline is sort-of encoded in the columns, and the status is nowhere to be seen. My first thought is that the columns, apart from the first, are all frequencies, so my instinct is to <code>gather</code> first:</p>
+<pre class="r"><code>airlines0 %&gt;% gather(airline_status,frequency,-airport)</code></pre>
+<pre><code>## # A tibble: 20 x 3
+##    airport      airline_status frequency
+##    &lt;chr&gt;        &lt;chr&gt;              &lt;int&gt;
+##  1 LosAngeles   aa_ontime            497
+##  2 Phoenix      aa_ontime            221
+##  3 SanDiego     aa_ontime            212
+##  4 SanFrancisco aa_ontime            503
+##  5 Seattle      aa_ontime           1841
+##  6 LosAngeles   aa_delayed            62
+##  7 Phoenix      aa_delayed            12
+##  8 SanDiego     aa_delayed            20
+##  9 SanFrancisco aa_delayed           102
+## 10 Seattle      aa_delayed           305
+## 11 LosAngeles   aw_ontime            694
+## 12 Phoenix      aw_ontime           4840
+## 13 SanDiego     aw_ontime            383
+## 14 SanFrancisco aw_ontime            320
+## 15 Seattle      aw_ontime            201
+## 16 LosAngeles   aw_delayed           117
+## 17 Phoenix      aw_delayed           415
+## 18 SanDiego     aw_delayed            65
+## 19 SanFrancisco aw_delayed           129
+## 20 Seattle      aw_delayed            61</code></pre>
+<p>“What makes the columns different”, my mental model for the first argument to <code>gather</code>, is actually an airline-status combination. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">My mental model for the second argument is what makes the columns the same, which is here that they are all frequencies.</span> So now we need to split these up; <code>separate</code> does exactly this, and even more helpfully, splits at an underscore by default, which is exactly what we happen to have:</p>
+<pre class="r"><code>airlines = airlines0 %&gt;% gather(airline_status,frequency,-airport) %&gt;% 
+  separate(airline_status,into=c(&quot;airline&quot;,&quot;status&quot;))
+airlines</code></pre>
+<pre><code>## # A tibble: 20 x 4
+##    airport      airline status  frequency
+##    &lt;chr&gt;        &lt;chr&gt;   &lt;chr&gt;       &lt;int&gt;
+##  1 LosAngeles   aa      ontime        497
+##  2 Phoenix      aa      ontime        221
+##  3 SanDiego     aa      ontime        212
+##  4 SanFrancisco aa      ontime        503
+##  5 Seattle      aa      ontime       1841
+##  6 LosAngeles   aa      delayed        62
+##  7 Phoenix      aa      delayed        12
+##  8 SanDiego     aa      delayed        20
+##  9 SanFrancisco aa      delayed       102
+## 10 Seattle      aa      delayed       305
+## 11 LosAngeles   aw      ontime        694
+## 12 Phoenix      aw      ontime       4840
+## 13 SanDiego     aw      ontime        383
+## 14 SanFrancisco aw      ontime        320
+## 15 Seattle      aw      ontime        201
+## 16 LosAngeles   aw      delayed       117
+## 17 Phoenix      aw      delayed       415
+## 18 SanDiego     aw      delayed        65
+## 19 SanFrancisco aw      delayed       129
+## 20 Seattle      aw      delayed        61</code></pre>
+<p>and now we have something tidy that we can work with.</p>
+</div>
+<div id="simpsons-paradox" class="section level2">
+<h2>Simpson’s paradox</h2>
+<p>To illustrate that Simpson’s paradox applies to these data, let’s compare the proportion of flights delayed for each airline altogether with the proportions of flights delayed for each airline at each airport.</p>
+<p>Starting with the total flights delayed and on time for each airline. We need to add up what’s contained in the <code>frequency</code> column, not just count the number of rows:</p>
+<pre class="r"><code>airlines %&gt;% count(airline,status,wt=frequency)</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##   airline status      n
+##   &lt;chr&gt;   &lt;chr&gt;   &lt;int&gt;
+## 1 aa      delayed   501
+## 2 aa      ontime   3274
+## 3 aw      delayed   787
+## 4 aw      ontime   6438</code></pre>
+<p>To work out proportions, we need to divide by status totals for each airline, which means grouping by airline first:</p>
+<pre class="r"><code>airlines %&gt;% group_by(airline) %&gt;% 
+  count(airline, status, wt=frequency) %&gt;% 
+  mutate(proportion=n/sum(n))</code></pre>
+<pre><code>## # A tibble: 4 x 4
+## # Groups:   airline [2]
+##   airline status      n proportion
+##   &lt;chr&gt;   &lt;chr&gt;   &lt;int&gt;      &lt;dbl&gt;
+## 1 aa      delayed   501      0.133
+## 2 aa      ontime   3274      0.867
+## 3 aw      delayed   787      0.109
+## 4 aw      ontime   6438      0.891</code></pre>
+<p>This shows what we need to show, but a cuter display is obtained by grabbing only the proportions delayed and putting each <code>airline</code> in its own column:</p>
+<pre class="r"><code>airlines %&gt;% group_by(airline) %&gt;% 
+  count(airline, status, wt=frequency) %&gt;% 
+  mutate(proportion=n/sum(n)) %&gt;% 
+  filter(status==&quot;delayed&quot;) %&gt;% 
+  select(-n) %&gt;% 
+  spread(airline,proportion)</code></pre>
+<pre><code>## # A tibble: 1 x 3
+##   status     aa    aw
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt;
+## 1 delayed 0.133 0.109</code></pre>
+<p>In my head, that last line is “spread airline, carrying along proportion”.</p>
+<p>This shows that Alaska Airlines is delayed 13.3% of the time and America West only 10.9%, so America West is more punctual.</p>
+<p>Let’s do this by airport for each airline now. This is actually almost a direct copy of the above, with <code>airport</code> inserted into the <code>group_by</code> and into the <code>count</code>:</p>
+<pre class="r"><code>airlines %&gt;% group_by(airport,airline) %&gt;% 
+  count(airport,airline,status,wt=frequency) %&gt;% 
+  mutate(proportion=n/sum(n)) %&gt;% 
+  filter(status==&quot;delayed&quot;) %&gt;% 
+  select(-n) %&gt;% 
+  spread(airline,proportion)</code></pre>
+<pre><code>## # A tibble: 5 x 4
+## # Groups:   airport [5]
+##   airport      status      aa     aw
+##   &lt;chr&gt;        &lt;chr&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+## 1 LosAngeles   delayed 0.111  0.144 
+## 2 Phoenix      delayed 0.0515 0.0790
+## 3 SanDiego     delayed 0.0862 0.145 
+## 4 SanFrancisco delayed 0.169  0.287 
+## 5 Seattle      delayed 0.142  0.233</code></pre>
+<p>We said above that America West had fewer flights delayed overall. Now look at this table: America West has more flights delayed <em>at every single airport</em>!</p>
+<p>You might be wondering how this can be possible. This apparent impossibility is <strong>Simpson’s Paradox</strong>.</p>
+</div>
+<div id="using-log-linear-modelling-to-explain-the-paradox" class="section level2">
+<h2>Using log-linear modelling to explain the paradox</h2>
+<p>A paradox is an apparent impossibility that does nevertheless have an explanation. This one yields nicely to log-linear modelling, which is a way of modelling associations between categorical variables.</p>
+<p>A log-linear model is a generalized linear model with the table frequencies modelled as having a Poisson distribution whose mean depends on the combination of categories a frequency belongs to; the actual relationship is that the log of the mean is linearly related to indicator variables representing the categories (hence the name).</p>
+<p>The idea of log-linear modelling is that you start by modelling the frequency in terms of all possible interactions, and then you see which of the interactions you can remove (because they are not significant). When everything remaining is significant, you stop, and the resulting model tells you what combinations of things are associated. You then look at those tables to understand what kind of associations there are.</p>
+<p>So let’s start with our data:</p>
+<pre class="r"><code>airlines.1=glm(frequency~airport*airline*status,data=airlines,family=&quot;poisson&quot;)</code></pre>
+<p>Looking at the output from this is not very illumating. The most helpful thing is to see what can be dropped, using <code>drop1</code>:</p>
+<pre class="r"><code>drop1(airlines.1,test=&quot;Chisq&quot;)</code></pre>
+<pre><code>## Single term deletions
+## 
+## Model:
+## frequency ~ airport * airline * status
+##                        Df Deviance    AIC    LRT Pr(&gt;Chi)
+## &lt;none&gt;                      0.0000 183.44                
+## airport:airline:status  4   3.2166 178.65 3.2166   0.5223</code></pre>
+<p>The only thing up for grabs is the three-way interaction, which is not significant, and so can be removed:</p>
+<pre class="r"><code>airlines.2=update(airlines.1,.~.-airport:airline:status)
+drop1(airlines.2,test=&quot;Chisq&quot;)</code></pre>
+<pre><code>## Single term deletions
+## 
+## Model:
+## frequency ~ airport + airline + status + airport:airline + airport:status + 
+##     airline:status
+##                 Df Deviance    AIC    LRT  Pr(&gt;Chi)    
+## &lt;none&gt;                  3.2  178.7                     
+## airport:airline  4   6432.5 6599.9 6429.2 &lt; 2.2e-16 ***
+## airport:status   4    240.1  407.5  236.9 &lt; 2.2e-16 ***
+## airline:status   1     45.5  218.9   42.2 8.038e-11 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>There are now three two-way interactions, any of which could be removed if they were not significant. But they all <em>are</em> significant, so they all have to stay, and we have to stop the model-building process.</p>
+<p>The way to read a log-linear model is that the surviving interactions tell you what significant <em>associations</em> there are between your categorical variables. Here, there are associations between airline and status, airport and status and between airport and airline. So we have three two-way tables to look at, in order to understand what is going on.</p>
+</div>
+<div id="looking-at-the-reduced-tables" class="section level2">
+<h2>Looking at the reduced tables</h2>
+<p>These three two-way tables hold the key to why Simpson’s Paradox happened here. Let’s start with airline and status. <code>status</code> is a response variable, so we want proportions of status values for each airline. That means grouping by <code>airline</code> first:</p>
+<pre class="r"><code>airlines %&gt;% group_by(airline) %&gt;% 
+  count(airline, status, wt=frequency) %&gt;% 
+  mutate(proportion=n/sum(n))</code></pre>
+<pre><code>## # A tibble: 4 x 4
+## # Groups:   airline [2]
+##   airline status      n proportion
+##   &lt;chr&gt;   &lt;chr&gt;   &lt;int&gt;      &lt;dbl&gt;
+## 1 aa      delayed   501      0.133
+## 2 aa      ontime   3274      0.867
+## 3 aw      delayed   787      0.109
+## 4 aw      ontime   6438      0.891</code></pre>
+<p>These are the same overall proportions of delayed flights that we saw before.</p>
+<p>Now we move on to airport by status. Again, <code>status</code> acts like a response, so we’ll <code>group_by</code> the other one:</p>
+<pre class="r"><code>airlines %&gt;% group_by(airport) %&gt;% 
+  count(airport, status, wt=frequency) %&gt;% 
+  mutate(proportion=n/sum(n))</code></pre>
+<pre><code>## # A tibble: 10 x 4
+## # Groups:   airport [5]
+##    airport      status      n proportion
+##    &lt;chr&gt;        &lt;chr&gt;   &lt;int&gt;      &lt;dbl&gt;
+##  1 LosAngeles   delayed   179     0.131 
+##  2 LosAngeles   ontime   1191     0.869 
+##  3 Phoenix      delayed   427     0.0778
+##  4 Phoenix      ontime   5061     0.922 
+##  5 SanDiego     delayed    85     0.125 
+##  6 SanDiego     ontime    595     0.875 
+##  7 SanFrancisco delayed   231     0.219 
+##  8 SanFrancisco ontime    823     0.781 
+##  9 Seattle      delayed   366     0.152 
+## 10 Seattle      ontime   2042     0.848</code></pre>
+<p>The airports differ substantially in proportions of flights delayed: only 8% of flights into Phoenix, but 22% of flights into San Francisco and 15% of flights into Seattle. (You might suppose that the weather has something to do with this.)</p>
+<p>Last, airport by airline.
+I’ll group by airport again to make it look like the last table:</p>
+<pre class="r"><code>airlines %&gt;% group_by(airport) %&gt;% 
+  count(airport, airline, wt=frequency) %&gt;% 
+  mutate(proportion=n/sum(n))</code></pre>
+<pre><code>## # A tibble: 10 x 4
+## # Groups:   airport [5]
+##    airport      airline     n proportion
+##    &lt;chr&gt;        &lt;chr&gt;   &lt;int&gt;      &lt;dbl&gt;
+##  1 LosAngeles   aa        559     0.408 
+##  2 LosAngeles   aw        811     0.592 
+##  3 Phoenix      aa        233     0.0425
+##  4 Phoenix      aw       5255     0.958 
+##  5 SanDiego     aa        232     0.341 
+##  6 SanDiego     aw        448     0.659 
+##  7 SanFrancisco aa        605     0.574 
+##  8 SanFrancisco aw        449     0.426 
+##  9 Seattle      aa       2146     0.891 
+## 10 Seattle      aw        262     0.109</code></pre>
+<p>The proportions are of all the flights into each airport. Thus 41% of the flights (in this dataset) into LA are Alaska Airlines flights.</p>
+<p>The most interesting things here are the most uneven numbers. 96% of the flights into Phoenix are America West flights, and 89% of the flights into Seattle are Alaska Airlines.</p>
+<p>To resolve the paradox, we combine the conclusions from the last two two-way tables. Most of the flights into Phoenix are America West, and in Phoenix it is easy to arrive on time. Most of the flights into Seattle are Alaska Airlines, and in Seattle it is difficult to arrive on time. This means that the overall on-time arrival percentages contain a hidden bias: Alaska Airlines’s percent is increased by the airports it flies into (where it is hard to be on time), and America West’s percent is decreased by the airports <em>it</em> flies into.</p>
+<p>That means that the overall percentages, obtained by averaging over very different airports, are misleading, and the correct comparison is to look at each airport individually, where Alaska Airlines came out better. There is no impossibility; the overall percentages should simply be ignored.</p>
+</div>
+<div id="something-to-ponder" class="section level2">
+<h2>Something to ponder</h2>
+<p>Is it better to look at the observed frequencies, or what would be called the expected frequencies in a chi-squared test (which would be predictions here), or model coefficients? I’m thinking the last of those, because the airline by status table above didn’t actually <em>resolve</em> the Simpson’s paradox.</p>
+<p>Let’s take a look at the coefficients:</p>
+<pre class="r"><code>summary(airlines.2)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = frequency ~ airport + airline + status + airport:airline + 
+##     airport:status + airline:status, family = &quot;poisson&quot;, data = airlines)
+## 
+## Deviance Residuals: 
+##        1         2         3         4         5         6         7  
+## -0.37378  -0.06264   0.04084   0.28330   0.05575   1.11633   0.27648  
+##        8         9        10        11        12        13        14  
+## -0.13154  -0.61396  -0.13655   0.31937   0.01340  -0.03034  -0.35138  
+##       15        16        17        18        19        20  
+## -0.16799  -0.75693  -0.04574   0.07391   0.56643   0.31024  
+## 
+## Coefficients:
+##                                  Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)                       3.98193    0.09906  40.198  &lt; 2e-16 ***
+## airportPhoenix                   -1.57791    0.11977 -13.175  &lt; 2e-16 ***
+## airportSanDiego                  -0.95693    0.15050  -6.358 2.04e-10 ***
+## airportSanFrancisco               0.70322    0.11326   6.209 5.34e-10 ***
+## airportSeattle                    1.74619    0.10797  16.174  &lt; 2e-16 ***
+## airlineaw                         0.84942    0.09281   9.152  &lt; 2e-16 ***
+## statusontime                      2.24338    0.09908  22.642  &lt; 2e-16 ***
+## airportPhoenix:airlineaw          2.77709    0.08695  31.940  &lt; 2e-16 ***
+## airportSanDiego:airlineaw         0.29079    0.09813   2.963  0.00304 ** 
+## airportSanFrancisco:airlineaw    -0.72505    0.08404  -8.627  &lt; 2e-16 ***
+## airportSeattle:airlineaw         -2.50665    0.08611 -29.109  &lt; 2e-16 ***
+## airportPhoenix:statusontime       0.75498    0.09798   7.706 1.30e-14 ***
+## airportSanDiego:statusontime      0.08540    0.14152   0.603  0.54622    
+## airportSanFrancisco:statusontime -0.72060    0.11106  -6.489 8.66e-11 ***
+## airportSeattle:statusontime      -0.45474    0.10850  -4.191 2.78e-05 ***
+## airlineaw:statusontime           -0.54440    0.08426  -6.461 1.04e-10 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for poisson family taken to be 1)
+## 
+##     Null deviance: 21082.1132  on 19  degrees of freedom
+## Residual deviance:     3.2166  on  4  degrees of freedom
+## AIC: 178.65
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<p>The last of those coefficients tells us that America West is actually <em>less</em> likely to be on time, all else equal, according to the model. The reason that America West was on time more often in our data set is that all else was <em>not</em> equal; America West flew more often into an airport (Phoenix) where punctuality was good.</p>
+<p>There appear to be missing coefficients because each categorical variable has a “baseline” level whose coefficient is zero: Los Angeles for the airports, Alaska Airlines, and “delayed” for <code>status</code>.</p>
+<p>Remembering that we are predicting a log-mean, positive coefficients mean “more likely” and negative coefficients “less likely” than the baseline. Thus the strongly positive coefficient on <code>airportPhoenix:airlineaw</code> means that a flight into Phoenix is more likely to be America West (than a flight into Los Angeles), and the negative coefficient on <code>airportSanFrancisco:statusontime</code> means that a flight into San Francisco is less likely to be on time (than a flight into Los Angeles).</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>Log-linear modelling enables us to understand the pattern of association among several categorical variables, by removing higher-order interactions to leave us with a simpler model supported by the data. This model shows us which of the categorical variables are associated, and by looking at the appropriate ones of the cross-tabulations, we can understand the associations that occur. This includes explanations of Simpson’s paradox.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li><p>A <a href="https://onlinecourses.science.psu.edu/stat504/node/122">detailed introduction to log-linear modelling</a></p></li>
+<li><p><code>xtabs</code> and <code>prop.table</code> are another way of making frequency tables <a href="https://www.statmethods.net/stats/frequencies.html">in here</a></p></li>
+</ul>
+</div>

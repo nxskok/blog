@@ -6,10 +6,20 @@
     <description>Recent content on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 05 Apr 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 07 Apr 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Simpson&#39;s paradox, log-linear modelling, and the tidyverse</title>
+      <link>/2018/04/07/simpson-s-paradox-log-linear-modelling-and-the-tidyverse/</link>
+      <pubDate>Sat, 07 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/04/07/simpson-s-paradox-log-linear-modelling-and-the-tidyverse/</guid>
+      <description>Introduction I have some data on punctuality of arrivals at five different airports for two different airlines, thus:
+ Alaska Airlines America West airport ontime delayed ontime delayed LosAngeles 497 62 694 117 Phoenix 221 12 4840 415 SanDiego 212 20 383 65 SanFrancisco 503 102 320 129 Seattle 1841 305 201 61 There are three variables: airport, airline and whatever the name is of the variable containing ontime and delayed (I’ll call it status).</description>
+    </item>
     
     <item>
       <title>R, it&#39;s OK I guess</title>
