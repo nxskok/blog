@@ -204,7 +204,7 @@ The last of those coefficients tells us that America West is actually *less* lik
 
 There appear to be missing coefficients because each categorical variable has a "baseline" level whose coefficient is inferred from the others: Los Angeles for the airports,  Alaska Airlines, and "delayed" for `status`. If we had all the coefficients, they'd add up to zero over each variable.
 
-Remembering that we are predicting a log-mean, positive coefficients mean "more likely" and negative coefficients "less likely" than the baseline. Thus the strongly positive coefficient on `airportPhoenix:airlineaw` means that  a flight into Phoenix is more likely to be America West (than a flight into Los Angeles), and the negative coefficient on `airportSanFrancisco:statusontime` means that a flight into San Francisco is less likely to be on time (than a flight into Los Angeles).
+Remembering that we are predicting a log-mean, positive coefficients mean "more likely" and negative coefficients "less likely" than the baseline. Thus the strongly positive coefficient on `airportPhoenix:airlineaw` means that  a flight into Phoenix is more likely to be America West (than Alaska Airlines), and the negative coefficient on `airportSanFrancisco:statusontime` means that a flight into San Francisco is less likely to be on time (than flights into airports with positive coefficients).
  
 ## Conclusion
 
