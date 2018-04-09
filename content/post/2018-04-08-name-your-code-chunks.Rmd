@@ -22,7 +22,7 @@ library(tidyverse)
 ```
 
 
-```{r, irisbox}
+```{r irisbox}
 ggplot(iris,aes(x=Species,y=Sepal.Width))+geom_boxplot()
 ```
 
