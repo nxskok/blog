@@ -211,7 +211,7 @@ Thus the simulated posterior distribution of `lambda` and the posterior predicti
 
 What does the posterior distribution of `lambda` look like?
 
-```{r}
+```{r rasiya}
 tibble(lambda=ppp1$lambda) %>% 
   ggplot(aes(x=lambda))+
   geom_histogram(bins=10)
@@ -221,7 +221,7 @@ This looks very much bell-shaped, as was suggested by the largish sample size an
 
 Let's go back and look at the distribution of the data, for which we should use a bar plot rather than a histogram since the data are discrete:
 
-```{r}
+```{r dixino}
 tibble(x=x) %>% 
   ggplot(aes(x=x))+
   geom_bar()
@@ -229,7 +229,7 @@ tibble(x=x) %>%
 
 This is skewed to the right, but it should resemble the posterior predictive distribution, which we can also plot:
 
-```{r}
+```{r capogi}
 tibble(x_new=ppp1$x_new) %>% 
   ggplot(aes(x=x_new))+
   geom_bar()
@@ -260,7 +260,7 @@ Two goals was a bit of an overestimate: the posterior mean is 1.55, with a 95% p
 
 Again, we should check that the data distribution and the posterior predictive distribution match up reasonably well:
 
-```{r}
+```{r mewumu}
 tibble(x=my_data_2$x) %>% 
   ggplot(aes(x=x))+
   geom_bar()
@@ -268,7 +268,7 @@ tibble(x=my_data_2$x) %>%
 
 and
 
-```{r}
+```{r pituvo}
 ppp2=extract(pp2)
 tibble(x=ppp2$x_new) %>% 
   ggplot(aes(x=x))+

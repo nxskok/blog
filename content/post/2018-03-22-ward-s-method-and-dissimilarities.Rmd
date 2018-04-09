@@ -30,7 +30,7 @@ library(tidyverse)
 
 For example, suppose we are considering Euclidean distance as dissimilarity, and we have some points in the $(x,y)$ plane like this. I'm showing you the R code to make these plots, for completeness, but you should feel free to ignore it and just look at the pictures:
 
-```{r}
+```{r tuzamu}
 set.seed(457299)
 a=data.frame(x=runif(5,0,20),y=runif(5,0,20))
 b=data.frame(x=runif(5,20,40),y=runif(5,20,40))
@@ -71,7 +71,7 @@ g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour="blue"
 
 the **complete-linkage distance**. Another option, that often works well in practice, is "Ward's method." This is most easily understood by thinking of the means of coordinates, for each group individually:
 
-```{r, echo=F}
+```{r hucawa, echo=F}
 xm=aggregate(x~cluster,ddd,mean)
 ym=aggregate(y~cluster,ddd,mean)
 dm=cbind(xm,y=ym[,2])
@@ -96,7 +96,7 @@ ggplot(ddd,aes(x=x,y=y,colour=cluster))+
 
 and for the two groups combined:
 
-```{r}
+```{r cidobe}
 ddd %>% summarize(x=mean(x),y=mean(y)) -> dm
 # loop through data frame and create grp that links to cluster's mean
 new=data.frame(x=double(),y=double(),cluster=character(),grp=integer(),

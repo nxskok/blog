@@ -106,12 +106,12 @@
 and define a distance between <em>clusters</em> from this.</p>
 <p>Start by loading the <code>tidyverse</code>:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
 ## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
 ## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
 ## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <p>For example, suppose we are considering Euclidean distance as dissimilarity, and we have some points in the <span class="math inline">\((x,y)\)</span> plane like this. I’m showing you the R code to make these plots, for completeness, but you should feel free to ignore it and just look at the pictures:</p>
@@ -122,7 +122,7 @@ ddd=bind_rows(a=a,b=b,.id=&quot;cluster&quot;)
 g=ggplot(ddd,aes(x=x,y=y,colour=cluster))+geom_point()+
   coord_fixed(xlim=c(0,40),ylim=c(0,40))
 g</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-2-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/tuzamu-1.png" width="672" /></p>
 <p>To measure the distance between the red cluster and the blue cluster, we might consider the closest distance between a red and a blue:</p>
 <pre class="r"><code>distance=function(p1,p2) {
   sqrt((p1[1]-p2[1])^2+(p1[2]-p2[2])^2)
@@ -139,15 +139,15 @@ wm2=which.min(apply(distances,2,min))
 closest=bind_rows(a=a[wm1,],b=b[wm2,],.id=&quot;cluster&quot;)
 # single linkage distance
 g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour=&quot;blue&quot;)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-2-1.png" width="672" /></p>
 <p>the so-called <strong>single-linkage distance</strong>, or the farthest distance between a red and a blue:</p>
 <pre class="r"><code>wm1=which.max(apply(distances,1,max))
 wm2=which.max(apply(distances,2,max))
 closest=bind_rows(a[wm1,],b[wm2,],.id=&quot;cluster&quot;)
 g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour=&quot;blue&quot;)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-3-1.png" width="672" /></p>
 <p>the <strong>complete-linkage distance</strong>. Another option, that often works well in practice, is “Ward’s method.” This is most easily understood by thinking of the means of coordinates, for each group individually:</p>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/hucawa-1.png" width="672" /></p>
 <p>and for the two groups combined:</p>
 <pre class="r"><code>ddd %&gt;% summarize(x=mean(x),y=mean(y)) -&gt; dm
 # loop through data frame and create grp that links to cluster&#39;s mean
@@ -167,7 +167,7 @@ ggplot(ddd,aes(x=x,y=y,colour=cluster))+
   geom_point()+
   geom_point(data=dm,aes(colour=NULL),shape=3)+
   geom_line(data=new,aes(group=grp),alpha=0.5)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/cidobe-1.png" width="672" /></p>
 <p>The Ward distance is the difference between the sum of squared distances in the second case vs. the first case. Here, the distances from the combined mean are a lot bigger than from the individual cluster means, so the Ward distance between the two clusters is large.</p>
 <p>But, if we don’t have coordinates from which the distances come, how do we define the cluster means, and thus how do we make Ward’s method go?</p>
 </div>
@@ -241,11 +241,11 @@ dd</code></pre>
 <pre class="r"><code>lang.1=hclust(dd,method=&quot;ward.D2&quot;)</code></pre>
 <p>and then draw a dendrogram:</p>
 <pre class="r"><code>plot(lang.1)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-7-1.png" width="672" /></p>
 <p>To me, this suggests three language clusters, these:</p>
 <pre class="r"><code>plot(lang.1)
 rect.hclust(lang.1,3)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-8-1.png" width="672" /></p>
 <p>This is rather pleasing from a linguistic point of view. From left to right, we have a cluster of three Romance (Latin-based) languages and the most Latin-like of the Slavic languages; then we have five Germanic languages, <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">English counts as a Germanic language from this point of view because the number words are very old, predating the Norman conquest from which most of English’s Latin-derived words date.</span> and finally the “Finno-Ugric” languages. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This is a bit of a cheat, since Finnish and Hungarian are not very similar at all, but they are (just about) more like each other than they are like anything else.</span></p>
 <p>**** continue with some calculation of within-cluster sums of squares and consideration of height</p>
 <pre class="r"><code>lang.1$merge</code></pre>
