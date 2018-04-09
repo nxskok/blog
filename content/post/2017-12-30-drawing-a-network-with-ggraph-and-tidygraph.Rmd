@@ -112,7 +112,7 @@ Thomas Lin Pedersen also wrote the package `ggraph` which allows `ggplot`-style 
 
 Graphs can be plotted in many different ways. For this graph, I know there is a representation in two dimensions, since the stations are scattered across the 2D-space of West Yorkshire. In `ggraph`, this is controlled by the `layout` parameter of the `ggraph` command.  The Kamada-Kawai method tries to plot neighbouring nodes a constant distance apart, and chooses their locations as if they are connected by unit-length springs. I find this works well here. In addition, I want to draw the edges (as lines), draw the nodes (as points), and label the nodes by which station they are. These are accomplished by `geom_edge_link`, `geom_node_point` and `geom_node_text`. Additional notes: the `alpha=0.3` draws the edges partly transparent, so that the station names stand out; the use of `repel=T` "repels" the station names away from the points they represent so that you can see them (in the manner of `geom_text_repel`):
 
-```{r}
+```{r ggra}
 ggraph(yorks_g,layout="kk")+
   geom_edge_link(colour="blue",alpha=0.3)+
   geom_node_point()+
@@ -123,7 +123,7 @@ This seems to do a nice job of reproducing the topology in a clear fashion with 
 
 Another plausible layout is the one called `lgl`. How does that work here? We leave everything else the same:
 
-```{r}
+```{r ggrb}
 ggraph(yorks_g,layout="lgl")+
   geom_edge_link(colour="blue",alpha=0.3)+
   geom_node_point()+
@@ -132,7 +132,7 @@ ggraph(yorks_g,layout="lgl")+
 
 This is much less pleasing, especially in the middle. Can I make it try more iterations than the default 150?
 
-```{r}
+```{r ggrc}
 ggraph(yorks_g,layout="lgl",maxiter=400)+
   geom_edge_link(colour="blue",alpha=0.3)+
   geom_node_point()+
@@ -144,7 +144,7 @@ This is a lot better, but still has some unnecessary crossings.
 
 One more try: the GEM "force-directed" layout:
 
-```{r}
+```{r ggrd}
 ggraph(yorks_g,layout="gem")+
   geom_edge_link(colour="blue",alpha=0.3)+
   geom_node_point()+

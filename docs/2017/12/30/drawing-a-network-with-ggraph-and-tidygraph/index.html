@@ -343,27 +343,27 @@ yorks_g</code></pre>
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/ggra-1.png" width="672" /></p>
 <p>This seems to do a nice job of reproducing the topology in a clear fashion with no overlaps where there shouldn’t be any. (I tried this using the separate stations, Westgate and Kirkgate, in Wakefield, and the display was a lot more confusing.) It doesn’t get compass directions right (it seems to have west and east reversed), but we had no right to expect that it would.</p>
 <p>Another plausible layout is the one called <code>lgl</code>. How does that work here? We leave everything else the same:</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/ggrb-1.png" width="672" /></p>
 <p>This is much less pleasing, especially in the middle. Can I make it try more iterations than the default 150?</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;,maxiter=400)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/ggrc-1.png" width="672" /></p>
 <p>This is a lot better, but still has some unnecessary crossings.</p>
 <p>One more try: the GEM “force-directed” layout:</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;gem&quot;)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="../../../../rmarkdown-libs/figure-html4/ggrd-1.png" width="672" /></p>
 <p>This is better, but I like the <code>kk</code> one the best.</p>
 </div>
 </section>

@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="width=1000">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:site" content="@mbostock">
-<meta property="og:url" content="https://bl.ocks.org/mbostock/3885304">
-<meta property="og:title" content="Bar Chart">
-<meta property="og:description" content="Mike Bostock’s Block 3885304">
-<meta property="og:image" content="https://bl.ocks.org/mbostock/raw/3885304/a91f37f5f4b43269df3dbabcda0090310c05285d/thumbnail.png">
-<title>Bar Chart - bl.ocks.org</title>
-<link rel="icon" href="https://bl.ocks.org/favicon.png">
-<link rel="canonical" href="https://bl.ocks.org/mbostock/3885304">
+<html class="ocks-org do-not-copy"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Let’s Make a Bar Chart, III</title>
 <style>
 
-@import url("/style.css");
+@import url(../../style.css);
+
+.example {
+  margin: 2em 0;
+}
+
+iframe {
+  margin-top: 40px;
+  width: 960px;
+  height: 500px;
+  border: none;
+}
 
 </style>
 
@@ -31,38 +33,332 @@
     margin-left: 0px !important;
 }
 </style></head><body><header>
-  <div class="column">
-    <div class="navigation">
-      <a href="https://bl.ocks.org/">Popular</a>
-      / <a href="https://bl.ocks.org/-/about">About</a>
-    </div>
-    <a class="user" href="https://bl.ocks.org/mbostock"><img class="avatar" src="./chart_files/230541" width="30" height="30">Mike Bostock</a>’s
-    Block <a class="gist gist-id self" title="View Gist on GitHub." href="https://gist.github.com/mbostock/3885304">3885304</a>
-    ← <a class="gist-id" href="https://bl.ocks.org/mbostock/3310560">3310560</a>    <div class="date">Updated August 20, 2017</div>
-  </div>
+  <aside>November 13, 2013</aside>
+  <a href="https://bost.ocks.org/mike/" rel="author">Mike Bostock</a>
 </header>
 
-<div class="column">
-  <h1>Bar Chart</h1>
-  <div class="index">
-    <iframe sandbox="allow-popups allow-scripts allow-forms allow-same-origin" src="./chart_files/saved_resource.html" marginwidth="0" marginheight="0" style="height:500px;" scrolling="no"></iframe>
-  </div>
-  <div class="index-pop">
-    <a target="_blank" title="Open Block 3885304 a new window." href="https://bl.ocks.org/mbostock/raw/3885304">Open<svg height="16" width="12"><path d="M11 10h1v3c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V3c0-0.55 0.45-1 1-1h3v1H1v10h10V10zM6 2l2.25 2.25-3.25 3.25 1.5 1.5 3.25-3.25 2.25 2.25V2H6z"></path></svg></a>
-  </div>
-  <div class="gist-readme" data-key="README.md"><p>This simple bar chart is constructed from a TSV file storing the frequency of letters in the English language. The chart employs <a href="https://bl.ocks.org/mbostock/3019563">conventional margins</a> and a number of D3 features:</p>
+<h1>Let’s Make a Bar Chart, III</h1>
 
-<ul>
-<li><a href="https://github.com/d3/d3-dsv">d3-dsv</a> - parse tab-separated values</li>
-<li><a href="https://github.com/d3/d3-format">d3-format</a> - number formatting</li>
-<li><a href="https://github.com/d3/d3-scale">d3-scale</a> - position encodings</li>
-<li><a href="https://github.com/d3/d3-array">d3-array</a> - data processing</li>
-<li><a href="https://github.com/d3/d3-axis">d3-axis</a> - axes</li>
-</ul></div>
-  <div class="gist-sources">
-    <div class="gist-source" data-key="index.html">
-      <h2>index.html<a name="index.html" class="anchor" href="https://bl.ocks.org/mbostock/3885304#index.html">#</a></h2>
-      <pre><code class="html xml"><span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<script src="./Let’s Make a Bar Chart, III_files/d3.v3.min.js" charset="utf-8"></script>
+
+<p>In the previous parts of this tutorial we made a basic bar chart <a href="https://bost.ocks.org/mike/bar/">in HTML</a> and then <a href="https://bost.ocks.org/mike/bar/2/">in SVG</a>; now, we’ll improve the display by rotating the chart into columns and adding axes. We’ll also switch to a real dataset, showing the relative frequency of letters in the English language.
+
+<iframe style="margin-left:-40px;" src="./Let’s Make a Bar Chart, III_files/saved_resource.html" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+</p><p></p><aside><a style="position:relative;top:6px;" href="https://bl.ocks.org/mbostock/3885304/" target="_blank">bl.ocks.org/3885304</a></aside>
+
+<p>Source: <a href="http://books.google.com/books?id=dx8zM-VeKI8C&amp;lpg=PP1&amp;dq=LEWAND%2C%20Robert.%20Cryptological%20mathematics&amp;pg=PA36#v=onepage&amp;q=letter%20frequency&amp;f=false"><i>Cryptological Mathematics</i></a>, Robert Lewand.
+
+</p><h2><a href="https://bost.ocks.org/mike/bar/3/#columns" name="columns">#</a>Rotating into Columns</h2>
+
+<p>Rotating a bar chart into a column chart largely involves swapping <i>x</i> with <i>y</i>. However, a number of smaller incidental changes are also required. This is the cost of working directly with SVG rather than using a high-level visualization grammar like <a href="http://ggplot2.org/">ggplot2</a>. On the other hand, SVG offers greater customizability; and SVG is a web standard, so we can use the browser’s developer tools like the element inspector, and use SVG for things beyond visualization.
+
+</p><p>When renaming the <code class="javascript">x</code> scale to the <code class="javascript">y</code> scale, the range becomes <code class="javascript">[height, <span class="number">0</span>]</code> rather than <code class="javascript">[<span class="number">0</span>, width]</code>. This is because the origin of SVG’s coordinate system is in the top-left corner. We want the zero-value to be positioned at the bottom of the chart, rather than the top. Likewise this means that we need to position the bar <code class="javascript">rect</code>s by setting the <code class="javascript"><span class="string">"y"</span></code> and <code class="javascript"><span class="string">"height"</span></code> attributes, whereas before we only needed to set <code class="javascript"><span class="string">"width"</span></code>. (The default value of the <code class="javascript"><span class="string">"x"</span></code> attribute is zero, and the old bars were left-aligned.)
+
+</p><p>We previously multiplied the <code class="javascript"><span class="keyword">var</span> barHeight</code> by the index of each data point (0, 1, 2, …) to produce fixed-height bars. The resulting chart’s height thus depended on the size of the dataset. But here the opposite behavior is desired: the chart width is fixed and the bar width variable.  So rather than fix the <code class="javascript">barHeight</code>, now we compute the <code class="javascript">barWidth</code> by dividing the available chart width by the size of the dataset, <code class="javascript">data.length</code>.
+
+</p><p>Lastly, the bar labels must be positioned differently for columns rather than bars, centered just below the top of the column. The new <code class="javascript"><span class="string">"dy"</span></code> attribute value of <code class="javascript"><span class="string">".75em"</span></code> anchors the label at approximately the text’s <a href="http://en.wikipedia.org/wiki/Cap_height">cap height</a> rather than the baseline.
+
+</p><aside><a href="https://bl.ocks.org/mbostock/7452541">bl.ocks.org/7452541</a></aside>
+
+<pre><code class="html xml"><span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
+<span class="tag">&lt;<span class="title">style</span>&gt;</span><span class="css">
+
+<span class="class">.chart</span> <span class="tag">rect</span> <span class="rules">{
+  <span class="rule"><span class="attribute">fill</span>:<span class="value"> steelblue</span>;</span>
+<span class="rule">}</span></span>
+
+<span class="class">.chart</span> <span class="tag">text</span> <span class="rules">{
+  <span class="rule"><span class="attribute">fill</span>:<span class="value"> white</span>;</span>
+  <span class="rule"><span class="attribute">font</span>:<span class="value"> <span class="number">10</span>px sans-serif</span>;</span>
+  <span class="rule"><span class="attribute">text-anchor</span>:<span class="value"> middle</span>;</span>
+<span class="rule">}</span></span>
+
+</span><span class="tag">&lt;/<span class="title">style</span>&gt;</span>
+<span class="tag">&lt;<span class="title">svg</span> <span class="attribute">class</span>=<span class="value">"chart"</span>&gt;</span><span class="tag">&lt;/<span class="title">svg</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//d3js.org/d3.v3.min.js"</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript">
+
+<span class="keyword">var</span> width = <span class="number">960</span>,
+    height = <span class="number">500</span>;
+
+<span class="keyword">var</span> y = d3.scale.linear()
+    .range([height, <span class="number">0</span>]);
+
+<span class="keyword">var</span> chart = d3.select(<span class="string">".chart"</span>)
+    .attr(<span class="string">"width"</span>, width)
+    .attr(<span class="string">"height"</span>, height);
+
+d3.tsv(<span class="string">"data.tsv"</span>, type, <span class="function"><span class="keyword">function</span><span class="params">(error, data)</span> {</span>
+  y.domain([<span class="number">0</span>, d3.max(data, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.value; })]);
+
+  <span class="keyword">var</span> barWidth = width / data.length;
+
+  <span class="keyword">var</span> bar = chart.selectAll(<span class="string">"g"</span>)
+      .data(data)
+    .enter().append(<span class="string">"g"</span>)
+      .attr(<span class="string">"transform"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d, i)</span> {</span> <span class="keyword">return</span> <span class="string">"translate("</span> + i * barWidth + <span class="string">",0)"</span>; });
+
+  bar.append(<span class="string">"rect"</span>)
+      .attr(<span class="string">"y"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> y(d.value); })
+      .attr(<span class="string">"height"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> height - y(d.value); })
+      .attr(<span class="string">"width"</span>, barWidth - <span class="number">1</span>);
+
+  bar.append(<span class="string">"text"</span>)
+      .attr(<span class="string">"x"</span>, barWidth / <span class="number">2</span>)
+      .attr(<span class="string">"y"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> y(d.value) + <span class="number">3</span>; })
+      .attr(<span class="string">"dy"</span>, <span class="string">".75em"</span>)
+      .text(<span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.value; });
+});
+
+<span class="function"><span class="keyword">function</span> <span class="title">type</span><span class="params">(d)</span> {</span>
+  d.value = +d.value; <span class="comment">// coerce to number</span>
+  <span class="keyword">return</span> d;
+}
+
+</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></code></pre>
+
+<h2><a href="https://bost.ocks.org/mike/bar/3/#ordinal" name="ordinal">#</a>Encoding Ordinal Data</h2>
+
+<p>Unlike <i>quantitative</i> values that can be compared numerically, subtracted or divided, <i>ordinal</i> values are compared by rank. Letters are ordinal; in the alphabet, A occurs before B, and B before C. Whereas D3’s linear, pow and log scales serve to encode quantitative data, <a href="https://github.com/mbostock/d3/wiki/Ordinal-Scales">ordinal scales</a> encode ordinal data. We can thus use an ordinal scale to simplify the positioning of bars by letter.
+
+</p><p>In its most explicit form, an ordinal scale is a mapping from a discrete set of data values (such as names) to a corresponding discrete set of display values (such as pixel positions). Like quantitative scales these sets are called the <i>domain</i> and <i>range</i>, respectively.
+
+</p><aside>To keep this example code short, only the first six letters of the alphabet are shown. In the full code below, we’ll compute the scale’s domain from the data and it will include every letter.</aside>
+
+<pre><code class="javascript"><span class="keyword">var</span> x = d3.scale.ordinal()
+    .domain([<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>, <span class="string">"E"</span>, <span class="string">"F"</span>])
+    .range([<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]);</code></pre>
+
+<p>The result of <code class="javascript">x(<span class="string">"A"</span>)</code> is <code class="javascript"><span class="number">0</span></code>, <code class="javascript">x(<span class="string">"B"</span>)</code> is <code class="javascript"><span class="number">1</span></code>, and so on. In specifying the domain and range, all that matters is the order of values: element <i>i</i> in the domain is mapped to element <i>i</i> in the range.
+
+</p><p>It would be tedious to enumerate the positions of each bar by hand, so instead we can convert a continuous range into a discrete set of values using <a href="https://github.com/mbostock/d3/wiki/Ordinal-Scales#wiki-ordinal_rangeBands">rangeBands</a> or <a href="https://github.com/mbostock/d3/wiki/Ordinal-Scales#wiki-ordinal_rangePoints">rangePoints</a>. The rangeBands method computes range values so as to divide the chart area into evenly-spaced, evenly-sized bands, as in a bar chart. The similar rangePoints method computes evenly-spaced range values as in a scatterplot. For example:
+
+</p><pre><code class="javascript"><span class="keyword">var</span> x = d3.scale.ordinal()
+    .domain([<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>, <span class="string">"E"</span>, <span class="string">"F"</span>])
+    .rangeBands([<span class="number">0</span>, width]);</code></pre>
+
+<aside>The full range can be retrieved for inspection with <code class="javascript">x.range()</code>.</aside>
+
+<p>If <code class="javascript">width</code> is <code class="javascript"><span class="number">960</span></code>, <code class="javascript">x(<span class="string">"A"</span>)</code> is now <code class="javascript"><span class="number">0</span></code> and <code class="javascript">x(<span class="string">"B"</span>)</code> is <code class="javascript"><span class="number">160</span></code>, and so on. These positions serve as the left edge of each bar, while <code class="javascript">x.rangeBand()</code> returns the width of each bar. But rangeBands can also add padding between bars with an optional third argument, and the <a href="https://github.com/mbostock/d3/wiki/Ordinal-Scales#wiki-ordinal_rangeRoundBands">rangeRoundBands</a> variant will compute positions that snap to exact pixel boundaries for crisp edges. Compare:
+
+</p><pre><code class="javascript"><span class="keyword">var</span> x = d3.scale.ordinal()
+    .domain([<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"C"</span>, <span class="string">"D"</span>, <span class="string">"E"</span>, <span class="string">"F"</span>])
+    .rangeRoundBands([<span class="number">0</span>, width], .<span class="number">1</span>);</code></pre>
+
+<p>Now <code class="javascript">x(<span class="string">"A"</span>)</code> is <code class="javascript"><span class="number">17</span></code> and each bar is 141 pixels wide. And, rather than hard-code the letters in our domain, we can compute them from data using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map">array.map</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort">array.sort</a>. All together:
+
+</p><aside><a href="https://bl.ocks.org/mbostock/7440840">bl.ocks.org/7440840</a></aside>
+
+<pre><code class="html xml"><span class="doctype">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
+<span class="tag">&lt;<span class="title">style</span>&gt;</span><span class="css">
+
+<span class="class">.chart</span> <span class="tag">rect</span> <span class="rules">{
+  <span class="rule"><span class="attribute">fill</span>:<span class="value"> steelblue</span>;</span>
+<span class="rule">}</span></span>
+
+<span class="class">.chart</span> <span class="tag">text</span> <span class="rules">{
+  <span class="rule"><span class="attribute">fill</span>:<span class="value"> white</span>;</span>
+  <span class="rule"><span class="attribute">font</span>:<span class="value"> <span class="number">10</span>px sans-serif</span>;</span>
+  <span class="rule"><span class="attribute">text-anchor</span>:<span class="value"> middle</span>;</span>
+<span class="rule">}</span></span>
+
+</span><span class="tag">&lt;/<span class="title">style</span>&gt;</span>
+<span class="tag">&lt;<span class="title">svg</span> <span class="attribute">class</span>=<span class="value">"chart"</span>&gt;</span><span class="tag">&lt;/<span class="title">svg</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//d3js.org/d3.v3.min.js"</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript">
+
+<span class="keyword">var</span> width = <span class="number">960</span>,
+    height = <span class="number">500</span>;
+
+<span class="keyword">var</span> x = d3.scale.ordinal()
+    .rangeRoundBands([<span class="number">0</span>, width], .<span class="number">1</span>);
+
+<span class="keyword">var</span> y = d3.scale.linear()
+    .range([height, <span class="number">0</span>]);
+
+<span class="keyword">var</span> chart = d3.select(<span class="string">".chart"</span>)
+    .attr(<span class="string">"width"</span>, width)
+    .attr(<span class="string">"height"</span>, height);
+
+d3.tsv(<span class="string">"data.tsv"</span>, type, <span class="function"><span class="keyword">function</span><span class="params">(error, data)</span> {</span>
+  x.domain(data.map(<span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.name; }));
+  y.domain([<span class="number">0</span>, d3.max(data, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.value; })]);
+
+  <span class="keyword">var</span> bar = chart.selectAll(<span class="string">"g"</span>)
+      .data(data)
+    .enter().append(<span class="string">"g"</span>)
+      .attr(<span class="string">"transform"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> <span class="string">"translate("</span> + x(d.name) + <span class="string">",0)"</span>; });
+
+  bar.append(<span class="string">"rect"</span>)
+      .attr(<span class="string">"y"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> y(d.value); })
+      .attr(<span class="string">"height"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> height - y(d.value); })
+      .attr(<span class="string">"width"</span>, x.rangeBand());
+
+  bar.append(<span class="string">"text"</span>)
+      .attr(<span class="string">"x"</span>, x.rangeBand() / <span class="number">2</span>)
+      .attr(<span class="string">"y"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> y(d.value) + <span class="number">3</span>; })
+      .attr(<span class="string">"dy"</span>, <span class="string">".75em"</span>)
+      .text(<span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.value; });
+});
+
+<span class="function"><span class="keyword">function</span> <span class="title">type</span><span class="params">(d)</span> {</span>
+  d.value = +d.value; <span class="comment">// coerce to number</span>
+  <span class="keyword">return</span> d;
+}
+
+</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></code></pre>
+
+<h2><a href="https://bost.ocks.org/mike/bar/3/#margins" name="margins">#</a>Preparing Margins</h2>
+
+<p>Ordinal scales are often used in conjunction with D3’s axis component to quickly display labeled tick marks, improving the chart’s legibility. But before we can add an axis, we need to clear some space in the margins.
+
+</p><aside>Unlike HTML, the SVG container is implicitly <a href="http://www.w3.org/TR/CSS21/visufx.html#propdef-overflow">overflow: hidden</a>. IE9 allows overflow, but other browsers do not, so you shouldn’t rely on it.</aside>
+
+<p><a href="https://bl.ocks.org/mbostock/3019563">By convention</a>, margins in D3 are specified as an object with top, right, bottom and left properties. Then, the <i>outer</i> size of the chart area, which includes the margins, is used to compute the <i>inner</i> size available for graphical marks by subtracting the margins. For example, reasonable values for a 960×500 chart are:
+
+</p><pre><code class="javascript"><span class="keyword">var</span> margin = {top: <span class="number">20</span>, right: <span class="number">30</span>, bottom: <span class="number">30</span>, left: <span class="number">40</span>},
+    width = <span class="number">960</span> - margin.left - margin.right,
+    height = <span class="number">500</span> - margin.top - margin.bottom;</code></pre>
+
+<p>Thus, 960 and 500 are the outer width and height, respectively, while the computed inner <code class="javascript">width</code> and <code class="javascript">height</code> are 890 and 450. These inner dimensions can be used to initialize scale ranges. To apply the margins to the SVG container, we set the width and height of the SVG element to the outer dimensions, and add a <code class="javascript">g</code> element to offset the origin of the chart area by the top-left margin.
+
+</p><pre><code class="javascript"><span class="keyword">var</span> chart = d3.select(<span class="string">".chart"</span>)
+    .attr(<span class="string">"width"</span>, width + margin.left + margin.right)
+    .attr(<span class="string">"height"</span>, height + margin.top + margin.bottom)
+  .append(<span class="string">"g"</span>)
+    .attr(<span class="string">"transform"</span>, <span class="string">"translate("</span> + margin.left + <span class="string">","</span> + margin.top + <span class="string">")"</span>);</code></pre>
+
+<p>Any elements subsequently added to <code class="javascript">chart</code> will thus inherit the margins.
+
+</p><h2><a href="https://bost.ocks.org/mike/bar/3/#axes" name="axes">#</a>Adding Axes</h2>
+
+<p>We define an axis by binding it to our existing <i>x</i>-scale and declaring one of the four orientations. Since our <i>x</i>-axis will appear below the bars, here we use the <code class="javascript"><span class="string">"bottom"</span></code> orientation.
+
+</p><pre><code class="javascript"><span class="keyword">var</span> xAxis = d3.svg.axis()
+    .scale(x)
+    .orient(<span class="string">"bottom"</span>);</code></pre>
+
+<p>The resulting <code class="javascript">xAxis</code> object be used to render multiple axes by repeated application using <a href="https://github.com/mbostock/d3/wiki/Selections#wiki-call">selection.call</a>. Think of it as a rubber stamp which can print out axes wherever they are needed. The axis elements are positioned relative to a local origin, so to transform into the desired position we set the <code class="javascript"><span class="string">"transform"</span></code> attribute on a containing <code class="javascript">g</code> element:
+
+</p><pre><code class="javascript">chart.append(<span class="string">"g"</span>)
+    .attr(<span class="string">"class"</span>, <span class="string">"x axis"</span>)
+    .attr(<span class="string">"transform"</span>, <span class="string">"translate(0,"</span> + height + <span class="string">")"</span>)
+    .call(xAxis);</code></pre>
+
+<p>The axis container should also have a class name so that we can apply styles. The name <code class="javascript"><span class="string">"axis"</span></code> here is arbitrary; call it whatever you like. Multiple class names, such as <code class="javascript"><span class="string">"x axis"</span></code>, are useful for styling axes differently by dimension while retaining some shared styles across dimensions.
+
+</p><p>The axis component consists of a <code class="javascript">path</code> element which displays the domain, and multiple <code class="javascript">g</code> <code class="javascript"><span class="string">".tick"</span></code> elements for each tick mark. A tick in turn contains a <code class="javascript">text</code> label and a <code class="javascript">line</code> mark. Most of D3’s examples therefore use the following minimalist style:
+
+</p><pre><code class="css"><span class="class">.axis</span> <span class="tag">text</span> <span class="rules">{
+  <span class="rule"><span class="attribute">font</span>:<span class="value"> <span class="number">10</span>px sans-serif</span>;</span>
+<span class="rule">}</span></span>
+
+<span class="class">.axis</span> <span class="tag">path</span>,
+<span class="class">.axis</span> <span class="tag">line</span> <span class="rules">{
+  <span class="rule"><span class="attribute">fill</span>:<span class="value"> none</span>;</span>
+  <span class="rule"><span class="attribute">stroke</span>:<span class="value"> <span class="number">#000</span></span>;</span>
+  <span class="rule"><span class="attribute">shape-rendering</span>:<span class="value"> crispEdges</span>;</span>
+<span class="rule">}</span></span></code></pre>
+
+<p>This produces an axis reminiscent of <a href="http://www.r-project.org/">R</a>:
+
+<style>
+
+#axis-example1 path,
+#axis-example1 line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+</p><p class="example"><svg id="axis-example1" width="720" height="20" style="margin-left:-5px;"><g transform="translate(4.5,1.5)"><g class="tick" transform="translate(0,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">0</text></g><g class="tick" transform="translate(50,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">5</text></g><g class="tick" transform="translate(100,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">10</text></g><g class="tick" transform="translate(150,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">15</text></g><g class="tick" transform="translate(200,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">20</text></g><g class="tick" transform="translate(250,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">25</text></g><g class="tick" transform="translate(300,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">30</text></g><g class="tick" transform="translate(350,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">35</text></g><g class="tick" transform="translate(400,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">40</text></g><path class="domain" d="M0,6V0H420V6"></path></g></svg>
+<script>
+
+d3.select("#axis-example1")
+  .append("g")
+    .attr("transform", "translate(4.5,1.5)")
+    .call(d3.svg.axis()
+      .scale(d3.scale.linear()
+        .domain([0, 42])
+        .range([0, 420]))
+      .orient("bottom"));
+
+</script>
+
+</p><p>However, axes are highly customizable. This more elaborate axis is styled after <a href="http://ggplot2.org/">ggplot2</a>:
+
+<style>
+
+#axis-example2 rect {
+  fill: #ddd;
+}
+
+#axis-example2 path,
+#axis-example2 .inner text {
+  display: none;
+}
+
+#axis-example2 line {
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+#axis-example2 .inner line {
+  stroke: #fff;
+}
+
+#axis-example2 .minor line {
+  stroke-opacity: .5;
+}
+
+</style>
+</p><p class="example"><svg id="axis-example2" width="720" height="58" style="margin-left:-5px;"><rect x="5" width="420" height="40"></rect><g transform="translate(4.5,39.5)" class="outer axis"><g class="tick" transform="translate(0,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">0</text></g><g class="tick" transform="translate(50,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">5</text></g><g class="tick" transform="translate(100,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">10</text></g><g class="tick" transform="translate(150,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">15</text></g><g class="tick" transform="translate(200,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">20</text></g><g class="tick" transform="translate(250,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">25</text></g><g class="tick" transform="translate(300,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">30</text></g><g class="tick" transform="translate(350,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">35</text></g><g class="tick" transform="translate(400,0)" style="opacity: 1;"><line y2="6" x2="0"></line><text dy=".71em" y="9" x="0" style="text-anchor: middle;">40</text></g><path class="domain" d="M0,6V0H420V6"></path></g><g transform="translate(4.5,39.5)" class="inner axis"><g class="tick" transform="translate(0,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">0</text></g><g class="tick minor" transform="translate(10,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">1</text></g><g class="tick minor" transform="translate(20,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">2</text></g><g class="tick minor" transform="translate(30,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">3</text></g><g class="tick minor" transform="translate(40,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">4</text></g><g class="tick" transform="translate(50,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">5</text></g><g class="tick minor" transform="translate(60,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">6</text></g><g class="tick minor" transform="translate(70,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">7</text></g><g class="tick minor" transform="translate(80,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">8</text></g><g class="tick minor" transform="translate(90,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">9</text></g><g class="tick" transform="translate(100,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">10</text></g><g class="tick minor" transform="translate(110,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">11</text></g><g class="tick minor" transform="translate(120,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">12</text></g><g class="tick minor" transform="translate(130,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">13</text></g><g class="tick minor" transform="translate(140,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">14</text></g><g class="tick" transform="translate(150,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">15</text></g><g class="tick minor" transform="translate(160,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">16</text></g><g class="tick minor" transform="translate(170,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">17</text></g><g class="tick minor" transform="translate(180,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">18</text></g><g class="tick minor" transform="translate(190,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">19</text></g><g class="tick" transform="translate(200,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">20</text></g><g class="tick minor" transform="translate(210,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">21</text></g><g class="tick minor" transform="translate(220,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">22</text></g><g class="tick minor" transform="translate(230.00000000000003,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">23</text></g><g class="tick minor" transform="translate(240,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">24</text></g><g class="tick" transform="translate(250,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">25</text></g><g class="tick minor" transform="translate(260,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">26</text></g><g class="tick minor" transform="translate(270,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">27</text></g><g class="tick minor" transform="translate(280,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">28</text></g><g class="tick minor" transform="translate(290,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">29</text></g><g class="tick" transform="translate(300,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">30</text></g><g class="tick minor" transform="translate(310,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">31</text></g><g class="tick minor" transform="translate(320,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">32</text></g><g class="tick minor" transform="translate(330,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">33</text></g><g class="tick minor" transform="translate(340,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">34</text></g><g class="tick" transform="translate(350,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">35</text></g><g class="tick minor" transform="translate(360,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">36</text></g><g class="tick minor" transform="translate(370,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">37</text></g><g class="tick minor" transform="translate(380,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">38</text></g><g class="tick minor" transform="translate(390,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">39</text></g><g class="tick" transform="translate(400,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">40</text></g><g class="tick minor" transform="translate(410,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">41</text></g><g class="tick minor" transform="translate(420,0)" style="opacity: 1;"><line y2="-40" x2="0"></line><text dy=".71em" y="3" x="0" style="text-anchor: middle;">42</text></g><path class="domain" d="M0,-40V0H420V-40"></path></g></svg>
+<script>(function() {
+
+var x = d3.scale.linear()
+    .domain([0, 42])
+    .range([0, 420]);
+
+var chart = d3.select("#axis-example2");
+
+chart.append("rect")
+    .attr("x", 5)
+    .attr("width", 420)
+    .attr("height", 40);
+
+chart.append("g")
+    .attr("transform", "translate(4.5,39.5)")
+    .attr("class", "outer axis")
+    .call(d3.svg.axis()
+      .scale(x)
+      .orient("bottom")
+      .ticks(10));
+
+chart.append("g")
+    .attr("transform", "translate(4.5,39.5)")
+    .attr("class", "inner axis")
+    .call(d3.svg.axis()
+      .scale(x)
+      .orient("bottom")
+      .tickSize(-40)
+      .ticks(40))
+  .selectAll(".tick")
+    .data(x.ticks(10), function(d) { return d; })
+  .exit()
+    .classed("minor", true);
+
+})()</script>
+
+</p><p>Beyond styles, you can further customize the appearance of an axis by selecting its elements and modifying them after the axis is created; the elements of an axis are part of its public API. The <a href="https://bl.ocks.org/mbostock/4349486">ggplot2-style axis</a> above is rendered using two overlaid axes, one inside the chart area and one outside, in the bottom margin. The major and minor ticks are styled differently.
+
+</p><p>With axes, we can now remove the labels from the bar. The complete code:
+
+</p><aside><a href="https://bl.ocks.org/mbostock/7441121">bl.ocks.org/7441121</a></aside>
+
+<pre><code class="html xml"><span class="doctype">&lt;!DOCTYPE html&gt;</span>
 <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span>
 <span class="tag">&lt;<span class="title">style</span>&gt;</span><span class="css">
 
@@ -70,144 +366,117 @@
   <span class="rule"><span class="attribute">fill</span>:<span class="value"> steelblue</span>;</span>
 <span class="rule">}</span></span>
 
-<span class="class">.bar</span><span class="pseudo">:hover</span> <span class="rules">{
-  <span class="rule"><span class="attribute">fill</span>:<span class="value"> brown</span>;</span>
+<span class="class">.axis</span> <span class="tag">text</span> <span class="rules">{
+  <span class="rule"><span class="attribute">font</span>:<span class="value"> <span class="number">10</span>px sans-serif</span>;</span>
 <span class="rule">}</span></span>
 
-<span class="class">.axis--x</span> <span class="tag">path</span> <span class="rules">{
+<span class="class">.axis</span> <span class="tag">path</span>,
+<span class="class">.axis</span> <span class="tag">line</span> <span class="rules">{
+  <span class="rule"><span class="attribute">fill</span>:<span class="value"> none</span>;</span>
+  <span class="rule"><span class="attribute">stroke</span>:<span class="value"> <span class="number">#000</span></span>;</span>
+  <span class="rule"><span class="attribute">shape-rendering</span>:<span class="value"> crispEdges</span>;</span>
+<span class="rule">}</span></span>
+
+<span class="class">.x</span><span class="class">.axis</span> <span class="tag">path</span> <span class="rules">{
   <span class="rule"><span class="attribute">display</span>:<span class="value"> none</span>;</span>
 <span class="rule">}</span></span>
 
 </span><span class="tag">&lt;/<span class="title">style</span>&gt;</span>
-<span class="tag">&lt;<span class="title">svg</span> <span class="attribute">width</span>=<span class="value">"960"</span> <span class="attribute">height</span>=<span class="value">"500"</span>&gt;</span><span class="tag">&lt;/<span class="title">svg</span>&gt;</span>
-<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"https://d3js.org/d3.v4.min.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+<span class="tag">&lt;<span class="title">svg</span> <span class="attribute">class</span>=<span class="value">"chart"</span>&gt;</span><span class="tag">&lt;/<span class="title">svg</span>&gt;</span>
+<span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//d3js.org/d3.v3.min.js"</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
 <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript">
 
-<span class="keyword">var</span> svg = d3.select(<span class="string">"svg"</span>),
-    margin = {top: <span class="number">20</span>, right: <span class="number">20</span>, bottom: <span class="number">30</span>, left: <span class="number">40</span>},
-    width = +svg.attr(<span class="string">"width"</span>) - margin.left - margin.right,
-    height = +svg.attr(<span class="string">"height"</span>) - margin.top - margin.bottom;
+<span class="keyword">var</span> margin = {top: <span class="number">20</span>, right: <span class="number">30</span>, bottom: <span class="number">30</span>, left: <span class="number">40</span>},
+    width = <span class="number">960</span> - margin.left - margin.right,
+    height = <span class="number">500</span> - margin.top - margin.bottom;
 
-<span class="keyword">var</span> x = d3.scaleBand().rangeRound([<span class="number">0</span>, width]).padding(<span class="number">0.1</span>),
-    y = d3.scaleLinear().rangeRound([height, <span class="number">0</span>]);
+<span class="keyword">var</span> x = d3.scale.ordinal()
+    .rangeRoundBands([<span class="number">0</span>, width], .<span class="number">1</span>);
 
-<span class="keyword">var</span> g = svg.append(<span class="string">"g"</span>)
+<span class="keyword">var</span> y = d3.scale.linear()
+    .range([height, <span class="number">0</span>]);
+
+<span class="keyword">var</span> xAxis = d3.svg.axis()
+    .scale(x)
+    .orient(<span class="string">"bottom"</span>);
+
+<span class="keyword">var</span> yAxis = d3.svg.axis()
+    .scale(y)
+    .orient(<span class="string">"left"</span>);
+
+<span class="keyword">var</span> chart = d3.select(<span class="string">".chart"</span>)
+    .attr(<span class="string">"width"</span>, width + margin.left + margin.right)
+    .attr(<span class="string">"height"</span>, height + margin.top + margin.bottom)
+  .append(<span class="string">"g"</span>)
     .attr(<span class="string">"transform"</span>, <span class="string">"translate("</span> + margin.left + <span class="string">","</span> + margin.top + <span class="string">")"</span>);
 
-d3.tsv(<span class="string">"data.tsv"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span>
-  d.frequency = +d.frequency;
-  <span class="keyword">return</span> d;
-}, <span class="function"><span class="keyword">function</span><span class="params">(error, data)</span> {</span>
-  <span class="keyword">if</span> (error) <span class="keyword">throw</span> error;
+d3.tsv(<span class="string">"data.tsv"</span>, type, <span class="function"><span class="keyword">function</span><span class="params">(error, data)</span> {</span>
+  x.domain(data.map(<span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.name; }));
+  y.domain([<span class="number">0</span>, d3.max(data, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.value; })]);
 
-  x.domain(data.map(<span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.letter; }));
-  y.domain([<span class="number">0</span>, d3.max(data, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> d.frequency; })]);
-
-  g.append(<span class="string">"g"</span>)
-      .attr(<span class="string">"class"</span>, <span class="string">"axis axis--x"</span>)
+  chart.append(<span class="string">"g"</span>)
+      .attr(<span class="string">"class"</span>, <span class="string">"x axis"</span>)
       .attr(<span class="string">"transform"</span>, <span class="string">"translate(0,"</span> + height + <span class="string">")"</span>)
-      .call(d3.axisBottom(x));
+      .call(xAxis);
 
-  g.append(<span class="string">"g"</span>)
-      .attr(<span class="string">"class"</span>, <span class="string">"axis axis--y"</span>)
-      .call(d3.axisLeft(y).ticks(<span class="number">10</span>, <span class="string">"%"</span>))
-    .append(<span class="string">"text"</span>)
-      .attr(<span class="string">"transform"</span>, <span class="string">"rotate(-90)"</span>)
-      .attr(<span class="string">"y"</span>, <span class="number">6</span>)
-      .attr(<span class="string">"dy"</span>, <span class="string">"0.71em"</span>)
-      .attr(<span class="string">"text-anchor"</span>, <span class="string">"end"</span>)
-      .text(<span class="string">"Frequency"</span>);
+  chart.append(<span class="string">"g"</span>)
+      .attr(<span class="string">"class"</span>, <span class="string">"y axis"</span>)
+      .call(yAxis);
 
-  g.selectAll(<span class="string">".bar"</span>)
-    .data(data)
+  chart.selectAll(<span class="string">".bar"</span>)
+      .data(data)
     .enter().append(<span class="string">"rect"</span>)
       .attr(<span class="string">"class"</span>, <span class="string">"bar"</span>)
-      .attr(<span class="string">"x"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> x(d.letter); })
-      .attr(<span class="string">"y"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> y(d.frequency); })
-      .attr(<span class="string">"width"</span>, x.bandwidth())
-      .attr(<span class="string">"height"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> height - y(d.frequency); });
+      .attr(<span class="string">"x"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> x(d.name); })
+      .attr(<span class="string">"y"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> y(d.value); })
+      .attr(<span class="string">"height"</span>, <span class="function"><span class="keyword">function</span><span class="params">(d)</span> {</span> <span class="keyword">return</span> height - y(d.value); })
+      .attr(<span class="string">"width"</span>, x.rangeBand());
 });
 
-</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
-</code></pre>
-    </div>
-    <div class="gist-source" data-key="data.tsv">
-      <h2>data.tsv<a name="data.tsv" class="anchor" href="https://bl.ocks.org/mbostock/3885304#data.tsv">#</a></h2>
-      <pre><code class="undefined">letter	frequency
-A	.08167
-B	.01492
-C	.02782
-D	.04253
-E	.12702
-F	.02288
-G	.02015
-H	.06094
-I	.06966
-J	.00153
-K	.00772
-L	.04025
-M	.02406
-N	.06749
-O	.07507
-P	.01929
-Q	.00095
-R	.05987
-S	.06327
-T	.09056
-U	.02758
-V	.00978
-W	.02360
-X	.00150
-Y	.01974
-Z	.00074</code></pre>
-    </div>
-  </div>
-  <div class="gist-license">
-    <h2>LICENSE<a name="license" class="anchor" href="https://bl.ocks.org/mbostock/3885304#license">#</a></h2>
-    Released under the <a target="_blank" href="https://opensource.org/licenses/GPL-3.0">GNU General Public License, version 3</a>.
-  </div>
-</div>
+<span class="function"><span class="keyword">function</span> <span class="title">type</span><span class="params">(d)</span> {</span>
+  d.value = +d.value; <span class="comment">// coerce to number</span>
+  <span class="keyword">return</span> d;
+}
 
-<script src="./chart_files/d3.v3.min.js"></script>
-<script src="./chart_files/highlight.min.js"></script>
-<script>
+</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span></code></pre>
 
-var gist = {"public":true,"protocol":"https","sha":"a91f37f5f4b43269df3dbabcda0090310c05285d","files":{".block":{"language":null,"type":"text/plain","filename":".block","size":17,"sha":"703d310b399098a243a76a50bc209167e924cfd2"},"README.md":{"language":"Markdown","type":"text/plain","filename":"README.md","size":517,"sha":"99ee6c267f1d1bdd8ede64eec3ba71dad2b8659a"},"data.tsv":{"language":null,"type":"text/tab-separated-values","filename":"data.tsv","size":250,"sha":"2bbfdc87fc412e681b08474e9e407dfa7f57ea49"},"index.html":{"language":"HTML","type":"text/html","filename":"index.html","size":1665,"sha":"b62cb10e2c106cee352bc6f41e77bba907b0ccef"},"thumbnail.png":{"language":null,"type":"image/png","filename":"thumbnail.png","size":4850,"sha":"6e9131d97a75c0a3564a5e0f718ee09921a25826"}},"created_at":"2012-10-13T16:45:02Z","updated_at":"2017-08-20T09:25:10Z","description":"Bar Chart","owner":{"login":"mbostock"},"fork_of":{"id":"3310560","owner":{"login":"mbostock"}},"id":"3885304"};
+<h2><a href="https://bost.ocks.org/mike/bar/3/#communicating" name="communicating">#</a>Communicating</h2>
 
-var files = d3.values(gist.files);
+<p>At this point in the tutorial, I must apologize. I have done you a disservice.
 
-d3.select(".gist-readme")
-    .data(files, function(d) { return d ? d.filename : this.getAttribute("data-key"); })
-    .each(function(d) {
-      var readme = d3.select(this);
-      d3.text("/mbostock/raw/3885304/a91f37f5f4b43269df3dbabcda0090310c05285d/" + d.filename, function(error, content) {
-        if (error) content = "Sorry, an error occurred.";
-        readme.html(new Showdown.converter().makeHtml(content));
-        readme.selectAll("code").each(function() { hljs.highlightBlock(this); });
-      });
-    });
+</p><p>In my effort to explain the technical details of chart construction, I have glossed over a critical component of effective visualization: <i>effective communication</i>. It doesn’t matter how good a chart looks if it doesn’t communicate anything! We must label the chart to give the reader sufficient context to interpret it.
 
-d3.selectAll(".gist-source")
-    .data(files, function(d) { return d ? d.filename : this.getAttribute("data-key"); })
-  .select("code")
-    .attr("class", function(d) { return d.language && (d.language === "JSON" ? "javascript" : d.language.toLowerCase()); })
-    .each(function(d) {
-      var code = d3.select(this);
-      d3.text("/mbostock/raw/3885304/a91f37f5f4b43269df3dbabcda0090310c05285d/" + (d.filename === "index.html" ? "" : d.filename), function(error, content) {
-        if (error) content = "Sorry, an error occurred.";
-        code.text(content);
-        hljs.highlightBlock(code.node());
-      });
-    });
+</p><p>This problem is more pervasive than you might expect. When visualizing data, it’s easy to internalize and forget the extra knowledge you have about your dataset or your intent. <i>You</i> know it’s a bar chart of relative frequency of letters in the English language. But unless you state that explicitly, your reader may not. Labels, captions, legends and other explanatory elements are essential to understanding. A title can be added to the <i>y</i>-axis by appending a <code class="javascript">text</code> element and positioning it as desired.
 
-</script>
+</p><pre><code class="javascript">chart.append(<span class="string">"g"</span>)
+    .attr(<span class="string">"class"</span>, <span class="string">"y axis"</span>)
+    .call(yAxis)
+  .append(<span class="string">"text"</span>)
+    .attr(<span class="string">"transform"</span>, <span class="string">"rotate(-90)"</span>)
+    .attr(<span class="string">"y"</span>, <span class="number">6</span>)
+    .attr(<span class="string">"dy"</span>, <span class="string">".71em"</span>)
+    .style(<span class="string">"text-anchor"</span>, <span class="string">"end"</span>)
+    .text(<span class="string">"Frequency"</span>);</code></pre>
 
-<script>
+<p>Unit-appropriate number formatting also improves legibility by tailoring the display to your data. Since our chart displays relative frequency, percentages are more appropriate than the default behavior which shows a number between 0 and 1. A <a href="https://github.com/mbostock/d3/wiki/Formatting">format string</a> as the second argument to <a href="https://github.com/mbostock/d3/wiki/SVG-Axes#wiki-ticks">axis.ticks</a> will customize the tick formatting, and the scale will automatically choose a precision appropriate to the tick interval.
 
-GoogleAnalyticsObject = "ga", ga = function() { ga.q.push(arguments); }, ga.q = [], ga.l = +new Date;
-ga("create", "UA-48272912-1", "auto");
-ga("send", "pageview");
+</p><aside>For total control over formatting, you can instead pass a function to <a href="https://github.com/mbostock/d3/wiki/SVG-Axes#wiki-tickFormat">axis.tickFormat</a>.</aside>
 
-</script>
-<script async="" src="https://www.google-analytics.com/analytics.js"></script>
+<pre><code class="javascript"><span class="keyword">var</span> yAxis = d3.svg.axis()
+    .scale(y)
+    .orient(<span class="string">"left"</span>)
+    .ticks(<span class="number">10</span>, <span class="string">"%"</span>);</code></pre>
+
+<h2>Next: Part 4</h2>
+
+<p>The code for part 3 of the tutorial is available at <a href="https://bl.ocks.org/mbostock/3885304">bl.ocks.org/3885304</a>.
+
+</p><p>The next tutorial in this series will cover interaction and transitions between views. Follow <a href="https://twitter.com/mbostock">me on Twitter</a> to be notified when the next section is published.
+
+</p><footer>
+  <aside>November 13, 2013</aside>
+  <a href="https://bost.ocks.org/mike/" rel="author">Mike Bostock</a>
+</footer>
+
+<script src="./Let’s Make a Bar Chart, III_files/highlight.min.js"></script>
 </body></html>
