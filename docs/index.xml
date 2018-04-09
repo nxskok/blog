@@ -6,10 +6,22 @@
     <description>Recent content on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 07 Apr 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 08 Apr 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Name your code chunks!</title>
+      <link>/2018/04/08/name-your-code-chunks/</link>
+      <pubDate>Sun, 08 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/04/08/name-your-code-chunks/</guid>
+      <description>Blogdown is amazing, but there is one thing that tripped me up, and I just worked out why.
+I have lots of graphs in my posts, but I was sometimes getting the wrong ones, and I was wondering why that was. I took a look in the Git pane in R Studio and discovered something.
+If you make a graph like this with an unnamed code chunk
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.</description>
+    </item>
     
     <item>
       <title>Simpson&#39;s paradox, log-linear modelling, and the tidyverse</title>

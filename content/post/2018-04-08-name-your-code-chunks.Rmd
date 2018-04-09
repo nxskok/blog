@@ -1,0 +1,33 @@
+---
+title: Name your code chunks!
+author: Ken
+date: '2018-04-08'
+slug: name-your-code-chunks
+categories:
+  - R
+  - blogdown
+tags:
+  - R
+  - blogdown
+---
+
+Blogdown is amazing, but there is one thing that tripped me up, and I just worked out why.
+
+I have lots of graphs in my posts, but I was sometimes getting the wrong ones, and I was wondering why that was. I took a look in the Git pane in R Studio and discovered something.
+
+If you make a graph like this with an unnamed code chunk
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r, irisbox}
+ggplot(iris,aes(x=Species,y=Sepal.Width))+geom_boxplot()
+```
+
+you get a .png file in `static` with a name like `unnamed-chunk-2-1.png`. *All* images on a blogdown website go in `static`, so the name might have been used before, in which case your new graph will overwrite the old one with that name, and suddenly all references to that graph before will be to the new (wrong) graph. 
+
+So, the moral of the story is *name all your code chunks that contain a graph*, and I guess this means that the names have to be unique over your whole blogdown site. Maybe having multipart chunk names that contain the post title and something like a title for the plot is the way to go.
+
+But as for now, I have to go all the way through my blog and make sure that all the code chunks with graphs have chunk names!
