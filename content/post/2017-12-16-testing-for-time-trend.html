@@ -53,10 +53,10 @@ x=z+0.02*(1:100)</code></pre>
 <p><code>mkac</code> includes a function <code>ts_plot</code> that plots a time series with the points joined by lines and with a smooth trend. It has an optional second argument, which is the time as stored in another variable, but defaults to 1 through the length of the series:</p>
 <pre class="r"><code>ts_plot(x)</code></pre>
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/tspx-1.png" width="672" /></p>
 <p>The upward trend is apparent. The lack of autocorrelation shows up in successive observations sometimes being on the same side of the smooth trend and sometimes on opposite sides. Time series aficionados would look at an <code>acf</code> plot (the AutoCorrelation Function):</p>
 <pre class="r"><code>acf(x)</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/acfx-1.png" width="672" /></p>
 <p>The thing to look for in the ACF is spikes at lags greater than zero that go further beyond the blue dotted lines than you would expect by chance. A few of them creep beyond significance, but nothing there appears more than chance.</p>
 <p>The function in <code>mkac</code> that tests for trend is called <code>kendall_Z_adjusted</code>:</p>
 <pre class="r"><code>kendall_Z_adjusted(x)</code></pre>
@@ -86,11 +86,11 @@ xx=arima.sim(list(ar=0.8),100) </code></pre>
 <pre class="r"><code>ts_plot(xx)</code></pre>
 <pre><code>## Don&#39;t know how to automatically pick scale for object of type ts. Defaulting to continuous.</code></pre>
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-8-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/tspxx-1.png" width="672" /></p>
 <p>This is autocorrelated: if it’s above the smooth trend, it’s more likely than not to stay there, and likewise below. Note the long “excursions” above and below the trend.
 We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:</p>
 <pre class="r"><code>pacf(xx)</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-9-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/pacfxx-1.png" width="672" /></p>
 <p>The big spike is at lag 1, so we infer that we have an AR(1) series, which is what we generated.</p>
 <p>This series was generated with <em>no trend</em>. What does the Mann-Kendall test say?</p>
 <pre class="r"><code>kendall_Z_adjusted(xx)</code></pre>
@@ -148,21 +148,21 @@ We ought to be able to see the lag-1 autocorrelation that we built into the seri
 <p>Since there are 36 columns that are all numbers of days, the data frame is not tidy. We should <code>gather</code> together the columns for the different locations, thus, and turn the text locations into numeric ones:</p>
 <pre class="r"><code>icefree_2 &lt;- icefree %&gt;% gather(location,days,-1) %&gt;% 
   rename(year=X1) %&gt;% 
-  mutate(location=as.numeric(location))
+  mutate(location=as.integer(location))
 icefree_2</code></pre>
 <pre><code>## # A tibble: 1,476 x 3
 ##     year location  days
-##    &lt;int&gt;    &lt;dbl&gt; &lt;int&gt;
-##  1  1971     1.00    NA
-##  2  1972     1.00   140
-##  3  1973     1.00    NA
-##  4  1974     1.00    NA
-##  5  1975     1.00    NA
-##  6  1976     1.00   147
-##  7  1977     1.00    NA
-##  8  1978     1.00   168
-##  9  1979     1.00   168
-## 10  1980     1.00   175
+##    &lt;int&gt;    &lt;int&gt; &lt;int&gt;
+##  1  1971        1    NA
+##  2  1972        1   140
+##  3  1973        1    NA
+##  4  1974        1    NA
+##  5  1975        1    NA
+##  6  1976        1   147
+##  7  1977        1    NA
+##  8  1978        1   168
+##  9  1979        1   168
+## 10  1980        1   175
 ## # ... with 1,466 more rows</code></pre>
 <p>There are now lots of rows, since we have location 1 for all the years, then location 2 for all the years, and so on.</p>
 <p>Just how many missing values do we have at each location? The <code>tidyverse</code> way to find out is to write a little function to count the number of missings in some column <code>x</code>, thus:</p>
@@ -332,24 +332,24 @@ icefree_2</code></pre>
 y</code></pre>
 <pre><code>## # A tibble: 41 x 3
 ##     year location  days
-##    &lt;int&gt;    &lt;dbl&gt; &lt;int&gt;
-##  1  1971     35.0    NA
-##  2  1972     35.0   126
-##  3  1973     35.0   154
-##  4  1974     35.0    91
-##  5  1975     35.0   140
-##  6  1976     35.0   147
-##  7  1977     35.0   168
-##  8  1978     35.0   119
-##  9  1979     35.0   119
-## 10  1980     35.0   147
+##    &lt;int&gt;    &lt;int&gt; &lt;int&gt;
+##  1  1971       35    NA
+##  2  1972       35   126
+##  3  1973       35   154
+##  4  1974       35    91
+##  5  1975       35   140
+##  6  1976       35   147
+##  7  1977       35   168
+##  8  1978       35   119
+##  9  1979       35   119
+## 10  1980       35   147
 ## # ... with 31 more rows</code></pre>
 <p>First, let’s plot against time. <code>ts_plot</code> has an optional second argument that is the actual time, year here:</p>
 <pre class="r"><code>with(y,ts_plot(days,year))</code></pre>
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
 <pre><code>## Warning: Removed 1 rows containing non-finite values (stat_smooth).</code></pre>
 <pre><code>## Warning: Removed 1 rows containing missing values (geom_path).</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-16-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/tspdy-1.png" width="672" /></p>
 <p>There is no special evidence of autocorrelation here: sometimes it stays one side of the trend, sometimes it jumps across. But there is definitely a trend. If we test this for trend, the adjustment for autocorrelation should be small, and the trend should be real:</p>
 <pre class="r"><code>kendall_Z_adjusted(y$days)</code></pre>
 <pre><code>## $z
@@ -612,6 +612,6 @@ It isn’t large, but it’s enough to turn an apparently significant trend into
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
 <pre><code>## Warning: Removed 290 rows containing non-finite values (stat_smooth).</code></pre>
 <pre><code>## Warning: Removed 290 rows containing missing values (geom_point).</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="/rmarkdown-libs/figure-html4/iffw-1.png" width="672" /></p>
 <p>That’s a whole lot of upward trends, that the test ensures us are not just chance.</p>
 </div>

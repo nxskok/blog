@@ -52,13 +52,13 @@ x=z+0.02*(1:100)
 
 `mkac` includes a function `ts_plot` that plots a time series with the points joined by lines and with a smooth trend. It has an optional second argument, which is the time as stored in another variable, but defaults to 1 through the length of the series:
 
-```{r}
+```{r,tspx}
 ts_plot(x)
 ```
 
 The upward trend is apparent. The lack of autocorrelation shows up in successive observations sometimes being on the same side of the smooth trend and sometimes on opposite sides. Time series aficionados would look at an `acf` plot (the AutoCorrelation Function):
 
-```{r}
+```{r,acfx}
 acf(x)
 ```
 
@@ -90,14 +90,14 @@ xx=arima.sim(list(ar=0.8),100)
 
 Let's look at a plot:
 
-```{r}
+```{r,tspxx}
 ts_plot(xx)
 ```
 
 This is autocorrelated: if it's above the smooth trend, it's more likely than not to stay there, and likewise below. Note the long "excursions" above and below the trend.
 We ought to be able to see the lag-1 autocorrelation that we built into the series. This was an AR series, so the appropriate plot is of the partial autocorrelation function:
 
-```{r}
+```{r,pacfxx}
 pacf(xx)
 ```
 
@@ -133,7 +133,7 @@ Since there are 36 columns that are all numbers of days, the data frame is not t
 ```{r}
 icefree_2 <- icefree %>% gather(location,days,-1) %>% 
   rename(year=X1) %>% 
-  mutate(location=as.numeric(location))
+  mutate(location=as.integer(location))
 icefree_2
 ```
 
@@ -164,7 +164,7 @@ y
 
 First, let's plot against time. `ts_plot` has an optional second argument that is the actual time, year here:
 
-```{r}
+```{r,tspdy}
 with(y,ts_plot(days,year))
 ```
 
@@ -199,7 +199,7 @@ On the other hand, location 2 has a very negative autocorrelation. This turns a 
 
 Perhaps the most distressing conclusion here is that those adjusted P-values are mostly so small. At most of the locations, there is a significant trend in ice-free period. We finish with a plot:
 
-```{r} 
+```{r,iffw} 
 ggplot(icefree_2,aes(x=year,y=days))+geom_point()+geom_smooth()+facet_wrap(~location,scales="free")
 ```
 
