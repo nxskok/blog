@@ -6,10 +6,19 @@
     <description>Recent content in Rstats on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 05 Apr 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 11 Apr 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/rstats/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Ordered alternatives in ANOVA</title>
+      <link>/2018/04/11/ordered-alternatives-in-anova/</link>
+      <pubDate>Wed, 11 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/04/11/ordered-alternatives-in-anova/</guid>
+      <description>Introduction Standard analysis of variance, and nonparametric alternatives to it such as the Kruskal-Wallis test, test a null hypothesis of “all the groups have the same mean” against a vague alternative of “two or more of the groups have different means”. We typically carry out ANOVA in two stages: do the \(F\)-test or Kruskal-Wallis, and, having rejected the null that all the groups are the same, then carry out a multiple-comparisons method such as Tukey’s to determine which groups differ from which.</description>
+    </item>
     
     <item>
       <title>R, it&#39;s OK I guess</title>
