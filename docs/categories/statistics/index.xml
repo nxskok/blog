@@ -6,10 +6,21 @@
     <description>Recent content in Statistics on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 07 Apr 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 12 Apr 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/statistics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tidy chi-squared testing</title>
+      <link>/2018/04/12/tidy-chi-squared-testing/</link>
+      <pubDate>Thu, 12 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/04/12/tidy-chi-squared-testing/</guid>
+      <description>Introduction R has the creaky old functions table and chisq.test for counting up frequencies and doing chi-squared tests for association. They work, but there is nothing very tidyverse or elegant about them. Nonetheless, if we organize things right, we can use them in a tidy way, with everything working with data frames and pipelines.
+ Packages I use broom later for tidy output:
+library(tidyverse) ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.</description>
+    </item>
     
     <item>
       <title>Simpson&#39;s paradox, log-linear modelling, and the tidyverse</title>

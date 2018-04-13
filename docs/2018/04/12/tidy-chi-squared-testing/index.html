@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Tidy chi-squared testing</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/04/12/tidy-chi-squared-testing/">Tidy chi-squared testing</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Apr 12, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;11 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>R has the creaky old functions <code>table</code> and <code>chisq.test</code> for counting up frequencies and doing chi-squared tests for association. They work, but there is nothing very <code>tidyverse</code> or elegant about them. Nonetheless, if we organize things right, we can use them in a tidy way, with everything working with data frames and pipelines.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<p>I use <code>broom</code> later for tidy output:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(broom)</code></pre>
+</div>
+<div id="example-1" class="section level2">
+<h2>Example 1</h2>
+<p><a href="http://psychstat3.missouristate.edu/Documents/IntroBook3/sbk22.htm">Here</a> we find an example of HIV status and
+sexual preference for 30 males. These are both categorical variables, with categories <code>y</code> (yes) and <code>n</code> (no) for the first, and <code>b</code> (both), <code>f</code> (females) and <code>m</code> (males) for the second. I decided to enter the data manually:</p>
+<pre class="r"><code>males = tribble(
+  ~HIV, ~SexPref,
+  &quot;y&quot;, &quot;b&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;b&quot;,
+  &quot;y&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;m&quot;,
+  &quot;y&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;y&quot;, &quot;b&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;b&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;m&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;y&quot;, &quot;m&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;y&quot;, &quot;b&quot;,
+  &quot;y&quot;, &quot;m&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;y&quot;, &quot;m&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;y&quot;, &quot;m&quot;,
+  &quot;n&quot;, &quot;f&quot;,
+  &quot;n&quot;, &quot;m&quot;
+)</code></pre>
+<p>To determine whether there is an association between these two categorical variables, we first need to count how many observations we have in each combination of HIV status and sexual preference. This goes (or, you might say, “went”) using <code>table</code>:</p>
+<pre class="r"><code>tab=with(males,table(HIV,SexPref))
+tab</code></pre>
+<pre><code>##    SexPref
+## HIV  b  f  m
+##   n  2 16  3
+##   y  3  2  4</code></pre>
+<p>It looks as if the males who did not have HIV mostly preferred females, whereas for the ones who did have HIV, the picture is a lot less clear.</p>
+<p>To test whether there is an association between <code>HIV</code> and <code>SexPref</code>, the standard procedure is a chi-squared test. This takes a table such as the one that came out of <code>table</code>:</p>
+<pre class="r"><code>chisq.test(tab)</code></pre>
+<pre><code>## Warning in chisq.test(tab): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  tab
+## X-squared = 7.6568, df = 2, p-value = 0.02174</code></pre>
+<p>The P-value is less than 0.05, so we reject the null hypothesis of no association and conclude that there is an association; for example, knowing a man’s HIV status tells you something about the kind of sexual partner he prefers.</p>
+</div>
+<div id="example-2" class="section level2">
+<h2>Example 2</h2>
+<p>I found <a href="http://www.utsc.utoronto.ca/~butler/d29/eyewear.txt">these data</a> somewhere, but have long since forgotten where. It’s from a study about association between gender and preferred eyewear. Rather than being one line per person, the data file is in contingency-table format:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/d29/eyewear.txt&quot;
+eyewear=read_delim(my_url,&quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   gender = col_character(),
+##   contacts = col_integer(),
+##   glasses = col_integer(),
+##   none = col_integer()
+## )</code></pre>
+<pre class="r"><code>eyewear</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   gender contacts glasses  none
+##   &lt;chr&gt;     &lt;int&gt;   &lt;int&gt; &lt;int&gt;
+## 1 female      121      32   129
+## 2 male         42      37    85</code></pre>
+<p>I discovered that you can feed a data frame directly into <code>chisq.test</code>:</p>
+<pre class="r"><code>eyewear2 = eyewear %&gt;% select(-gender)
+chisq.test(eyewear2)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  eyewear2
+## X-squared = 17.718, df = 2, p-value = 0.0001421</code></pre>
+<p>Here, there is very strong evidence of an association, probably because fewer females (as a proportion) than males wear glasses. I’ll come back to that in a moment.</p>
+<p>You might have noticed that <code>eyewear</code> is not tidy. It is in “wide” format, with the numbers all being frequencies, and the names of the columns of frequencies being <em>levels</em> of a categorical variable that might be called <code>eyewear</code>. As ever, this can be tidied using my favourite function in the entire <code>tidyverse</code>, <code>gather</code>:</p>
+<pre class="r"><code>eyewear_tidy = eyewear %&gt;% gather(eyewear, frequency, -gender)
+eyewear_tidy</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   gender eyewear  frequency
+##   &lt;chr&gt;  &lt;chr&gt;        &lt;int&gt;
+## 1 female contacts       121
+## 2 male   contacts        42
+## 3 female glasses         32
+## 4 male   glasses         37
+## 5 female none           129
+## 6 male   none            85</code></pre>
+<p>I mentioned proportions earlier. It seems logical here to think of <code>gender</code> as explanatory and <code>eyewear</code> as response, so we should divide by totals for <code>gender</code>. This will enable us to ask things like “given that a person is female, how likely are they to wear contacts?”</p>
+<pre class="r"><code>eyewear_tidy %&gt;% 
+  group_by(gender) %&gt;% 
+  mutate(proportion=frequency/sum(frequency))</code></pre>
+<pre><code>## # A tibble: 6 x 4
+## # Groups:   gender [2]
+##   gender eyewear  frequency proportion
+##   &lt;chr&gt;  &lt;chr&gt;        &lt;int&gt;      &lt;dbl&gt;
+## 1 female contacts       121      0.429
+## 2 male   contacts        42      0.256
+## 3 female glasses         32      0.113
+## 4 male   glasses         37      0.226
+## 5 female none           129      0.457
+## 6 male   none            85      0.518</code></pre>
+<p>Something clever is happening here: the totals are being computed <em>for each group (gender)</em>. We can even do this (I come back to <code>spread</code> below):</p>
+<pre class="r"><code>eyewear_tidy %&gt;% 
+  group_by(gender) %&gt;% 
+  mutate(proportion=frequency/sum(frequency)) %&gt;% 
+  select(-frequency) %&gt;% 
+  spread(eyewear,proportion)</code></pre>
+<pre><code>## # A tibble: 2 x 4
+## # Groups:   gender [2]
+##   gender contacts glasses  none
+##   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+## 1 female    0.429   0.113 0.457
+## 2 male      0.256   0.226 0.518</code></pre>
+<p>This makes it clearer that a lot more of the females wear contacts and a lot more of the males wear glasses. That’s the reason for the association.</p>
+</div>
+<div id="a-tidy-chi-squared-test" class="section level2">
+<h2>A tidy chi-squared test</h2>
+<p>Let’s go back to example 1 and show that we can we can do the whole chi-squared test, starting from the data, in a tidy fashion.</p>
+<p>First, the <code>tidyverse</code> version of <code>table</code> is to use <code>count</code>. If you feed this <em>all</em> the categorical columns, you get counts of all the category combinations:</p>
+<pre class="r"><code>males %&gt;% count(HIV,SexPref)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   HIV   SexPref     n
+##   &lt;chr&gt; &lt;chr&gt;   &lt;int&gt;
+## 1 n     b           2
+## 2 n     f          16
+## 3 n     m           3
+## 4 y     b           3
+## 5 y     f           2
+## 6 y     m           4</code></pre>
+<p>This is the “long” or “tidy” version of what <code>table</code> produced above. It has acquired a column called <code>n</code> which are the frequencies.</p>
+<p>However, <code>chisq.test</code> wants one categorical variable as rows and the other as columns: that is, wide format. To get that, we have to deliberately “untidy” this data frame, using <code>spread</code>, which is the opposite of <code>gather</code>. In the table we made with <code>table</code>, we had <code>SexPref</code> in the columns, so we’ll “spread” that. <code>spread</code> needs two things: a column whose values will make the column headings, and a second column whose values will fill the new columns. Here, that is <code>SexPref</code>, “carrying along <code>n</code>”:</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Some of the category combinations may not appear in the output from “count”. In that case, NA values will appear in the “spread” output, which you can avoid by adding “fill=0” to the “spread” command.</span></p>
+<pre class="r"><code>males %&gt;% count(HIV,SexPref) %&gt;% 
+  spread(SexPref,n)</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   HIV       b     f     m
+##   &lt;chr&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;
+## 1 n         2    16     3
+## 2 y         3     2     4</code></pre>
+<p>Then, we pull off the first column and pass this on to <code>chisq.test</code>, which we know will accept a data frame:</p>
+<pre class="r"><code>males %&gt;% count(HIV,SexPref) %&gt;% 
+  spread(SexPref,n) %&gt;% 
+  select(-HIV) %&gt;% 
+  chisq.test()</code></pre>
+<pre><code>## Warning in chisq.test(.): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  .
+## X-squared = 7.6568, df = 2, p-value = 0.02174</code></pre>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The warning is that some of the expected frequencies are small, casting doubt on the accuracy of the chi-squared approximation that produced the P-value.</span></p>
+<p>This, though, is the made-for-looking-at output. If you want to grab the P-value for further processing, though, this is doable but not easy. A better alternative is to use <code>broom</code>, specifically <code>glance</code>, which gives a one-line summary of any of the tests it knows about, and outputs the result as a one-row data frame:</p>
+<pre class="r"><code>males %&gt;% count(HIV,SexPref) %&gt;% 
+  spread(SexPref,n) %&gt;% 
+  select(-HIV) %&gt;% 
+  chisq.test() %&gt;% 
+  glance()</code></pre>
+<pre><code>## Warning in chisq.test(.): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>##   statistic    p.value parameter                     method
+## 1  7.656841 0.02174394         2 Pearson&#39;s Chi-squared test</code></pre>
+<p>In <code>broom</code>, the P-value is always called <code>p.value</code>, so if that’s all you want, you can extract it thus:</p>
+<pre class="r"><code>males %&gt;% count(HIV,SexPref) %&gt;% 
+  spread(SexPref,n) %&gt;% 
+  select(-HIV) %&gt;% 
+  chisq.test() %&gt;% 
+  glance() %&gt;%
+  pull(p.value)</code></pre>
+<pre><code>## Warning in chisq.test(.): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>## [1] 0.02174394</code></pre>
+</div>
+<div id="fishers-exact-test" class="section level2">
+<h2>Fisher’s Exact Test</h2>
+<p>This test is also for associations between categorical variables, but it applies only in the special case that <em>all the marginal totals are fixed by design</em>. In our examples, we knew how many males of each HIV status, or males and females in the eyewear example, we had, but the frequencies of the other variable’s categories could have been anything (there is no reason, for example, that there would have been exactly 69 people wearing glasses: that was just how it happened to come out).</p>
+<p>The classic example of Fisher’s exact test is Fisher’s original <a href="https://en.wikipedia.org/wiki/Lady_tasting_tea">“lady tasting tea”</a> experiment. There, 8 cups of tea were prepared, four with milk first and four with milk last. The taster knew that four of the eight cups had milk first, and her job was to identify <em>which</em> four. The data might have looked like this, with the entries in <code>actual</code> and <code>guessed</code> indicating what went into the cup first:</p>
+<pre class="r"><code>tea = tribble(
+  ~cup, ~actual, ~guessed,
+  1,    &quot;milk&quot;,  &quot;milk&quot;,
+  2,    &quot;tea&quot;,   &quot;tea&quot;,
+  3,    &quot;milk&quot;,  &quot;tea&quot;,
+  4,    &quot;tea&quot;,   &quot;tea&quot;,
+  5,    &quot;tea&quot;,   &quot;tea&quot;,
+  6,    &quot;milk&quot;,  &quot;milk&quot;,
+  7,    &quot;tea&quot;,   &quot;milk&quot;,
+  8,    &quot;milk&quot;,  &quot;milk&quot;
+)</code></pre>
+<p>If we make this into a table and “spread” it:</p>
+<pre class="r"><code>tea %&gt;% count(actual, guessed) %&gt;% 
+  spread(guessed,n)</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   actual  milk   tea
+##   &lt;chr&gt;  &lt;int&gt; &lt;int&gt;
+## 1 milk       3     1
+## 2 tea        1     3</code></pre>
+<p>we see that the lady got two of the cups wrong. There actually <em>are</em> four cups of each type, and the lady is always going to pick exactly four cups of each type (even if she is wrong about which ones), so both rows and columns here are going to add up to 4.
+There is no way to only get one cup wrong, so this is a good performance.</p>
+<p>Is this evidence that the lady can tell the difference, better than guessing? We use <code>fisher.test</code>:</p>
+<pre class="r"><code>tea %&gt;% count(actual, guessed) %&gt;% 
+  spread(guessed,n) %&gt;% 
+  select(-actual) %&gt;% 
+  fisher.test(alternative=&quot;greater&quot;) %&gt;% 
+  glance()</code></pre>
+<pre><code>##   estimate   p.value  conf.low conf.high
+## 1 6.408309 0.2428571 0.3135693       Inf
+##                               method alternative
+## 1 Fisher&#39;s Exact Test for Count Data     greater</code></pre>
+<p>This is not at all unlikely if the lady were just guessing, so we would conclude (if this were the actual data) that the lady <em>was</em> just guessing. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">If she got all four right, that would be enough to infer an ability to tell the difference. A one-sided test is appropriate here since we are trying to find out if the lady can do <em>better</em> than guessing.</span></p>
+</div>
+<div id="log-linear-modelling" class="section level2">
+<h2>Log-linear modelling</h2>
+<p>Another way to test for association is to fit a so-called log-linear model. This starts from the long-format tidy data frame that contains each categorical variable as a column, along with a column of frequencies, such as the output from <code>count</code>. The idea is to model the <em>frequency</em> in terms of the categorical variables, including interaction, using a generalized linear model with a Poisson “family”. This comes by default with a log link, hence the name “log-linear”.</p>
+<p>To illustrate on our example 1, we make the “long” table of counts first:</p>
+<pre class="r"><code>males %&gt;% count(HIV,SexPref) %&gt;% 
+  glm(n~HIV*SexPref,data=.,family=&quot;poisson&quot;) -&gt; males.1</code></pre>
+<p>The two-way interaction <code>HIV:SexPref</code> is what we need to look at to test association. If it is not significant, then <code>HIV</code> and <code>SexPref</code> have independent effects and there is no association between them. The easiest way to test this interaction is to use <code>drop1</code>:</p>
+<pre class="r"><code>drop1(males.1,test=&quot;Chisq&quot;)</code></pre>
+<pre><code>## Single term deletions
+## 
+## Model:
+## n ~ HIV * SexPref
+##             Df Deviance    AIC    LRT Pr(&gt;Chi)  
+## &lt;none&gt;           0.0000 31.098                  
+## HIV:SexPref  2   7.8031 34.901 7.8031  0.02021 *
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>This shows that the interaction cannot be dropped (the model will fit worse if it is removed), and confirms that there is an association.</p>
+<p>For our example 2, the long format version of the data set is what we called <code>eyewear_tidy</code>:</p>
+<pre class="r"><code>glm(frequency~gender*eyewear,data=eyewear_tidy,family=&quot;poisson&quot;) %&gt;% drop1(test=&quot;Chisq&quot;)</code></pre>
+<pre><code>## Single term deletions
+## 
+## Model:
+## frequency ~ gender * eyewear
+##                Df Deviance    AIC    LRT  Pr(&gt;Chi)    
+## &lt;none&gt;               0.000 47.958                     
+## gender:eyewear  2   17.829 61.787 17.829 0.0001345 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>and again we see the significant association between gender and eyewear.</p>
+<p>If you compare the test statistic from <code>chisq.test</code> and <code>glm</code> in each example, you will see that they are almost the same but not equal. They are using different test statistics: both functions are comparing the observed <span class="math inline">\(O\)</span> and expected <span class="math inline">\(E\)</span> in each cell and adding up the results, but <code>chisq.test</code> is using the Pearson statistic <span class="math inline">\((O-E)^2/E\)</span>, while <code>glm</code> is using the likelihood ratio statistic <span class="math inline">\(O \ln(O/E)\)</span>. These look very different, but often come out very similar, as they do here.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://twitter.com/londonaesthetik/status/984481301876150272">This tweet</a> by <span class="citation">@londonaesthetik</span> that kicked this all off.</p>
+<p><a href="http://psychstat3.missouristate.edu/Documents/IntroBook3/sbk22.htm">The first example here</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Lady_tasting_tea">Lady tasting tea</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2018
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
