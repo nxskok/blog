@@ -289,7 +289,7 @@ d</code></pre>
 <p>But what if we wanted something more complicated, for example the R-squared from the regression of gas mileage on horsepower for each number of cylinders? A graph first would give us an idea of what to expect:</p>
 <pre class="r"><code>ggplot(mtcars,aes(x=hp,y=mpg,colour=factor(cyl)))+geom_point()+geom_smooth(method=&quot;lm&quot;)</code></pre>
 <p><img src="../../../../rmarkdown-libs/figure-html4/mtcars-hp-mpg-1.png" width="672" /></p>
-<p>A somewhat negative relationship for the 4-cylinder cars, and weak, slightly negative, relationships for the rest. A good way to tackle this is to deliberately create list-columns containing everything but <code>cyl</code>, one for each number of cylinders:</p>
+<p>A somewhat negative relationship for the 4-cylinder cars, and weak, slightly negative, relationships for the rest. A good way to tackle this is to deliberately create a list-column of data frames containing everything but <code>cyl</code>, one for each number of cylinders:</p>
 <pre class="r"><code>mtcars %&gt;% group_by(cyl) %&gt;% nest()</code></pre>
 <pre><code>## # A tibble: 3 x 2
 ##     cyl data              
@@ -330,8 +330,8 @@ d</code></pre>
 ## 3  8.00 &lt;tibble [14 × 10]&gt; &lt;S3: lm&gt; &lt;data.frame [1 × 11]&gt; 0.0804</code></pre>
 <p>R-squared is close to zero for the 6-cylinder and 8-cylinder cars, and somewhat larger for the 4-cylinder cars. This is in line with what we would guess from the graph.</p>
 </div>
-<div id="map_2" class="section level2">
-<h2><code>map_2</code></h2>
+<div id="the-map2-family" class="section level2">
+<h2>The <code>map2</code> family</h2>
 <p>Sometimes the for-each contains two things. For example, suppose we have this data frame:</p>
 <pre class="r"><code>d=tribble(
   ~p, ~q,

@@ -183,7 +183,7 @@ But what if we wanted something more complicated, for example the R-squared from
 ggplot(mtcars,aes(x=hp,y=mpg,colour=factor(cyl)))+geom_point()+geom_smooth(method="lm")
 ```
 
-A somewhat negative relationship for the 4-cylinder cars, and weak, slightly negative, relationships for the rest. A good way to tackle this is to deliberately create list-columns containing everything but `cyl`, one for each number of cylinders:
+A somewhat negative relationship for the 4-cylinder cars, and weak, slightly negative, relationships for the rest. A good way to tackle this is to deliberately create a list-column of data frames containing everything but `cyl`, one for each number of cylinders:
 
 ```{r}
 mtcars %>% group_by(cyl) %>% nest()
@@ -217,7 +217,7 @@ mtcars %>% group_by(cyl) %>% nest() %>%
 
 R-squared is close to zero for the 6-cylinder and 8-cylinder cars, and somewhat larger for the 4-cylinder cars. This is in line with what we would guess from the graph.
 
-## `map_2`
+## The `map2` family
 
 Sometimes the for-each contains two things. For example, suppose we have this data frame:
 
