@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/2018/04/19/purrr-and-map-an-introduction/</loc>
+    <lastmod>2018-04-19T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2018/04/12/tidy-chi-squared-testing/</loc>
     <lastmod>2018-04-12T00:00:00+00:00</lastmod>
   </url>
@@ -389,7 +394,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2018-04-12T00:00:00+00:00</lastmod>
+    <lastmod>2018-04-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -401,13 +406,13 @@
   
   <url>
     <loc>/categories/r/</loc>
-    <lastmod>2018-04-12T00:00:00+00:00</lastmod>
+    <lastmod>2018-04-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/</loc>
-    <lastmod>2018-04-12T00:00:00+00:00</lastmod>
+    <lastmod>2018-04-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -455,7 +460,7 @@
   
   <url>
     <loc>/tags/tidyverse/</loc>
-    <lastmod>2018-04-12T00:00:00+00:00</lastmod>
+    <lastmod>2018-04-19T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
