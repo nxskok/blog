@@ -42,7 +42,7 @@ y
 
 This works, but it has a lot of overhead: we have to initialize `y`, then we have to create a looping variable `i`, which we have to note goes from 1 to 5, and then we have the mechanism of the for loop. The actual doubling-`x` part is one of our four lines of code, and what we are actually doing gets rather hidden.
 
-If you an R veteran, you've probably heard that "for loops are slow" (less true than it was), or that you should use one of the `apply` functions (which I am here arguing against, since the `map` functions are easier and more uniform). A lot of R functions are "vectorized", meaning that you can feed them a vector and they will return you a vector consisting of whatever you ask for, elementwise:
+If you are an R veteran, you've probably heard that "for loops are slow" (less true than it was), or that you should use one of the `apply` functions (which I am here arguing against, since the `map` functions are easier and more uniform). A lot of R functions are "vectorized", meaning that you can feed them a vector and they will return you a vector consisting of whatever you ask for, elementwise:
 
 ```{r}
 y=2*x
