@@ -6,10 +6,19 @@
     <description>Recent content in Bayesian on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 28 Feb 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 01 May 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/bayesian/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Rating rugby league with Stan</title>
+      <link>/2018/05/01/rating-rugby-league-with-stan/</link>
+      <pubDate>Tue, 01 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/05/01/rating-rugby-league-with-stan/</guid>
+      <description>Introduction Rugby League is one of the “football” family of sports, in which players gain ground by carrying and passing the ball (like Rugby Union, North American football and somewhat like Australian and Gaelic football). The aim of the game is to touch the ball down behind the opponents’ goal line (a “try”, four points) after which a kick is taken at goal (a “conversion”, two points). These typically make up most of the scoring, but teams can also score a penalty goal for two points or a drop goal for one, usually near the end of a close game.</description>
+    </item>
     
     <item>
       <title>Working my way back to you, a re-investigation of rstan</title>
