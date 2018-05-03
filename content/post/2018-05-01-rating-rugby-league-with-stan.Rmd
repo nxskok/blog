@@ -56,12 +56,13 @@ These are, respectively, for Bayesian modelling (later), the usual data tidying 
 
 Humble beginnings:
 
-`r tufte::margin_note("I realize I could have avoided the spreadsheet entirely by using \"read.table\" with \"file='clipboard'\".")`
 
 ```{r}
 rl=read_excel("/home/ken/Documents/rugby-league.xlsx",col_names = "res",sheet=2)
 rl
 ```
+
+I realized that I could have avoided using the spreadsheet entirely, by using [this idea](https://twitter.com/SuzanBaert/status/991755292550549506) from Suzan Baert.
 
 The layout of things:
 

@@ -70,7 +70,6 @@ library(lubridate)</code></pre>
 ##     date</code></pre>
 <p>These are, respectively, for Bayesian modelling (later), the usual data tidying stuff, reading in Excel files, and handling dates and times (which we will be doing shortly).</p>
 <p>Humble beginnings:</p>
-<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I realize I could have avoided the spreadsheet entirely by using “read.table” with “file=‘clipboard’”.</span></p>
 <pre class="r"><code>rl=read_excel(&quot;/home/ken/Documents/rugby-league.xlsx&quot;,col_names = &quot;res&quot;,sheet=2)
 rl</code></pre>
 <pre><code>## # A tibble: 353 x 1
@@ -87,6 +86,7 @@ rl</code></pre>
 ##  9 Rochdale Hornets 16 - 38 Sheffield Eagles CH      
 ## 10 Leigh Centurions 46 - 18 Barrow Raiders CH        
 ## # ... with 343 more rows</code></pre>
+<p>I realized that I could have avoided using the spreadsheet entirely, by using <a href="https://twitter.com/SuzanBaert/status/991755292550549506">this idea</a> from Suzan Baert.</p>
 <p>The layout of things:</p>
 <ul>
 <li>the name of the home team</li>
@@ -456,8 +456,8 @@ r1=sampling(model_compiled,data=ch_stan_data)</code></pre>
 <pre><code>## 
 ## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 1).
 ## 
-## Gradient evaluation took 1.1e-05 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.11 seconds.
+## Gradient evaluation took 1.2e-05 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -474,15 +474,15 @@ r1=sampling(model_compiled,data=ch_stan_data)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.145042 seconds (Warm-up)
-##                0.039637 seconds (Sampling)
-##                0.184679 seconds (Total)
+##  Elapsed Time: 0.146864 seconds (Warm-up)
+##                0.041217 seconds (Sampling)
+##                0.188081 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 2).
 ## 
-## Gradient evaluation took 8e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+## Gradient evaluation took 7e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -499,15 +499,15 @@ r1=sampling(model_compiled,data=ch_stan_data)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.182948 seconds (Warm-up)
-##                0.036608 seconds (Sampling)
-##                0.219556 seconds (Total)
+##  Elapsed Time: 0.141118 seconds (Warm-up)
+##                0.04556 seconds (Sampling)
+##                0.186678 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 3).
 ## 
-## Gradient evaluation took 6e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.06 seconds.
+## Gradient evaluation took 7e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -524,15 +524,15 @@ r1=sampling(model_compiled,data=ch_stan_data)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.151536 seconds (Warm-up)
-##                0.042736 seconds (Sampling)
-##                0.194272 seconds (Total)
+##  Elapsed Time: 0.218432 seconds (Warm-up)
+##                0.075189 seconds (Sampling)
+##                0.293621 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 4).
 ## 
-## Gradient evaluation took 8e-06 seconds
-## 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+## Gradient evaluation took 1.2e-05 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.12 seconds.
 ## Adjust your expectations accordingly!
 ## 
 ## 
@@ -549,9 +549,9 @@ r1=sampling(model_compiled,data=ch_stan_data)</code></pre>
 ## Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Iteration: 2000 / 2000 [100%]  (Sampling)
 ## 
-##  Elapsed Time: 0.159379 seconds (Warm-up)
-##                0.059324 seconds (Sampling)
-##                0.218703 seconds (Total)</code></pre>
+##  Elapsed Time: 0.241962 seconds (Warm-up)
+##                0.045534 seconds (Sampling)
+##                0.287496 seconds (Total)</code></pre>
 <pre class="r"><code>r1</code></pre>
 <pre><code>## Inference for Stan model: 1c822356d9d5242a98f27a218c5175d5.
 ## 4 chains, each with iter=2000; warmup=1000; thin=1; 
@@ -588,7 +588,7 @@ r1=sampling(model_compiled,data=ch_stan_data)</code></pre>
 ## rat[12]     4000    1
 ## lp__        1461    1
 ## 
-## Samples were drawn using NUTS(diag_e) at Thu May  3 12:19:37 2018.
+## Samples were drawn using NUTS(diag_e) at Thu May  3 12:41:30 2018.
 ## For each parameter, n_eff is a crude measure of effective sample size,
 ## and Rhat is the potential scale reduction factor on split chains (at 
 ## convergence, Rhat=1).</code></pre>
