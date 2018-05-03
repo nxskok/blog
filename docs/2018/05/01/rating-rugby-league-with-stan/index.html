@@ -80,7 +80,7 @@
   
   
   &nbsp;<i class="fa fa-clock-o"></i>
-    &nbsp;16 min read
+    &nbsp;28 min read
   
   
   
@@ -98,10 +98,14 @@
     </section>
 
 
-<section><div id="introduction" class="section level2">
+<section><div id="abstract" class="section level2">
+<h2>Abstract</h2>
+<p>of techniques used here</p>
+</div>
+<div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p><a href="https://en.wikipedia.org/wiki/Rugby_league">Rugby League</a> is one of the “football” family of sports, in which players gain ground by carrying and passing the ball (like Rugby Union, North American football and somewhat like Australian and Gaelic football). The aim of the game is to touch the ball down behind the opponents’ goal line (a “try”, four points) after which a kick is taken at goal (a “conversion”, two points). These typically make up most of the scoring, but teams can also score a penalty goal for two points or a drop goal for one, usually near the end of a close game.</p>
-<p>Rugby League began in the late 1800s after a dispute about whether players should be paid (as compensation for taking time off work to play). It has thus been a professional game from the start, unlike Rugby Union which was until relatively recently an amateur game. Rugby League differs from Rugby Union in two important respects:</p>
+<p><a href="https://en.wikipedia.org/wiki/Rugby_league">Rugby league</a> is one of the “football” family of sports, in which players gain ground by carrying and passing and kicking the ball (like rugby union, North American football and somewhat like Australian and Gaelic football). The aim of the game is to touch the ball down behind the opponents’ goal line (a “try”, four points) after which a kick is taken at goal (a “conversion”, two points). These typically make up most of the scoring, but teams can also score a penalty goal for two points or a drop goal for one, usually near the end of a close game.</p>
+<p>Rugby league began in the late 1800s after a dispute about whether players should be paid (as compensation for taking time off work to play). It has thus been a professional game from the start, unlike Rugby union which was until relatively recently an amateur game. Rugby league differs from Rugby union in two important respects:</p>
 <ul>
 <li>thirteen players a side instead of fifteen</li>
 <li>after a tackle, play stops long enough for the tackled player to get up and for the defence to retreat, and play restarts with the tackled player rolling the ball back to the “dummy half” behind him. This is in principle similar to American football, but the restart of play happens immediately, and so play is effectively continuous.</li>
@@ -208,7 +212,7 @@ rl</code></pre>
 ##  9 T     &quot;&quot;           Rochdale Hornets 16 - 38 Sheffield Eagles CH      
 ## 10 T     &quot;&quot;           Leigh Centurions 46 - 18 Barrow Raiders CH        
 ## # ... with 343 more rows</code></pre>
-<p>Those dates are text, but I can make them into real dates using <code>lubridate</code>. They are all year 2018, so if I glue the year onto the end, they are in day-month-year order, so <code>dmy</code> will parse them:</p>
+<p>Those dates are text, but I can make them into real dates using <code>lubridate</code>. They are all year 2018, so if I glue the year onto the end, they are in day-month-year order, and then <code>dmy</code> will parse them:</p>
 <pre class="r"><code>rl %&gt;% mutate(isres=str_detect(res,&quot; - &quot;)) %&gt;% 
   mutate(date=ifelse(isres,&quot;&quot;,res),
          result=ifelse(isres,res,&quot;&quot;)) %&gt;% 
@@ -229,7 +233,7 @@ rl</code></pre>
 ##  9 T     NA         Rochdale Hornets 16 - 38 Sheffield Eagles CH      
 ## 10 T     NA         Leigh Centurions 46 - 18 Barrow Raiders CH        
 ## # ... with 343 more rows</code></pre>
-<p>The “dates” that are empty cannot be parsed as dates, so they are turned into missing values.</p>
+<p>The “dates” that are empty cannot be parsed as dates, so they are turned into missing values. (These are all the lines that “failed to parse”.)</p>
 <p>The reason for making the dates into real dates was so that they could be used as the dates for the game results. What we want to do is to replace all those <code>NA</code> values by the previous non-missing value, all the way down. This is a task that comes up often enough that <code>tidyr</code> has a function to do exactly that, called <code>fill</code>. By default it fills down from the previous non-missing value, which is what we want. (It can also be made to fill upwards from the <em>next</em> non-missing value.):</p>
 <pre class="r"><code>rl %&gt;% mutate(isres=str_detect(res,&quot; - &quot;)) %&gt;% 
   mutate(date=ifelse(isres,&quot;&quot;,res),
@@ -281,6 +285,7 @@ rl2</code></pre>
 <p>I am using the right-arrow to assign the result to <code>rl2</code>, which I put, unindented, on the next line, to remind myself that I am creating this new data frame.</p>
 <p>Now we have to deal with that <code>result</code> column.
 I learned Perl, which is a great language for handling text like this. The idea there is that you use a “regular expression” with “capture groups” to identify and extract the things you want. A similar <code>tidyverse</code> functionality lives in <code>extract</code> from <code>tidyr</code>. I’m doing to do this in three steps. The first step is to separate <code>result</code> into the bit before the space-dash-space. In fact, I can use <code>separate</code> for this bit:</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I realized in time that “sep” below does not have to be a single character.</span></p>
 <pre class="r"><code>rl2 %&gt;% 
   separate(result,into=c(&quot;first&quot;,&quot;second&quot;),sep=&quot; - &quot;)</code></pre>
 <pre><code>## # A tibble: 290 x 3
@@ -299,6 +304,7 @@ I learned Perl, which is a great language for handling text like this. The idea 
 ## # ... with 280 more rows</code></pre>
 <p>Now we can’t use <code>separate</code> any more, because sometimes space separates the thing we want, and sometimes it separates words in a team name. This is where <code>extract</code> comes in, as we tackle part 2.</p>
 <p><code>first</code> contains some text (the home team’s name), then a space, then one or more digits, then the end of the string. The following extracts those pieces (I explain my regular expression below):</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Both “tidyr” and “rstan” have a function called “extract”. By coincidence we will be using both of them in this post, so I thought it better to be clear about which one I was using.</span></p>
 <pre class="r"><code>rl2 %&gt;% 
   separate(result,into=c(&quot;first&quot;,&quot;second&quot;),sep=&quot; - &quot;) %&gt;% 
   tidyr::extract(first,c(&quot;t1&quot;,&quot;s1&quot;),&quot;(.*)\\s(\\d+)$&quot;) </code></pre>
@@ -316,6 +322,7 @@ I learned Perl, which is a great language for handling text like this. The idea 
 ##  9 2018-04-29 Leigh Centurions      46    18 Barrow Raiders CH      
 ## 10 2018-04-29 Featherstone Rovers   50    12 Batley Bulldogs CH     
 ## # ... with 280 more rows</code></pre>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">A lot more about string matching and regular expressions is in Chapter 14 of R for Data Science. Link at the end in References, since I am not sure about putting a link in a marginal note.</span></p>
 <p>The inputs to <code>extract</code> are: some text that we want to pull something out of, new columns to store the results in, and a regular expression that provides a recipe for what to pull out. My regular expression contains:</p>
 <ul>
 <li><code>.</code> matches any single character</li>
@@ -356,8 +363,9 @@ games</code></pre>
 <div id="a-bayesian-model-for-rugby-league" class="section level2">
 <h2>A Bayesian model for rugby league</h2>
 <p>It might be possible to model the actual point-scoring process: maybe a Poisson model for tries (with mean depending on the team strength), conversions successfully kicked with a certain probability (that might vary by team). But then there are penalty goals and drop goals, which are typically kicked near the end of a game, <em>if</em> they are close enough to goal to stand a reasonable chance of success, and <em>if</em> the extra two points or one point are enough to substantially improve a team’s chance of winning the game. (A team leading by six points might kick a drop goal to lead by seven and force the other side to score twice instead of being able to level the score with a converted try.)</p>
+<p>** side note about conversions **</p>
 <p>So I gave up on that idea and went with something a lot simpler. I decided to model the score difference as having a normal distribution with mean that depended on the relative strengths of the teams (the difference between their “ratings”), and a standard deviation that was fixed for all games (to be estimated). I could have also used something like a <span class="math inline">\(t\)</span> distribution with degrees of freedom to be estimated, which might better account for freak results, but this seemed to be a good place to start.</p>
-<p>As in <a href="http://ritsokiguess.site/docs/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/">my other blog post about Stan</a>, I piece the Stan code together step by step. I assert that each team has a rating <code>rat</code>, and I let <code>sigma_diff</code> be the (unknown) SD of score differences. I can compute the rating differences game by game. I seem to get the best results in Stan if I calculate things step by step, so my likelihood part looks like this:</p>
+<p>As in <a href="http://ritsokiguess.site/docs/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/">my other blog post about Stan</a>, I write out the (likelihood part of the) model first, and then piece together the rest of the Stan code. I assert that each team has a rating <code>rat</code>, and I let <code>sigma_diff</code> be the (unknown) SD of score differences. I can compute the rating differences game by game. I seem to get the best results in Stan if I calculate things step by step, so my likelihood part looks like this:</p>
 <pre><code>model {
   // likelihood
   for (i in 1:ng) {
@@ -370,8 +378,9 @@ games</code></pre>
 <p>I realized coding this that the teams would have to have <em>numbers</em> rather than names, because Stan arrays have integer subscripts. Thus <code>t1[i]</code> is the home team in game <code>i</code> (an integer), and <code>rat[o1]</code> is the rating of team number <code>o1</code>. The sampling step at the bottom works just fine on vectors, so that can be outside the loop.</p>
 <p><code>ng</code> is the number of games. Elsewhere I need <code>nt</code> to be the number of teams.</p>
 <p>Now I have to tidy up after myself. <code>t1</code> and <code>t2</code> are data, and <code>diff</code> will be data also. <code>o1</code>, <code>o2</code> and <code>ratdiff</code> are calculated here, so they will have to be declared. <code>rat</code> and <code>sigma_diff</code> are parameters, so they will need to be given prior distributions and declared in a <code>parameters</code> section. A normal prior for <code>rat</code> seems reasonable, with an SD that will be part of the data; also it seems easiest to have a chi-squared prior for <code>sigma_diff</code> with a df (mean) that will also be part of the data.</p>
-<p>All of which leads me to this:</p>
-<pre><code>data {
+<p>All of which leads me to this (model as a piece of text):</p>
+<pre class="r"><code>model=&#39;
+data {
   int&lt;lower=2&gt; nt;
   int&lt;lower=2&gt; ng;
   real&lt;lower=0&gt; sigma_prior;
@@ -400,13 +409,313 @@ model {
     ratdiff[i]=rat[o1]-rat[o2];
   } 
   diff ~ normal(ratdiff, sigma_diff);
-}</code></pre>
+}
+&#39;</code></pre>
 <p>For model-checking I would add a <code>generated quantities</code> section to simulate predictive distributions (which I would then compare with the data). But that’s for later.</p>
+<p>Compile that (to C++), ignoring the warnings:</p>
+<pre class="r"><code>model_compiled=stan_model(model_code=model)</code></pre>
+<pre><code>## In file included from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/BH/include/boost/config.hpp:39:0,
+##                  from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/BH/include/boost/math/tools/config.hpp:13,
+##                  from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/StanHeaders/include/stan/math/rev/core/var.hpp:7,
+##                  from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/StanHeaders/include/stan/math/rev/core/gevv_vvv_vari.hpp:5,
+##                  from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/StanHeaders/include/stan/math/rev/core.hpp:12,
+##                  from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/StanHeaders/include/stan/math/rev/mat.hpp:4,
+##                  from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/StanHeaders/include/stan/math.hpp:4,
+##                  from /home/ken/R/x86_64-pc-linux-gnu-library/3.4/StanHeaders/include/src/stan/model/model_header.hpp:4,
+##                  from file63b37263e1c1.cpp:8:
+## /home/ken/R/x86_64-pc-linux-gnu-library/3.4/BH/include/boost/config/compiler/gcc.hpp:186:0: warning: &quot;BOOST_NO_CXX11_RVALUE_REFERENCES&quot; redefined
+##  #  define BOOST_NO_CXX11_RVALUE_REFERENCES
+##  ^
+## &lt;command-line&gt;:0:0: note: this is the location of the previous definition</code></pre>
+</div>
+<div id="organizing-the-data-for-stan" class="section level2">
+<h2>Organizing the data for Stan</h2>
+<p>My team is the Toronto Wolfpack, who are playing in the Championship (2nd level) this year. Yes, this is a team based in Canada, playing in the English league system.
+So let’s rate the teams in this league (designated <code>CH</code> in my data):</p>
+<pre class="r"><code>games %&gt;% filter(lg==&quot;CH&quot;) -&gt;
+games_ch
+games_ch</code></pre>
+<pre><code>## # A tibble: 67 x 7
+##    date       t1                  s1    s2    t2              lg      diff
+##    &lt;date&gt;     &lt;chr&gt;               &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;           &lt;chr&gt;  &lt;dbl&gt;
+##  1 2018-04-29 Rochdale Hornets    16    38    Sheffield Eagl… CH    -22.0 
+##  2 2018-04-29 Leigh Centurions    46    18    Barrow Raiders  CH     28.0 
+##  3 2018-04-29 Featherstone Rovers 50    12    Batley Bulldogs CH     38.0 
+##  4 2018-04-28 Swinton Lions       8     62    Toulouse Olymp… CH    -54.0 
+##  5 2018-04-28 Toronto Wolfpack    42    10    Halifax RLFC    CH     32.0 
+##  6 2018-04-28 London Broncos      64    6     Dewsbury Rams   CH     58.0 
+##  7 2018-04-25 Dewsbury Rams       18    46    Halifax RLFC    CH    -28.0 
+##  8 2018-04-15 Sheffield Eagles    20    72    Leigh Centurio… CH    -52.0 
+##  9 2018-04-15 Halifax RLFC        18    12    Swinton Lions   CH      6.00
+## 10 2018-04-15 Dewsbury Rams       12    23    Toronto Wolfpa… CH    -11.0 
+## # ... with 57 more rows</code></pre>
+<p>I said above that we need to convert the teams to number labels. So let’s make a conversion table. First I need to get all the teams into one vector:</p>
+<pre class="r"><code>teams_vec=with(games_ch,c(t1,t2))</code></pre>
+<p>and then I grab the distinct ones, put them into a data frame, and supply some ID numbers (the row numbers of the data frame will do):</p>
+<pre class="r"><code>tibble(team=teams_vec) %&gt;% distinct() %&gt;% 
+  mutate(team_id=row_number()) -&gt;
+teams
+teams</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##    team                team_id
+##    &lt;chr&gt;                 &lt;int&gt;
+##  1 Rochdale Hornets          1
+##  2 Leigh Centurions          2
+##  3 Featherstone Rovers       3
+##  4 Swinton Lions             4
+##  5 Toronto Wolfpack          5
+##  6 London Broncos            6
+##  7 Dewsbury Rams             7
+##  8 Sheffield Eagles          8
+##  9 Halifax RLFC              9
+## 10 Barrow Raiders           10
+## 11 Batley Bulldogs          11
+## 12 Toulouse Olympique       12</code></pre>
+<p>Those with a keen eye on the geography will recognise a number of locations in northern England, and a few outliers: London, Toulouse, Toronto.</p>
+<p>We’ll use this as a conversion table to convert the team names to numbers, run Stan, and then use this table to convert the results back afterwards. The major ingredient to do that is <code>left_join</code>. This looks up a column of one data frame in another data frame. Let’s do that with the home teams, which are <code>t1</code> in <code>games_ch</code>. The <code>by</code> is needed below since the column names are not the same: what is <code>t1</code> in <code>games_ch</code> needs to be looked up in <code>team</code> in <code>teams</code>:</p>
+<pre class="r"><code>games_ch %&gt;% left_join(teams,by=c(&quot;t1&quot;=&quot;team&quot;))</code></pre>
+<pre><code>## # A tibble: 67 x 8
+##    date       t1                  s1    s2    t2      lg      diff team_id
+##    &lt;date&gt;     &lt;chr&gt;               &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;  &lt;dbl&gt;   &lt;int&gt;
+##  1 2018-04-29 Rochdale Hornets    16    38    Sheffi… CH    -22.0        1
+##  2 2018-04-29 Leigh Centurions    46    18    Barrow… CH     28.0        2
+##  3 2018-04-29 Featherstone Rovers 50    12    Batley… CH     38.0        3
+##  4 2018-04-28 Swinton Lions       8     62    Toulou… CH    -54.0        4
+##  5 2018-04-28 Toronto Wolfpack    42    10    Halifa… CH     32.0        5
+##  6 2018-04-28 London Broncos      64    6     Dewsbu… CH     58.0        6
+##  7 2018-04-25 Dewsbury Rams       18    46    Halifa… CH    -28.0        7
+##  8 2018-04-15 Sheffield Eagles    20    72    Leigh … CH    -52.0        8
+##  9 2018-04-15 Halifax RLFC        18    12    Swinto… CH      6.00       9
+## 10 2018-04-15 Dewsbury Rams       12    23    Toront… CH    -11.0        7
+## # ... with 57 more rows</code></pre>
+<p>We’ve gained an extra column <code>team_id</code>, which is the numerical ID of the home team. So we repeat the process with the away teams:</p>
+<pre class="r"><code>games_ch %&gt;% 
+  left_join(teams,by=c(&quot;t1&quot;=&quot;team&quot;)) %&gt;% 
+  left_join(teams,by=c(&quot;t2&quot;=&quot;team&quot;)) -&gt; 
+d
+d</code></pre>
+<pre><code>## # A tibble: 67 x 9
+##    date       t1       s1    s2    t2     lg      diff team_id.x team_id.y
+##    &lt;date&gt;     &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;  &lt;dbl&gt;     &lt;int&gt;     &lt;int&gt;
+##  1 2018-04-29 Rochdal… 16    38    Sheff… CH    -22.0          1         8
+##  2 2018-04-29 Leigh C… 46    18    Barro… CH     28.0          2        10
+##  3 2018-04-29 Feather… 50    12    Batle… CH     38.0          3        11
+##  4 2018-04-28 Swinton… 8     62    Toulo… CH    -54.0          4        12
+##  5 2018-04-28 Toronto… 42    10    Halif… CH     32.0          5         9
+##  6 2018-04-28 London … 64    6     Dewsb… CH     58.0          6         7
+##  7 2018-04-25 Dewsbur… 18    46    Halif… CH    -28.0          7         9
+##  8 2018-04-15 Sheffie… 20    72    Leigh… CH    -52.0          8         2
+##  9 2018-04-15 Halifax… 18    12    Swint… CH      6.00         9         4
+## 10 2018-04-15 Dewsbur… 12    23    Toron… CH    -11.0          7         5
+## # ... with 57 more rows</code></pre>
+<p>This time, we have a <code>team_id.x</code> and a <code>team_id.y</code> which are the numerical IDs of the home and away teams respectively. This contains all we need for input to Stan.</p>
+</div>
+<div id="running-stan" class="section level2">
+<h2>Running Stan</h2>
+<p>Looking back at the <code>data</code>section of our Stan code tells us what we need to supply. There are two prior SDs. One is <code>sigma_prior</code>, the prior SD of the team ratings. I’ll pick 10 for this, suggesting that the top and bottom teams are about 40–60 points apart (2–3 times sigma up and down). The other is <code>sigma_diff_mean</code>. This is the <em>mean</em> of the prior distribution of SD of score difference within a game. I’ll use 20 (points) for this. The numbers of teams and games are the numbers of rows of data frames we already made. So now make a <code>list</code>:</p>
+<pre class="r"><code>ch_stan_data=list(
+  nt=nrow(teams),
+  ng=nrow(games_ch),
+  sigma_prior=10,
+  sigma_diff_mean=20,
+  t1=d$team_id.x,
+  t2=d$team_id.y,
+  diff=d$diff
+)</code></pre>
+<p>and then sample away (which doesn’t take long):</p>
+<pre class="r"><code>set.seed(457299)
+r1=sampling(model_compiled,data=ch_stan_data)</code></pre>
+<pre><code>## 
+## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 1).
+## 
+## Gradient evaluation took 1e-05 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.1 seconds.
+## Adjust your expectations accordingly!
+## 
+## 
+## Iteration:    1 / 2000 [  0%]  (Warmup)
+## Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Iteration: 2000 / 2000 [100%]  (Sampling)
+## 
+##  Elapsed Time: 0.134173 seconds (Warm-up)
+##                0.035974 seconds (Sampling)
+##                0.170147 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 2).
+## 
+## Gradient evaluation took 9e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+## Adjust your expectations accordingly!
+## 
+## 
+## Iteration:    1 / 2000 [  0%]  (Warmup)
+## Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Iteration: 2000 / 2000 [100%]  (Sampling)
+## 
+##  Elapsed Time: 0.128628 seconds (Warm-up)
+##                0.036704 seconds (Sampling)
+##                0.165332 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 3).
+## 
+## Gradient evaluation took 8e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+## Adjust your expectations accordingly!
+## 
+## 
+## Iteration:    1 / 2000 [  0%]  (Warmup)
+## Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Iteration: 2000 / 2000 [100%]  (Sampling)
+## 
+##  Elapsed Time: 0.138977 seconds (Warm-up)
+##                0.038558 seconds (Sampling)
+##                0.177535 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL &#39;1c822356d9d5242a98f27a218c5175d5&#39; NOW (CHAIN 4).
+## 
+## Gradient evaluation took 8e-06 seconds
+## 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+## Adjust your expectations accordingly!
+## 
+## 
+## Iteration:    1 / 2000 [  0%]  (Warmup)
+## Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Iteration: 2000 / 2000 [100%]  (Sampling)
+## 
+##  Elapsed Time: 0.14066 seconds (Warm-up)
+##                0.036668 seconds (Sampling)
+##                0.177328 seconds (Total)</code></pre>
+<pre class="r"><code>r1</code></pre>
+<pre><code>## Inference for Stan model: 1c822356d9d5242a98f27a218c5175d5.
+## 4 chains, each with iter=2000; warmup=1000; thin=1; 
+## post-warmup draws per chain=1000, total post-warmup draws=4000.
+## 
+##               mean se_mean   sd    2.5%     25%     50%     75%   97.5%
+## sigma_diff   19.26    0.03 1.83   16.03   17.97   19.11   20.42   23.11
+## rat[1]      -15.41    0.09 5.87  -26.46  -19.47  -15.42  -11.46   -3.67
+## rat[2]       10.46    0.09 5.64   -0.41    6.57   10.57   14.35   21.25
+## rat[3]       12.76    0.08 5.31    2.09    9.22   12.83   16.33   23.03
+## rat[4]      -14.84    0.09 5.47  -25.78  -18.34  -14.93  -11.23   -3.74
+## rat[5]        8.50    0.09 5.45   -2.44    4.87    8.63   12.09   18.79
+## rat[6]       15.51    0.09 5.64    4.54   11.76   15.47   19.36   26.52
+## rat[7]       -7.81    0.09 5.45  -18.23  -11.59   -7.88   -4.12    2.94
+## rat[8]      -13.74    0.09 5.50  -24.18  -17.48  -13.89  -10.06   -2.48
+## rat[9]        1.98    0.09 5.59   -9.19   -1.81    2.01    5.59   13.19
+## rat[10]      -9.65    0.09 5.51  -20.58  -13.43   -9.71   -5.91    1.48
+## rat[11]      -3.04    0.09 5.60  -14.32   -6.74   -2.97    0.59    7.97
+## rat[12]      14.43    0.09 5.42    3.73   10.71   14.49   18.04   24.90
+## lp__       -221.18    0.07 2.72 -227.46 -222.74 -220.84 -219.21 -216.86
+##            n_eff Rhat
+## sigma_diff  4000    1
+## rat[1]      4000    1
+## rat[2]      4000    1
+## rat[3]      4000    1
+## rat[4]      4000    1
+## rat[5]      4000    1
+## rat[6]      4000    1
+## rat[7]      4000    1
+## rat[8]      4000    1
+## rat[9]      4000    1
+## rat[10]     4000    1
+## rat[11]     4000    1
+## rat[12]     4000    1
+## lp__        1461    1
+## 
+## Samples were drawn using NUTS(diag_e) at Thu May  3 01:02:52 2018.
+## For each parameter, n_eff is a crude measure of effective sample size,
+## and Rhat is the potential scale reduction factor on split chains (at 
+## convergence, Rhat=1).</code></pre>
+<p>This seems to have worked, as evidenced by the <code>Rhat</code> values of 1 and the <code>n_eff</code> values of 4000 (there were <span class="math inline">\(4\times 1000\)</span> non-warm-up samples). The <code>rat[1]</code>, <code>rat[2]</code> etc refer to the team ID numbers, but it would be nice to have a table of posterior rating means for each team with the team <em>names</em> in it. First, though, we have to extract the posterior distributions from <code>r1</code>, using the <code>extract</code> from <code>rstan</code> (and not the <code>extract</code> from <code>tidyr</code>!):</p>
+<pre class="r"><code>r2=rstan::extract(r1)
+posterior_means=apply(r2$rat,2,mean)
+posterior_means</code></pre>
+<pre><code>##  [1] -15.412479  10.464621  12.762741 -14.838499   8.496976  15.509100
+##  [7]  -7.809105 -13.743902   1.980887  -9.645538  -3.039513  14.434609</code></pre>
+<p><code>r2$rat</code> is a <span class="math inline">\(4000\times 12\)</span> matrix (one row per Stan sample, 1 column per team). Since I only want the posterior means from it for the moment, I fired up some base R to get the column means directly. These are in the order of the team numbers, so now we make a data frame with the team numbers in it, and look them up in <code>teams</code>:</p>
+<pre class="r"><code>tibble(post_mean=posterior_means) %&gt;% 
+  mutate(team_id=row_number()) %&gt;% 
+  left_join(teams) %&gt;% 
+  arrange(desc(post_mean))</code></pre>
+<pre><code>## Joining, by = &quot;team_id&quot;</code></pre>
+<pre><code>## # A tibble: 12 x 3
+##    post_mean team_id team               
+##        &lt;dbl&gt;   &lt;int&gt; &lt;chr&gt;              
+##  1     15.5        6 London Broncos     
+##  2     14.4       12 Toulouse Olympique 
+##  3     12.8        3 Featherstone Rovers
+##  4     10.5        2 Leigh Centurions   
+##  5      8.50       5 Toronto Wolfpack   
+##  6      1.98       9 Halifax RLFC       
+##  7    - 3.04      11 Batley Bulldogs    
+##  8    - 7.81       7 Dewsbury Rams      
+##  9    - 9.65      10 Barrow Raiders     
+## 10    -13.7        8 Sheffield Eagles   
+## 11    -14.8        4 Swinton Lions      
+## 12    -15.4        1 Rochdale Hornets</code></pre>
+<p>This time the <code>join</code> is simpler because the column we want to look up has the same name <code>team_id</code> in both data frames, and our final result has acquired a column <code>team</code> that matches up with <code>team_id</code>.</p>
+<p>The ordering of teams here is not the same as in the league table:</p>
+<p><img src="../../../../ch_table.svg" /></p>
+<p>The most visible difference is that the Toronto Wolfpack are rated 5th but top of the table. My guess is that my ratings place a greater emphasis on points scored and a lesser emphasis on wins (since wins do not appear explicitly in my ratings). The Wolfpack have conceded the fewest points in the league, but have scored a lot fewer points than the teams around them. This would show up as the Wolfpack doing better than expected (by the ratings) against the teams at the top and worse against the teams at the bottom.</p>
+<p>A nice visual is to display the rating posterior distributions as boxplots, one for each team, in order of median:</p>
+<pre class="r"><code>r2$rat %&gt;% as_tibble() %&gt;% 
+  gather(team_number,rat,everything()) %&gt;% 
+  mutate(team_id=parse_number(team_number)) %&gt;% 
+  left_join(teams) %&gt;% 
+  mutate(team_ordered=fct_reorder(team,rat,median)) %&gt;% 
+  ggplot(aes(x=team_ordered,y=rat))+geom_boxplot()+coord_flip() -&gt; 
+g</code></pre>
+<pre><code>## Joining, by = &quot;team_id&quot;</code></pre>
+<p>** explain code **</p>
+<p>Here’s the graph:</p>
+<pre class="r"><code>g</code></pre>
+<p><img src="../../../../rmarkdown-libs/figure-html4/unnamed-chunk-23-1.png" width="672" /></p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
 <p><a href="https://en.wikipedia.org/wiki/Rugby_league">Wikipedia article on rugby league</a></p>
-<p><a href="http://tidyr.tidyverse.org/reference/extract.html">Tidyverse help page on <code>extract</code></a></p>
+<p><a href="http://tidyr.tidyverse.org/reference/extract.html">Tidyverse help page on “extract”</a></p>
+<p><a href="https://groups.google.com/forum/#!topic/ggplot2/8N0ofttOdcw">Base “reorder”</a></p>
+<p><a href="https://www.rdocumentation.org/packages/forcats/versions/0.3.0/topics/fct_reorder">Tidyverse help page on “fct_reorder”</a></p>
+<p><a href="http://r4ds.had.co.nz/">R for Data Science</a>: chapter 14 for strings and regular expressions, chapter 15 for factors (where I got <code>fct_reorder</code> from)</p>
 </div>
 </section>
 <section>
