@@ -17,8 +17,8 @@
       <pubDate>Tue, 01 May 2018 00:00:00 +0000</pubDate>
       
       <guid>/2018/05/01/rating-rugby-league-with-stan/</guid>
-      <description>Abstract of techniques used here
- Introduction Rugby league is one of the “football” family of sports, in which players gain ground by carrying and passing and kicking the ball (like rugby union, North American football and somewhat like Australian and Gaelic football). The aim of the game is to touch the ball down behind the opponents’ goal line (a “try”, four points) after which a kick is taken at goal (a “conversion”, two points).</description>
+      <description>What’s in here This is a rather long and complicated post. Here are some of the things you’ll find here:
+ about rugby league extracting data from text making dates with lubridate and using fill to copy them to empty rows tidyr::extract making a Bayesian model with Stan rstan using left_join to look up values in another table fct_reorder and ordering boxplots by median   Introduction Rugby league is one of the “football” family of sports, in which players gain ground by carrying and passing and kicking the ball (like rugby union, North American football and somewhat like Australian and Gaelic football).</description>
     </item>
     
     <item>
