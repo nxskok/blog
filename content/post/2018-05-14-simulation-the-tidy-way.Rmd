@@ -1,0 +1,136 @@
+---
+title: Simulation, the tidy way
+author: Ken
+date: '2018-05-14'
+slug: simulation-the-tidy-way
+categories:
+  - R
+  - statistics
+tags:
+  - rstats 
+  - tidyverse
+---
+
+
+## Packages
+
+I'm using this, and also doing some random number generation, which I'd like to be reproducible:
+
+```{r}
+library(tidyverse)
+set.seed(457299)
+```
+
+## Introduction 
+
+I have been used to using the base R `replicate` for doing simulations, but today I wondered whether there was a Tidyverse equivalent. I discovered there was, and it's called `rerun`. How does it work, and can I reproduce the simulation functionality using `rerun`?
+
+## Replicate
+
+`replicate` does the second input as many times as the first input.
+This one takes 100 random standard normals, computes the mean, and repeats this 10 times. 
+
+```{r}
+replicate(10,mean(rnorm(100)))
+```
+
+The sample mean of a sample of 100 $N(0,1)$ values has mean 0 and SD $1/\sqrt{100}=0.1$, so 95\% of values like these should be between $\pm 0.2$. That seems to match these values.
+
+## The tidy way with `map`
+
+I would do this the tidy way by creating a column with the replication numbers, then using `map` to generate the random samples, following up with another `map` to compute their means:
+
+```{r}
+tibble(rep=1:10) %>% 
+  mutate(samples=map(rep,~rnorm(100))) %>% 
+  mutate(means=map_dbl(samples,~mean(.)))
+```
+
+The column called `samples` is a list-column: each entry is a vector of 100 values. The list-column is created using `map`, and is then used as input to the calculation of the single-number (each time) mean using a second `map`, this time a `map_dbl`.
+
+The answers are different from but comparable with the ones from `replicate`.
+
+The column `rep` is only to label different replications of the same thing, so the first `map` does *not* have a dot in it ("for each `rep`, generate 100 random standard normals for which nothing depends on the value of `rep`"). The `map_dbl` in the next line, however, is the usual "for each thing in `samples`, do something with *it*", and so the dot is used to mean "the particular random sample we are looking at right now, whose mean we want".
+
+## `rerun`
+
+Defining the column `rep`, as we did above, is in fact almost completely pointless. The only use of that column is to say that we want 10 repeats of the random sampling process, and that information could be just as easily conveyed by the number 10. This is how `rerun` works:
+
+```{r}
+rerun(10,rnorm(100)) %>% 
+  map_dbl(~mean(.))
+```
+
+The output of this `rerun` is a `list` containing 10 random samples of size 100 each, and then the `map_dbl` calculates the mean of each of these (each list element, in general) returning a vector of 10 sample means. 
+
+For full tidiness, this ought to be done in a data frame. The output from `rerun`, though, is a list. If you convert it into a `tibble`, it comes across as a data frame with one column for each list element with *no names*, so I have to supply some:
+
+```{r}
+rerun(10,rnorm(100)) %>% 
+  as_tibble(validate=F) -> 
+z
+names(z)=str_c("X",sprintf("%02d",1:10))
+z
+```
+
+This gives a couple of ways of extracting the sample means:
+
+```{r}
+z %>% summarize_all(mean)
+```
+
+Or we can gather the columns into one and use the column names as the grouping variable:
+
+```{r}
+z %>% gather(col_name,value,everything()) %>% 
+  group_by(col_name) %>% 
+  summarize(means=mean(value))
+```
+
+
+## Power of $t$-test
+ 
+To simulate the power of a hypothesis test, the process is to simulate a lot of samples from the true (alternative) distribution, and test the null hypothesis (which is incorrect) for each one. The number of times you correctly reject is your estimate of the power of your test. The idea is that you want your test to have a reasonably good chance that it will reject the null, or to design your study so that it will.
+
+By way of example, how likely are we to reject a null hypothesis that the population mean is 10, if the population mean is actually 8 (and the population standard deviation is 4), using a sample size of $n=15$, assuming normally-distributed data and doing a two-sided test? With 1000 simulated samples, it goes like this:
+
+```{r}
+rerun(1000,rnorm(15,8,4)) %>% 
+  map_dbl(~t.test(.,mu=10)$p.value) -> 
+pvals
+table(pvals<=0.05)
+```
+
+The power is estimated to be a disappointing 0.427.
+
+This is one of those cases where we can calculate the answer exactly and compare:
+
+```{r}
+power.t.test(n=15,delta=8-10,sd=4,type="one.sample",alternative="two.sided")
+```
+
+Our simulation is pretty close to the truth. 
+
+If the actual data distribution is not normal, though, we *have* to resort to simulation. Supposing that the true distribution is gamma with $a=(8/4)^2=4$, $b=8/4^2=0.5$, it will have the same mean and SD of 8 and 4. This is definitely skewed, though:
+
+```{r}
+x=rgamma(1000,4,0.5)
+ggplot(tibble(x),aes(x=x)) + geom_histogram(bins=15)
+```
+
+What will that do to the power? Let's find out:
+
+```{r}
+rerun(1000,rgamma(15,4,0.5)) %>% 
+  map_dbl(~t.test(.,mu=10)$p.value) -> 
+pvals
+table(pvals<=0.05)
+```
+
+The power has gone up a bit (it was 0.438 before). You may speculate as to why that is.
+
+## References
+
+[The "rerun" help page](https://purrr.tidyverse.org/reference/rerun.html)
+
+[Getting the gamma parameters from mean and  SD](https://math.stackexchange.com/questions/1810257/gamma-functions-mean-and-standard-deviation-through-shape-and-rate), because I was too lazy to work it out myself.

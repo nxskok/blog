@@ -2,13 +2,14 @@
 title: "Drawing a network with ggraph and tidygraph"
 author: "Ken"
 date: '2017-12-30'
+output: word_document
 slug: drawing-a-network-with-ggraph-and-tidygraph
 tags:
-- 'rstats'
-- 'tidyverse'
-categories: 
- - R 
- - trains
+- rstats
+- tidyverse
+categories:
+- R
+- trains
 ---
 
 
@@ -18,12 +19,12 @@ categories:
 <p><a href="https://github.com/thomasp85">Thomas Lin Pedersen</a> is the author of a lot of packages, including two that deal with graphs (in the sense of networks), <code>tidygraph</code> for storing and handling graphs, and <code>ggraph</code> for drawing them, <code>ggplot</code>-style. I have a feeling I will be spending a lot of time with <code>tidygraph</code>, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.</p>
 <p>Packages:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
 ## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
 ## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
 ## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ─────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(tidygraph)</code></pre>
@@ -258,26 +259,26 @@ yorks_g</code></pre>
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/ggra-1.png" width="672" /></p>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggra-1.png" width="672" /></p>
 <p>This seems to do a nice job of reproducing the topology in a clear fashion with no overlaps where there shouldn’t be any. (I tried this using the separate stations, Westgate and Kirkgate, in Wakefield, and the display was a lot more confusing.) It doesn’t get compass directions right (it seems to have west and east reversed), but we had no right to expect that it would.</p>
 <p>Another plausible layout is the one called <code>lgl</code>. How does that work here? We leave everything else the same:</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/ggrb-1.png" width="672" /></p>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggrb-1.png" width="672" /></p>
 <p>This is much less pleasing, especially in the middle. Can I make it try more iterations than the default 150?</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;,maxiter=400)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/ggrc-1.png" width="672" /></p>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggrc-1.png" width="672" /></p>
 <p>This is a lot better, but still has some unnecessary crossings.</p>
 <p>One more try: the GEM “force-directed” layout:</p>
 <pre class="r"><code>ggraph(yorks_g,layout=&quot;gem&quot;)+
   geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
   geom_node_point()+
   geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
-<p><img src="/rmarkdown-libs/figure-html4/ggrd-1.png" width="672" /></p>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggrd-1.png" width="672" /></p>
 <p>This is better, but I like the <code>kk</code> one the best.</p>
 </div>

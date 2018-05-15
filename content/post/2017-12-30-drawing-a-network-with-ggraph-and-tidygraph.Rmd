@@ -2,13 +2,14 @@
 title: "Drawing a network with ggraph and tidygraph"
 author: "Ken"
 date: '2017-12-30'
+output: word_document
 slug: drawing-a-network-with-ggraph-and-tidygraph
 tags:
-- 'rstats'
-- 'tidyverse'
-categories: 
- - R 
- - trains
+- rstats
+- tidyverse
+categories:
+- R
+- trains
 ---
 
 ## Introduction
