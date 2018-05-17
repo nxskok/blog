@@ -13,7 +13,7 @@ tags:
 
 ## Introduction
 
-Somebody mentioned ANOSIM to me, and I had this kind of vague recollection of it, meaning that I didn't remember anything of it at all. This prompted me to explore further, which got me into the `vegan` package.
+Somebody mentioned ANOSIM to me, and I had this kind of vague recollection of it, meaning that I didn't really understand anything of it at all. This prompted me to explore further, which got me into the `vegan` package.
 This contains a number of functions for handling ecological community data. One of these is `anosim`, or "analysis of similarity", which is used for assessing the groupings of objects when we have only a dissimilarity matrix: are the objects within a group more similar than ones in different groups? We explore ANOSIM, with a side trip via cluster analysis, because I had to connect this up with what I already knew. 
 
 ## packages
