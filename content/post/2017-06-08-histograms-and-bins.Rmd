@@ -22,7 +22,7 @@ This is data from production of soap bars. There are two production lines, run a
 
 I've almost forgotten how to make a base R histogram, but I think it goes like this:
 
-```{r}
+```{r base_hist_soap}
 hist(soap$scrap)
 ```
 
@@ -36,7 +36,7 @@ I'm not quite sure where I stand on this. I am feeling that it would be nice to 
 
 Here's how you specify a number of bins in `ggplot`:
 
-```{r}
+```{r soap_eight_bins}
 ggplot(soap,aes(x=scrap))+geom_histogram(bins=8)
 ```
 
@@ -44,13 +44,13 @@ Even though we used the same number of bins, the histogram looks different becau
 
 The bin width is specified like this:
 
-```{r}
+```{r soap_binwidth}
 ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=50)
 ```
 
 This again looks very different, with a clear "hole" in the middle. There are some other options in `geom_histogram`, of which one is `breaks`, a vector of bin boundaries. So I can mimic the base R histogram this way:
 
-```{r}
+```{r base_alike}
 b=seq(100,500,50)
 b
 ggplot(soap,aes(x=scrap))+geom_histogram(breaks=b)
@@ -105,24 +105,23 @@ fd=function(x) {
 fd(soap$scrap)
 ```
 
-What `geom_histogram` claims to let you do is to supply a *function* to `binwidth` (though not `bins`, far as I can tell). I couldn't get this to work:
+What `geom_histogram` claims to let you do is to supply a *function* to `binwidth` (though not `bins`, far as I can tell). I couldn't get this to work before, but I seem to be able to now:
 
-```{r}
+```{r binwidth_by_function}
 ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=fd)
 ```
 
-I welcome comment on how to do this.
 
 To use Sturges or Freedman-Diaconis as a default, you can do something like this:
 
-```{r}
+```{r hist_sturges}
 k=sturges(soap$scrap)
 ggplot(soap,aes(x=scrap))+geom_histogram(bins=k)
 ```
 
 or
 
-```{r}
+```{r hist_fd}
 h=fd(soap$scrap)
 ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=h)
 ```
