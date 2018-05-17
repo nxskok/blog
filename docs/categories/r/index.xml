@@ -6,10 +6,19 @@
     <description>Recent content in R on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 14 May 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 17 May 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Ken ventures into community ecology</title>
+      <link>/2018/05/17/ken-ventures-into-community-ecology/</link>
+      <pubDate>Thu, 17 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/05/17/ken-ventures-into-community-ecology/</guid>
+      <description>Introduction Somebody mentioned ANOSIM to me, and I had this kind of vague recollection of it, meaning that I didn’t remember anything of it at all. This prompted me to explore further, which got me into the vegan package. This contains a number of functions for handling ecological community data. One of these is anosim, or “analysis of similarity”, which is used for assessing the groupings of objects when we have only a dissimilarity matrix: are the objects within a group more similar than ones in different groups?</description>
+    </item>
     
     <item>
       <title>Simulation, the tidy way</title>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Ken ventures into community ecology</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/05/17/ken-ventures-into-community-ecology/">Ken ventures into community ecology</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;May 17, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;15 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Somebody mentioned ANOSIM to me, and I had this kind of vague recollection of it, meaning that I didn’t remember anything of it at all. This prompted me to explore further, which got me into the <code>vegan</code> package.
+This contains a number of functions for handling ecological community data. One of these is <code>anosim</code>, or “analysis of similarity”, which is used for assessing the groupings of objects when we have only a dissimilarity matrix: are the objects within a group more similar than ones in different groups? We explore ANOSIM, with a side trip via cluster analysis, because I had to connect this up with what I already knew.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>packages</h2>
+<p>I need these:</p>
+<pre class="r"><code>library(vegan)</code></pre>
+<pre><code>## Loading required package: permute</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## This is vegan 2.5-1</code></pre>
+<pre class="r"><code>library(ggrepel)</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ tibble  1.4.2     ✔ purrr   0.2.4
+## ✔ tidyr   0.8.0     ✔ dplyr   0.7.4
+## ✔ readr   1.1.1     ✔ stringr 1.3.0
+## ✔ tibble  1.4.2     ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div id="the-dune-data" class="section level2">
+<h2>The dune data</h2>
+<p>The data set <code>dune</code> contains <a href="https://globalrangelands.org/inventorymonitoring/daubenmire">cover class values</a> of 30 different species at 20 different sites. To start with, let’s group the sites into similar ones, and ask whether those groups related to anything else.</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I think this is a link to the right thing. Please correct me (in the comments) if not.</span></p>
+<p>Here’s the data set:</p>
+<pre class="r"><code>data(dune)
+dune %&gt;% as_tibble()</code></pre>
+<pre><code>## # A tibble: 20 x 30
+##    Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu
+##  *    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+##  1     1.00     0        0        0        0        0        0        0   
+##  2     3.00     0        0        2.00     0        3.00     4.00     0   
+##  3     0        4.00     0        7.00     0        2.00     0        0   
+##  4     0        8.00     0        2.00     0        2.00     3.00     0   
+##  5     2.00     0        0        0        4.00     2.00     2.00     0   
+##  6     2.00     0        0        0        3.00     0        0        0   
+##  7     2.00     0        0        0        2.00     0        2.00     0   
+##  8     0        4.00     0        5.00     0        0        0        0   
+##  9     0        3.00     0        3.00     0        0        0        0   
+## 10     4.00     0        0        0        4.00     2.00     4.00     0   
+## 11     0        0        0        0        0        0        0        0   
+## 12     0        4.00     0        8.00     0        0        0        0   
+## 13     0        5.00     0        5.00     0        0        0        1.00
+## 14     0        4.00     0        0        0        0        0        0   
+## 15     0        4.00     0        0        0        0        0        0   
+## 16     0        7.00     0        4.00     0        0        0        0   
+## 17     2.00     0        2.00     0        4.00     0        0        0   
+## 18     0        0        0        0        0        2.00     0        0   
+## 19     0        0        3.00     0        4.00     0        0        0   
+## 20     0        5.00     0        0        0        0        0        0   
+## # ... with 22 more variables: Cirsarve &lt;dbl&gt;, Comapalu &lt;dbl&gt;,
+## #   Eleopalu &lt;dbl&gt;, Elymrepe &lt;dbl&gt;, Empenigr &lt;dbl&gt;, Hyporadi &lt;dbl&gt;,
+## #   Juncarti &lt;dbl&gt;, Juncbufo &lt;dbl&gt;, Lolipere &lt;dbl&gt;, Planlanc &lt;dbl&gt;,
+## #   Poaprat &lt;dbl&gt;, Poatriv &lt;dbl&gt;, Ranuflam &lt;dbl&gt;, Rumeacet &lt;dbl&gt;,
+## #   Sagiproc &lt;dbl&gt;, Salirepe &lt;dbl&gt;, Scorautu &lt;dbl&gt;, Trifprat &lt;dbl&gt;,
+## #   Trifrepe &lt;dbl&gt;, Vicilath &lt;dbl&gt;, Bracruta &lt;dbl&gt;, Callcusp &lt;dbl&gt;</code></pre>
+<p>The columns are the (abbreviated) species names, and the rows are sites.</p>
+<p>The approved way of making dissimilarities between the sites is the Bray-Curtis distance, which is the default for <code>vegdist</code>:</p>
+<pre class="r"><code>dune.dist=vegdist(dune)
+dune.dist</code></pre>
+<pre><code>##            1         2         3         4         5         6         7
+## 2  0.4666667                                                            
+## 3  0.4482759 0.3414634                                                  
+## 4  0.5238095 0.3563218 0.2705882                                        
+## 5  0.6393443 0.4117647 0.4698795 0.5000000                              
+## 6  0.6363636 0.5111111 0.5681818 0.6344086 0.2967033                    
+## 7  0.5517241 0.4390244 0.4750000 0.5058824 0.2289157 0.2272727          
+## 8  0.6551724 0.5365854 0.3250000 0.4117647 0.6385542 0.5909091 0.5250000
+## 9  0.6000000 0.4761905 0.3414634 0.3793103 0.5058824 0.6000000 0.4878049
+## 10 0.5737705 0.2941176 0.4698795 0.4772727 0.3488372 0.3186813 0.2771084
+## 11 0.5600000 0.5405405 0.5555556 0.5844156 0.6266667 0.4500000 0.4444444
+## 12 0.9245283 0.7142857 0.4400000 0.5250000 0.6923077 0.6385542 0.6266667
+## 13 0.8431373 0.6000000 0.4246575 0.5128205 0.6842105 0.7530864 0.6438356
+## 14 1.0000000 0.7878788 0.7500000 0.7971014 0.8805970 0.8055556 0.8750000
+## 15 1.0000000 0.9076923 0.7142857 0.7352941 0.8484848 0.8028169 0.8412698
+## 16 0.9215686 0.8933333 0.6712329 0.6666667 0.8947368 0.8518519 0.8904110
+## 17 0.8787879 0.8245614 0.8909091 0.9000000 0.6206897 0.6825397 0.6727273
+## 18 0.7777778 0.5942029 0.6119403 0.6666667 0.5428571 0.4933333 0.5522388
+## 19 1.0000000 0.8082192 0.8309859 0.7894737 0.7027027 0.7215190 0.7464789
+## 20 1.0000000 0.9452055 0.7746479 0.7631579 0.8918919 0.8481013 0.8873239
+##            8         9        10        11        12        13        14
+## 2                                                                       
+## 3                                                                       
+## 4                                                                       
+## 5                                                                       
+## 6                                                                       
+## 7                                                                       
+## 8                                                                       
+## 9  0.3170732                                                            
+## 10 0.5421687 0.6000000                                                  
+## 11 0.5277778 0.5945946 0.4133333                                        
+## 12 0.4400000 0.3506494 0.7179487 0.6716418                              
+## 13 0.3698630 0.4133333 0.7368421 0.7538462 0.3529412                    
+## 14 0.5625000 0.7575758 0.7611940 0.8214286 0.6949153 0.6491228          
+## 15 0.4285714 0.6615385 0.8484848 0.7454545 0.6206897 0.6785714 0.3617021
+## 16 0.4246575 0.6533333 0.8947368 0.8769231 0.5882353 0.6060606 0.5438596
+## 17 0.8909091 0.8947368 0.6206897 0.7021277 0.9200000 0.8750000 0.8974359
+## 18 0.6417910 0.6811594 0.4857143 0.3220339 0.7419355 0.8000000 0.8431373
+## 19 0.7464789 0.7808219 0.7027027 0.5555556 0.6969697 0.8125000 0.8545455
+## 20 0.4929577 0.6986301 0.8918919 0.8095238 0.6969697 0.7187500 0.4545455
+##           15        16        17        18        19
+## 2                                                   
+## 3                                                   
+## 4                                                   
+## 5                                                   
+## 6                                                   
+## 7                                                   
+## 8                                                   
+## 9                                                   
+## 10                                                  
+## 11                                                  
+## 12                                                  
+## 13                                                  
+## 14                                                  
+## 15                                                  
+## 16 0.3571429                                        
+## 17 0.8947368 1.0000000                              
+## 18 0.7200000 0.8666667 0.7619048                    
+## 19 0.7777778 0.9062500 0.5652174 0.5517241          
+## 20 0.2962963 0.3437500 0.9130435 0.6896552 0.7419355</code></pre>
+</div>
+<div id="cluster-analysis" class="section level2">
+<h2>Cluster analysis</h2>
+<p>My thinking about how to analyze these sites begins with a cluster analysis to group sites into similar ones. Since we have dissimilarities, a hierarchical method like Ward’s is available:</p>
+<pre class="r"><code>dune.1=hclust(dune.dist,method=&quot;ward.D&quot;)
+plot(dune.1)</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>The next question is to think about an appropriate number of clusters. This tends to involve a lot of hand-waving. I dunno, four?</p>
+<pre class="r"><code>plot(dune.1)
+rect.hclust(dune.1,4)</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Perhaps a better way to choose a number of clusters is to plot that thing <code>height</code> on the <span class="math inline">\(y\)</span>-axis against the number of clusters, in a so-called <em>scree plot</em>.</p>
+<pre class="r"><code>h=dune.1$height
+h</code></pre>
+<pre><code>##  [1] 0.2272727 0.2705882 0.2746551 0.2941176 0.2962963 0.3170732 0.3220339
+##  [8] 0.3529412 0.3684965 0.4349385 0.5138554 0.5453692 0.5652174 0.5826138
+## [15] 0.7323873 0.8420304 1.2254557 1.6706423 2.4312773</code></pre>
+<p>The larger the “height” is, the more dissimilar the sites within a cluster are. These go from 20 clusters down to 2:</p>
+<pre class="r"><code>d=tibble(clusters=20:2,height=h)
+d</code></pre>
+<pre><code>## # A tibble: 19 x 2
+##    clusters height
+##       &lt;int&gt;  &lt;dbl&gt;
+##  1       20  0.227
+##  2       19  0.271
+##  3       18  0.275
+##  4       17  0.294
+##  5       16  0.296
+##  6       15  0.317
+##  7       14  0.322
+##  8       13  0.353
+##  9       12  0.368
+## 10       11  0.435
+## 11       10  0.514
+## 12        9  0.545
+## 13        8  0.565
+## 14        7  0.583
+## 15        6  0.732
+## 16        5  0.842
+## 17        4  1.23 
+## 18        3  1.67 
+## 19        2  2.43</code></pre>
+<p>Now plot height against clusters. It’s easiest to join the points by lines:</p>
+<pre class="r"><code>ggplot(d,aes(x=clusters,y=height))+geom_point()+geom_line()</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>The idea is that we want a relatively small height, indicating that the sites within a cluster are similar, but we also want a relatively small number of clusters, for greater insight. (You could have 20 clusters, with each site in a cluster by itself, but there would not be much insight there!). Thus we want to be towards the bottom left of the picture. We look for an “elbow” sticking out towards that corner of the graph, where the height drops by a lot and then by a little, such as at 5 or 7 clusters.</p>
+<p>The name comes from imagining this plot to be a side-on view of a mountain, where “scree” refers to <a href="https://www.geograph.org.uk/photo/5322223">loose rock that has fallen to the bottom of the rock face</a>. Here, we are thinking of scree as being the random rubbish at the bottom of the mountain, such as after 7 clusters. Here, we want the height to be reasonably small, so we take the number of clusters to be the first one on the scree. (This is different from using a scree plot for principal components, where we want the ordinate to be <em>large</em>, so we go back one from the elbow to get the last point definitely on the mountain.)</p>
+<p>I’m going with seven clusters, though I could as well have picked five. How does seven clusters look on the dendrogram?</p>
+<pre class="r"><code>plot(dune.1)
+rect.hclust(dune.1,7)</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Then we can eyeball the data for two sites in the same cluster, such as sites 11 and 18 in our third cluster:</p>
+<pre class="r"><code>dune %&gt;% slice(c(11,18)) %&gt;% print(width=Inf)</code></pre>
+<pre><code>## # A tibble: 2 x 30
+##   Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1        0        0        0        0        0     0           0        0
+## 2        0        0        0        0        0     2.00        0        0
+##   Cirsarve Comapalu Eleopalu Elymrepe Empenigr Hyporadi Juncarti Juncbufo
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1        0        0        0        0        0     2.00        0        0
+## 2        0        0        0        0        0     0           0        0
+##   Lolipere Planlanc Poaprat Poatriv Ranuflam Rumeacet Sagiproc Salirepe
+##      &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1     7.00     3.00    4.00       0        0        0     2.00     0   
+## 2     2.00     3.00    3.00       0        0        0     0        3.00
+##   Scorautu Trifprat Trifrepe Vicilath Bracruta Callcusp
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1     5.00        0     3.00     2.00     4.00        0
+## 2     5.00        0     2.00     1.00     6.00        0</code></pre>
+<p>We get the impression that these sites have very similar cover class values. A lot of the species are absent at both sites, and where they are present, they tend to have similar values. Contrast that with sites in different clusters, such as sites 16 and 17:</p>
+<pre class="r"><code>dune %&gt;% slice(c(16,17)) %&gt;% print(width=Inf)</code></pre>
+<pre><code>## # A tibble: 2 x 30
+##   Achimill Agrostol Airaprae Alopgeni Anthodor Bellpere Bromhord Chenalbu
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1     0        7.00     0        4.00     0           0        0        0
+## 2     2.00     0        2.00     0        4.00        0        0        0
+##   Cirsarve Comapalu Eleopalu Elymrepe Empenigr Hyporadi Juncarti Juncbufo
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1        0        0     8.00        0        0     0        3.00        0
+## 2        0        0     0           0        0     2.00     0           0
+##   Lolipere Planlanc Poaprat Poatriv Ranuflam Rumeacet Sagiproc Salirepe
+##      &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1        0     0       0       2.00     2.00        0        0        0
+## 2        0     2.00    1.00    0        0           0        0        0
+##   Scorautu Trifprat Trifrepe Vicilath Bracruta Callcusp
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1     0           0        0        0     4.00     3.00
+## 2     2.00        0        0        0     0        0</code></pre>
+<p>This time, a lot of species are present at one site but not at the other, marking the sites as dissimilar.</p>
+<p>Let’s save the cluster memberships for later use:</p>
+<pre class="r"><code>dune_cluster=cutree(dune.1,7)
+dune_cluster</code></pre>
+<pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  1  2  3  3  2  2  2  3  3  2  4  5  5  6  6  6  7  4  7  6</code></pre>
+</div>
+<div id="more-about-the-sites" class="section level2">
+<h2>More about the sites</h2>
+<p>The data set <code>dune.env</code> contains some other information about the sites:</p>
+<pre class="r"><code>data(&quot;dune.env&quot;) 
+dune.env %&gt;% as_tibble()</code></pre>
+<pre><code>## # A tibble: 20 x 5
+##       A1 Moisture Management Use      Manure
+##  * &lt;dbl&gt; &lt;ord&gt;    &lt;fct&gt;      &lt;ord&gt;    &lt;ord&gt; 
+##  1  2.80 1        SF         Haypastu 4     
+##  2  3.50 1        BF         Haypastu 2     
+##  3  4.30 2        SF         Haypastu 4     
+##  4  4.20 2        SF         Haypastu 4     
+##  5  6.30 1        HF         Hayfield 2     
+##  6  4.30 1        HF         Haypastu 2     
+##  7  2.80 1        HF         Pasture  3     
+##  8  4.20 5        HF         Pasture  3     
+##  9  3.70 4        HF         Hayfield 1     
+## 10  3.30 2        BF         Hayfield 1     
+## 11  3.50 1        BF         Pasture  1     
+## 12  5.80 4        SF         Haypastu 2     
+## 13  6.00 5        SF         Haypastu 3     
+## 14  9.30 5        NM         Pasture  0     
+## 15 11.5  5        NM         Haypastu 0     
+## 16  5.70 5        SF         Pasture  3     
+## 17  4.00 2        NM         Hayfield 0     
+## 18  4.60 1        NM         Hayfield 0     
+## 19  3.70 5        NM         Hayfield 0     
+## 20  3.50 5        NM         Hayfield 0</code></pre>
+<p>Details about this are in the <a href="http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/dune.html">help for <code>dune</code></a>. The column of interest to us is <code>Management</code>. This describes the type of farming done at the site, with labels:</p>
+<ul>
+<li>BF: biological farming</li>
+<li>HF: hobby farming</li>
+<li>NM: nature conservation management</li>
+<li>SF: standard farming</li>
+</ul>
+<p>We might be concerned with any relationship between farming type and species cover profile. This is what ANOSIM can look at, but before that we’ll think about using our cluster analysis to assess this issue.</p>
+</div>
+<div id="farming-type-and-cluster-analysis" class="section level2">
+<h2>Farming type and cluster analysis</h2>
+<p>A way to look for a relationship here is to ask whether sites in the same cluster tend to have the same farming type. I can think of two ways to do that. One way is to make a crosstabulation of cluster and farming type:</p>
+<pre class="r"><code>tab=table(farming=dune.env$Management,cluster=dune_cluster)
+tab</code></pre>
+<pre><code>##        cluster
+## farming 1 2 3 4 5 6 7
+##      BF 0 2 0 1 0 0 0
+##      HF 0 3 2 0 0 0 0
+##      NM 0 0 0 1 0 3 2
+##      SF 1 0 2 0 2 1 0</code></pre>
+<p>Clusters 6 and 7 seem to contain mostly the non-farmed sites. With these small frequencies, it’s kind of absurd to do a test, but just for fun:</p>
+<pre class="r"><code>chisq.test(tab)</code></pre>
+<pre><code>## Warning in chisq.test(tab): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  tab
+## X-squared = 29.867, df = 18, p-value = 0.03876</code></pre>
+<p>We have way too many small frequencies to take this P-value seriously, though it <em>is</em> significant.</p>
+<p>A second way to use the cluster analysis is to re-draw the dendrogram, but instead of using the site numbers to identify the sites, label them by the kind of farming done there:</p>
+<pre class="r"><code>plot(dune.1,labels=dune.env$Management)
+rect.hclust(dune.1,7)</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>There seems to be some grouping here: the clusters each only contain one or two of the farming types. This is really the same information as in the cross-tabulation, but presented in a different way. (The clusters are not ordered by cluster number across the page.)</p>
+</div>
+<div id="analysis-of-similarity" class="section level2">
+<h2>Analysis of similarity</h2>
+<p>I used the cluster analysis as a stepping-stone to figure out which sites were “similar” to each other. However, this is really losing information about similarity, because it boils down the actual numbers in the dissimilarity matrix into a yes/no: two sites are either in the same cluster or not. It seems better to use the actual dissimilarities in an analysis. This avoids arbitrary choices about the number of clusters to use; if I had used, say, six clusters instead of four, the story could have been different.</p>
+<p>This is where Analysis of Similarity comes in. It is like analysis of variance, in that it tests whether pre-determined groups are similar to each other or different, but instead of using observations from each of the groups, it uses dissimilarities between observations within and between groups. The <a href="http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/anosim.html"><code>anosim</code></a> function takes a dissimilarity matrix and a column containing the grouping. It does a permutation test to obtain a P-value:</p>
+<pre class="r"><code>dune.2=anosim(dune.dist,dune.env$Management)
+dune.2</code></pre>
+<pre><code>## 
+## Call:
+## anosim(x = dune.dist, grouping = dune.env$Management) 
+## Dissimilarity: bray 
+## 
+## ANOSIM statistic R: 0.2579 
+##       Significance: 0.008 
+## 
+## Permutation: free
+## Number of permutations: 999</code></pre>
+<p>This is significant, so we deduce that sites farmed in the same way have similar cover class profiles. This ought to be more powerful than the (not very believable) chi-squared test based on the cluster analysis.</p>
+</div>
+<div id="using-anosim-on-the-clusters" class="section level2">
+<h2>Using <code>anosim</code> on the clusters</h2>
+<p><code>anosim</code> is supposed to be used on pre-determined groups, but the clusters in cluster analysis are formed by looking at the same data as the <code>anosim</code> will be run on, which is likely to be biased: the clusters are found to <em>make</em> them as different as possible from one another, and this does not address the question of how reproducible the clusters might be.</p>
+<p>However, there is nothing stopping us from running <code>anosim</code> using the clusters as if they were known groups, to see what happens:</p>
+<pre class="r"><code>anosim(dune.dist,dune_cluster)</code></pre>
+<pre><code>## 
+## Call:
+## anosim(x = dune.dist, grouping = dune_cluster) 
+## Dissimilarity: bray 
+## 
+## ANOSIM statistic R: 0.9265 
+##       Significance: 0.001 
+## 
+## Permutation: free
+## Number of permutations: 999</code></pre>
+<p>Very significant indeed. (We should probably do some kind of cross-validation here to get a P-value we can trust, but I leave that aside.)</p>
+</div>
+<div id="ordination-or-multidimensional-scaling" class="section level2">
+<h2>Ordination, or multidimensional scaling</h2>
+<p>Another thing community ecologists do is called “ordination”. I call it “multidimensional scaling”. Anyway, the idea is to use dissimilarities to draw a two-dimensional picture of the sites (here) so that similar ones are close together. This uses the dissimilarities that we calculated earlier. The base function <code>cmdscale</code> tries to place the individual sites in two dimensions so as to best reproduce the dissimilarities as distances on the graph.</p>
+<pre class="r"><code>dune.scale=cmdscale(dune.dist,eig=T)
+dune.scale$GOF</code></pre>
+<pre><code>## [1] 0.5601833 0.5961463</code></pre>
+<p>The goodness-of-fit measure is like R-squared. I don’t know why there are two values, but I’m calling this acceptably high.</p>
+<p><code>dune.scale</code> contains <code>points</code>, a matrix with <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> coordinates for plotting. I would make the plot using <code>ggplot</code> by first constructing a data frame with the coordinates and identifiers for the locations, thus:</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">“Vegan” also has functions for making and plotting ordinations, perhaps more in line with how community ecologists are used to seeing them. I couldn’t get my head around how the species appeared on the plot from “ordiplot”.</span></p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">When you turn a matrix with nameless columns into a “tibble”, the columns acquire names V1, V2, etc.</span></p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The sites are identified by number in the row names of “dune”. This technique would also work if the sites had names stored in the row names of the data frame.</span></p>
+<pre class="r"><code>as_tibble(dune.scale$points) %&gt;%
+  rownames_to_column(&quot;site&quot;) %&gt;% 
+  ggplot(aes(x=V1,y=V2,label=site))+
+    geom_point()+geom_text_repel()+coord_fixed()</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The “coord_fixed” is to make both axes have the same scale, so that distances are properly mapped.</span></p>
+<p>This is perhaps better than the cluster analysis because it doesn’t <em>force</em> somewhat dissimilar sites to be in the same cluster; it lets the consumer of the graph decide the extent to which sites are similar or not.</p>
+<p>There do seem to be some groups of similar sites. A tweak to our code lets us see how these correspond to our clusters from earlier:</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Code notes: I (i) added the cluster identifiers to the data frame I created, as a factor, (ii) added them to the plot using colour, (iii) got rid of the legend, since I don’t care about which cluster is which.</span></p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Yes, I forgot the “as.factor” the first time, so that all my points were in varying shades of blue.</span></p>
+<pre class="r"><code>as_tibble(dune.scale$points) %&gt;% 
+  rownames_to_column(&quot;site&quot;) %&gt;% 
+  mutate(cluster=as.factor(dune_cluster)) %&gt;% 
+  ggplot(aes(x=V1,y=V2,colour=cluster,label=site))+
+    geom_point()+geom_text_repel()+coord_fixed()+guides(colour=F)</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>Not bad at all. The clusters are mostly distinct, though site 2 ought to be in the same cluster as site 1, and site 8 ought to be in the cluster with sites 12 and 13. Having seven clusters, one of the suggestions from our scree plot, does seem to make sense.</p>
+<p>As a final flourish, we could add the farming methods to this plot instead of the clusters. This time, having the legend is helpful:</p>
+<pre class="r"><code>as_tibble(dune.scale$points) %&gt;% 
+  rownames_to_column(&quot;site&quot;) %&gt;% 
+  mutate(farming=dune.env$Management) %&gt;% 
+  ggplot(aes(x=V1,y=V2,colour=farming,label=site))+
+    geom_point()+geom_text_repel()+coord_fixed()</code></pre>
+<p><img src="../../../../post/2018-05-17-ken-ventures-into-community-ecology_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>There is definitely some grouping, but it is not as clear as for the clusters.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://cran.r-project.org/web/packages/vegan/vegan.pdf">Documentation for <code>vegan</code></a></p>
+<p><a href="https://cran.r-project.org/web/packages/vegan/vignettes/intro-vegan.pdf">Ordination vignette in <code>vegan</code></a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2018
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
