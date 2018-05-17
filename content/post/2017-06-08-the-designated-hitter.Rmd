@@ -131,7 +131,7 @@ byleague
 
 A graphical comparison of runs by game for each league is most easily a boxplot:
 
-```{r}
+```{r runs_boxplot}
 ggplot(byleague,aes(x=leagues,y=runs))+geom_boxplot()
 ```
 
