@@ -167,7 +167,7 @@ There seems to be some grouping here: the clusters each only contain one or two 
 
 ## Analysis of similarity
 
-I used the cluster analysis as a stepping-stone to figure out which sites were "similar" to each other. However, this is really losing information about similarity, because it boils down the actual numbers in the dissimilarity matrix into a yes/no: two sites are either in the same cluster or not. It seems better to use the actual dissimilarities in an analysis. This avoids arbitrary choices about the number of clusters to use; if I had used, say, six clusters instead of four, the story could have been different.
+I used the cluster analysis as a stepping-stone to figure out which sites were "similar" to each other. However, this is really losing information about similarity, because it boils down the actual numbers in the dissimilarity matrix into a yes/no: two sites are either in the same cluster or not. It seems better to use the actual dissimilarities in an analysis. This avoids arbitrary choices about the number of clusters to use; if I had used, say, three clusters instead of seven, the story would have been different.
 
 This is where Analysis of Similarity comes in. It is like analysis of variance, in that it tests whether pre-determined groups are similar to each other or different, but instead of using observations from each of the groups, it uses dissimilarities between observations within and between groups. The [`anosim`](http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/anosim.html) function takes a dissimilarity matrix and a column containing the grouping. It does a permutation test to obtain a P-value:
 
@@ -210,7 +210,7 @@ The goodness-of-fit measure is like R-squared. I don't know why there are two va
 
 `r tufte::margin_note("The sites are identified by number in the row names of \"dune\". This technique would also work if the sites had names stored in the row names of the data frame.")`
 
-```{r}
+```{r mds}
 as_tibble(dune.scale$points) %>%
   rownames_to_column("site") %>% 
   ggplot(aes(x=V1,y=V2,label=site))+
@@ -227,7 +227,7 @@ There do seem to be some groups of similar sites. A tweak to our code lets us se
 
 `r tufte::margin_note("Yes, I forgot the \"as.factor\" the first time, so that all my points were in varying shades of blue.")`
 
-```{r}
+```{r mds_cluster}
 as_tibble(dune.scale$points) %>% 
   rownames_to_column("site") %>% 
   mutate(cluster=as.factor(dune_cluster)) %>% 
@@ -239,7 +239,7 @@ Not bad at all. The clusters are mostly distinct, though site 2 ought to be in t
 
 As a final flourish, we could add the farming methods to this plot instead of the clusters. This time, having the legend is helpful:
 
-```{r}
+```{r mds_farming}
 as_tibble(dune.scale$points) %>% 
   rownames_to_column("site") %>% 
   mutate(farming=dune.env$Management) %>% 
@@ -255,3 +255,5 @@ There is definitely some grouping, but it is not as clear as for the clusters.
 [Documentation for `vegan`](https://cran.r-project.org/web/packages/vegan/vegan.pdf)
 
 [Ordination vignette in `vegan`](https://cran.r-project.org/web/packages/vegan/vignettes/intro-vegan.pdf)
+
+[Row names in the tidyverse](https://www.rdocumentation.org/packages/tibble/versions/1.4.2/topics/rownames)
