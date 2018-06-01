@@ -1,0 +1,133 @@
+---
+title: Getting data from a frequency table, the tidyverse way
+author: Ken
+date: '2018-06-01'
+slug: getting-data-from-a-frequency-table-the-tidyverse-way
+categories:
+  - statistics
+tags:
+  - rstats
+  - tidyverse
+---
+
+## The usual package
+
+```{r}
+library(tidyverse)
+```
+
+
+## Introduction
+
+`r tufte::margin_note("References at the end.")`
+
+I was searching for some data for an assignment for my students, and I found an exercise in Watkins, Schaeffer and Cobb that seemed to fit my needs. However, the data values were in a frequency table, and I wanted an actual list of values, so that my students could make a histogram and calculate some summary statistics using R. Also, for reasons that we will come to later, I wanted to randomly shuffle the values, which turns out to have a ludicrously easy solution in the Tidyverse.
+
+## The data set, as it reached me
+
+These are speeds (in miles per hour) of 1000 cars measured on a particular stretch of road (in free-flowing traffic).
+
+Here's the frequency table:
+
+```{r}
+counts=tribble(
+  ~speed_int, ~count,
+  25, 2, 
+  26, 31,
+  27, 92,
+  28, 149,
+  29, 178,
+  30, 156,
+  31, 157,
+  32, 99,
+  33, 74,
+  34, 31,
+  35, 16,
+  36, 13,
+  37, 1, 
+  38, 1
+)
+counts
+```
+
+The speeds are in `speed_int` and the `count` column contains frequencies.
+
+What I want is a list of speeds, each speed appearing in the data set the corresponding `count` number of times. 
+That is, the frequencies add up to 1000, so I want 1000 values. 
+
+
+## Repeating the values the right number of times
+
+Base R's `rep` function provides the simplest way to get what I want:
+
+```{r}
+with(counts,rep(speed_int,count))
+```
+
+How do I do the same thing the tidyverse way? The obvious idea doesn't work:
+
+```{r, eval=F}
+counts %>% mutate(speed=rep(speed_int,count))
+```
+
+This is because the new `speed` column has to have the same length as the old `speed_int` column, and it's now longer. 
+So I thought a list-column might do the job: replicate each `speed_int` by the count in the corresponding row, 
+and save each vector answer in a list-column, thus:
+
+```{r}
+counts %>% mutate(speed=map2(speed_int,count,~rep(.x,.y)))
+```
+
+I don't really need the `~` form here, but I think it reads nicely: "for each `speed_int` and `count` (in parallel), 
+repeat the first thing as many times as the second thing". Each entry in `speed` is a vector as long as the entry in `count`. 
+
+## Making a data frame of speeds
+
+Now, I need to get the actual speeds out of there. This is a job for `unnest`:
+
+```{r}
+counts %>% mutate(speed=map2(speed_int,count,~rep(.x,.y))) %>% 
+  unnest()
+```
+
+25 appears twice, then 26 31 times, and so on.
+
+Now it occurs to me that the values in `speed_int` have been repeated the right number of times, 
+so I didn't need to work so hard: *anything* that produced a vector of the right length would have done. 
+But anyway.
+
+## Shuffling the rows
+
+I wanted to present my students with a file containing a bunch of speeds in apparently random order 
+(as if they were the speeds of 1000 cars in the order they passed the speed gun). I remembered `sample_frac`, 
+which randomly selects a fraction of the rows of a data frame, but didn't realize (until I looked at the Stack Overflow post
+referenced below) that sampling a fraction 1 of the rows will sample them all, but in a shuffled order, in the same
+way that `sample` when not supplied a sample size will randomly sample all of its input (that is, shuffle it). 
+Thus I can do this:
+
+```{r}
+counts %>% mutate(speed=map2(speed_int,count,~rep(.x,.y))) %>% 
+  unnest() %>% 
+  sample_frac(1)
+```
+
+and do a bit of tidying before I save the results:
+
+```{r}
+counts %>% mutate(speed=map2(speed_int,count,~rep(.x,.y))) %>% 
+  unnest() %>% 
+  sample_frac(1) %>% 
+  mutate(car_no=row_number()) %>% 
+  select(car_no,speed)
+```
+
+The last two lines create a column of "car numbers", and then put the two columns I want to keep in a sensible order.
+
+
+## References
+
+[Using `rep`](https://stats.stackexchange.com/questions/15574/how-to-convert-a-frequency-table-into-a-vector-of-values?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa)
+
+[Randomly shuffling rows of a data frame](https://stackoverflow.com/questions/6422273/how-to-randomize-or-permute-a-dataframe-rowwise-and-columnwise?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa)
+
+[Watkins, Schaeffer and Cobb](https://www.amazon.ca/Statistics-Binder-Ready-Version-Decision/dp/0470559942/ref=sr_1_1?ie=UTF8&qid=1527868509&sr=8-1&keywords=watkins+scheaffer+cobb+statistics&dpID=51kUOPO2Y0L&preST=_SX198_BO1,204,203,200_QL40_&dpSrc=srch)

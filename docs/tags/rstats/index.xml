@@ -6,10 +6,20 @@
     <description>Recent content in Rstats on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 17 May 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 01 Jun 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/rstats/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Getting data from a frequency table, the tidyverse way</title>
+      <link>/2018/06/01/getting-data-from-a-frequency-table-the-tidyverse-way/</link>
+      <pubDate>Fri, 01 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/06/01/getting-data-from-a-frequency-table-the-tidyverse-way/</guid>
+      <description>The usual package library(tidyverse) ## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag()  Introduction ⊕References at the end.
+I was searching for some data for an assignment for my students, and I found an exercise in Watkins, Schaeffer and Cobb that seemed to fit my needs.</description>
+    </item>
     
     <item>
       <title>Ken ventures into community ecology</title>
