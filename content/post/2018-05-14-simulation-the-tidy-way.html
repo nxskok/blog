@@ -71,49 +71,6 @@ This one takes 100 random standard normals, computes the mean, and repeats this 
 <pre><code>##  [1] -0.01464278  0.07959040  0.12642268  0.11989901  0.05910164
 ##  [6]  0.06355798 -0.13927125  0.02277575 -0.14046121  0.14216426</code></pre>
 <p>The output of this <code>rerun</code> is a <code>list</code> containing 10 random samples of size 100 each, and then the <code>map_dbl</code> calculates the mean of each of these (each list element, in general) returning a vector of 10 sample means.</p>
-<p>For full tidiness, this ought to be done in a data frame. The output from <code>rerun</code>, though, is a list. If you convert it into a <code>tibble</code>, it comes across as a data frame with one column for each list element with <em>no names</em>, so I have to supply some:</p>
-<pre class="r"><code>rerun(10,rnorm(100)) %&gt;% 
-  as_tibble(validate=F) -&gt; 
-z
-names(z)=str_c(&quot;X&quot;,sprintf(&quot;%02d&quot;,1:10))
-z</code></pre>
-<pre><code>## # A tibble: 100 x 10
-##         X01    X02    X03    X04     X05     X06    X07     X08    X09
-##       &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
-##  1  1.12    -0.734  2.01   0.124  0.978  -1.47   -1.60  -0.0530 -0.432
-##  2  0.148    0.485  0.479 -0.448 -0.0324  0.332   0.767  2.02   -0.627
-##  3  0.00855 -0.704  0.855  0.702 -1.70    0.277  -0.817  0.814   0.790
-##  4 -0.739    0.532  1.79  -1.28  -0.575  -0.629   0.552 -2.88    0.282
-##  5  0.986   -0.409 -0.465  2.84  -0.628   1.12   -1.74  -0.816   0.905
-##  6 -0.941    0.502 -0.412  0.722  0.599   1.05    0.568  0.349   0.353
-##  7 -0.917    0.169 -1.38  -0.891  1.60   -0.510   0.251 -0.209   1.17 
-##  8  0.0183  -0.555  0.232  0.234  0.271  -0.856   0.184  0.337   0.121
-##  9  0.519   -0.576  0.816  0.524 -0.216  -0.0174  1.30  -0.676   0.381
-## 10  0.949   -0.211  0.406  0.391 -0.0616 -1.96    1.63  -0.903   0.807
-## # ... with 90 more rows, and 1 more variable: X10 &lt;dbl&gt;</code></pre>
-<p>This gives a couple of ways of extracting the sample means:</p>
-<pre class="r"><code>z %&gt;% summarize_all(mean)</code></pre>
-<pre><code>## # A tibble: 1 x 10
-##       X01    X02    X03    X04     X05     X06    X07     X08   X09    X10
-##     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
-## 1 -0.0153 0.0327 0.0654 0.0208 -0.0169 9.63e⁻⁴ 0.0120 0.00647 0.101 0.0874</code></pre>
-<p>Or we can gather the columns into one and use the column names as the grouping variable:</p>
-<pre class="r"><code>z %&gt;% gather(col_name,value,everything()) %&gt;% 
-  group_by(col_name) %&gt;% 
-  summarize(means=mean(value))</code></pre>
-<pre><code>## # A tibble: 10 x 2
-##    col_name     means
-##    &lt;chr&gt;        &lt;dbl&gt;
-##  1 X01      -0.0153  
-##  2 X02       0.0327  
-##  3 X03       0.0654  
-##  4 X04       0.0208  
-##  5 X05      -0.0169  
-##  6 X06       0.000963
-##  7 X07       0.0120  
-##  8 X08       0.00647 
-##  9 X09       0.101   
-## 10 X10       0.0874</code></pre>
 </div>
 <div id="power-of-t-test" class="section level2">
 <h2>Power of <span class="math inline">\(t\)</span>-test</h2>
@@ -125,7 +82,7 @@ pvals
 table(pvals&lt;=0.05)</code></pre>
 <pre><code>## 
 ## FALSE  TRUE 
-##   573   427</code></pre>
+##   574   426</code></pre>
 <p>The power is estimated to be a disappointing 0.427.</p>
 <p>This is one of those cases where we can calculate the answer exactly and compare:</p>
 <pre class="r"><code>power.t.test(n=15,delta=8-10,sd=4,type=&quot;one.sample&quot;,alternative=&quot;two.sided&quot;)</code></pre>
@@ -142,7 +99,7 @@ table(pvals&lt;=0.05)</code></pre>
 <p>If the actual data distribution is not normal, though, we <em>have</em> to resort to simulation. Supposing that the true distribution is gamma with <span class="math inline">\(a=(8/4)^2=4\)</span>, <span class="math inline">\(b=8/4^2=0.5\)</span>, it will have the same mean and SD of 8 and 4. This is definitely skewed, though:</p>
 <pre class="r"><code>x=rgamma(1000,4,0.5)
 ggplot(tibble(x),aes(x=x)) + geom_histogram(bins=15)</code></pre>
-<p><img src="/post/2018-05-14-simulation-the-tidy-way_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="/post/2018-05-14-simulation-the-tidy-way_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>What will that do to the power? Let’s find out:</p>
 <pre class="r"><code>rerun(1000,rgamma(15,4,0.5)) %&gt;% 
   map_dbl(~t.test(.,mu=10)$p.value) -&gt; 
@@ -150,8 +107,71 @@ pvals
 table(pvals&lt;=0.05)</code></pre>
 <pre><code>## 
 ## FALSE  TRUE 
-##   513   487</code></pre>
+##   511   489</code></pre>
 <p>The power has gone up a bit (it was 0.438 before). You may speculate as to why that is.</p>
+<p>One possibility is that the <span class="math inline">\(t\)</span>-test is the wrong test, with a skewed distribution. That would show up in the size of the test being wrong, but we can easily investigate that as well by simulation: test using the actual mean of 8, and see if we erroneously reject 5% of the time:</p>
+<pre class="r"><code>rerun(1000,rgamma(15,4,0.5)) %&gt;% 
+  map_dbl(~t.test(.,mu=8)$p.value) -&gt; 
+pvals
+table(pvals&lt;=0.05)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   954    46</code></pre>
+<p>That’s pretty close to 5%. That suggests that even a sample of size 15 is big enough to make the Central Limit Theorem work with this amount of skewness, and tells us that there is some other reason why the power is bigger when the true distribution is gamma.</p>
+</div>
+<div id="confidence-interval-for-the-power-and-type-i-error-probability" class="section level2">
+<h2>Confidence interval for the power (and type I error probability)</h2>
+<p>Because these simulations are based on simulation, another run could produce different results. The nature of these simulations, though, is that each simulation run is independent and each random sample either leads to rejection or not with some fixed probability <span class="math inline">\(p\)</span> (the “true power” or “true type I error probability”). We can use the usual mechanism based on the binomial distribution to get a confidence interval for this unknown probability. This is implemented in <code>prop.test</code>, which, despite its name, gets a confidence interval for the unknown probability. It normally has up to three arguments: the observed number of rejections, the number of simulations and a null probability (that defaults to 0.5). For this, I think it’s clearer to not give a null probability and look only at the confidence interval.</p>
+<p>Here’s the one we did for the type I error probability:</p>
+<pre class="r"><code>prop.test(46,1000)</code></pre>
+<pre><code>## 
+##  1-sample proportions test with continuity correction
+## 
+## data:  46 out of 1000, null probability 0.5
+## X-squared = 822.65, df = 1, p-value &lt; 2.2e-16
+## alternative hypothesis: true p is not equal to 0.5
+## 95 percent confidence interval:
+##  0.03423080 0.06137627
+## sample estimates:
+##     p 
+## 0.046</code></pre>
+<p>This says that the type I error probability is somewhere between 0.034 and 0.061, which definitely includes 0.05.</p>
+<p>And, in the power one (for the gamma data) we got 489 rejections out of 1000:</p>
+<pre class="r"><code>prop.test(489,1000)</code></pre>
+<pre><code>## 
+##  1-sample proportions test with continuity correction
+## 
+## data:  489 out of 1000, null probability 0.5
+## X-squared = 0.441, df = 1, p-value = 0.5066
+## alternative hypothesis: true p is not equal to 0.5
+## 95 percent confidence interval:
+##  0.4576218 0.5204638
+## sample estimates:
+##     p 
+## 0.489</code></pre>
+<p>0.458 to 0.520.</p>
+<p>You might find these intervals a bit long; at the cost of waiting a bit longer for the results, you can run the simulations for longer, say 10,000 instead of 1000:</p>
+<pre class="r"><code>rerun(10000,rgamma(15,4,0.5)) %&gt;% 
+  map_dbl(~t.test(.,mu=10)$p.value) -&gt; 
+pvals
+table(pvals&lt;=0.05)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##  5135  4865</code></pre>
+<p>The answer is almost the same, but the confidence interval should be shorter:</p>
+<pre class="r"><code>prop.test(4865,10000)</code></pre>
+<pre><code>## 
+##  1-sample proportions test with continuity correction
+## 
+## data:  4865 out of 10000, null probability 0.5
+## X-squared = 7.2361, df = 1, p-value = 0.007145
+## alternative hypothesis: true p is not equal to 0.5
+## 95 percent confidence interval:
+##  0.4766609 0.4963496
+## sample estimates:
+##      p 
+## 0.4865</code></pre>
+<p>and so it is: 0.477 to 0.496</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
