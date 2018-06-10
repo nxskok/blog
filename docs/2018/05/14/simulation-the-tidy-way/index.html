@@ -206,7 +206,7 @@ table(pvals&lt;=0.05)</code></pre>
 </div>
 <div id="confidence-interval-for-the-power-and-type-i-error-probability" class="section level2">
 <h2>Confidence interval for the power (and type I error probability)</h2>
-<p>Because these simulations are based on simulation, another run could produce different results. The nature of these simulations, though, is that each simulation run is independent and each random sample either leads to rejection or not with some fixed probability <span class="math inline">\(p\)</span> (the “true power” or “true type I error probability”). We can use the usual mechanism based on the binomial distribution to get a confidence interval for this unknown probability. This is implemented in <code>prop.test</code>, which, despite its name, gets a confidence interval for the unknown probability. It normally has up to three arguments: the observed number of rejections, the number of simulations and a null probability (that defaults to 0.5). For this, I think it’s clearer to not give a null probability and look only at the confidence interval.</p>
+<p>Because these simulations are based on simulation, another run could produce different results. The nature of these simulations, though, is that each simulation run is independent and each random sample either leads to rejection or not with some fixed probability <span class="math inline">\(p\)</span> (the “true power” or “true type I error probability”). We can use the usual mechanism based on the binomial distribution to get a confidence interval for this unknown probability. This is implemented in <code>prop.test</code>, which, despite its name, also gets a confidence interval for the unknown probability. It normally has up to three arguments: the observed number of rejections, the number of simulations and a null probability (that defaults to 0.5). For this, I think it’s clearer to not give a null probability and look only at the confidence interval.</p>
 <p>Here’s the one we did for the type I error probability:</p>
 <pre class="r"><code>prop.test(46,1000)</code></pre>
 <pre><code>## 
@@ -256,7 +256,7 @@ table(pvals&lt;=0.05)</code></pre>
 ## sample estimates:
 ##      p 
 ## 0.4865</code></pre>
-<p>and so it is: 0.477 to 0.496</p>
+<p>and so it is: 0.477 to 0.496.</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
