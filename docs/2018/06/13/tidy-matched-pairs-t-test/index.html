@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Tidy matched pairs t-test</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/06/13/tidy-matched-pairs-t-test/">Tidy matched pairs t-test</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jun 13, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;6 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The matched pairs <span class="math inline">\(t\)</span>-test is for comparing two measurements obtained on the <em>same</em> individual, such as a before and an after measurement. This is different from the two-sample <span class="math inline">\(t\)</span>-test, which has two independent sets of measurements, one for each experimental condition, with each set collected on <em>different</em> individuals. The matched-pairs <span class="math inline">\(t\)</span>-test is typically the first time we meet repeated-measures data (more than one measurement on the same individual, collected at different times or under different conditions), but we sidestep having to learn anything too new by looking at the <em>difference</em> between the two measurements on the same individual, thus turning the two measurements for each individual into one.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div id="example" class="section level2">
+<h2>Example</h2>
+<p>This example comes from <a href="https://www.abebooks.com/Introduction-Statistical-Methods-Data-Analysis-4th/20271787237/bd">Ott, 4th ed</a>.
+<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This text is old enough to advertise that it comes with a 3.5-inch data disk.</span></p>
+<p>Insurance adjusters were concerned that Garage 1 was giving higher estimates for auto repairs compared to Garage 2. Each of 15 cars recently involved in an collision was taken to both garages for separate estimates of repair costs. The data set is small enough to enter directly via <code>tribble</code>:</p>
+<pre class="r"><code>repairs=tribble(
+  ~garage1, ~garage2,
+  7.6, 7.3,
+  10.2, 9.1,
+  9.5, 8.4,
+  1.3, 1.5,
+  3.0, 2.7,
+  6.3, 5.8,
+  5.3, 4.9,
+  6.2, 5.3,
+  2.2, 2.0,
+  4.8, 4.2,
+  11.3, 11.0,
+  12.1, 11.0,
+  6.9, 6.1,
+  7.6, 6.7,
+  8.4, 7.5
+)
+repairs</code></pre>
+<pre><code>## # A tibble: 15 x 2
+##    garage1 garage2
+##      &lt;dbl&gt;   &lt;dbl&gt;
+##  1    7.60    7.30
+##  2   10.2     9.10
+##  3    9.50    8.40
+##  4    1.30    1.50
+##  5    3.00    2.70
+##  6    6.30    5.80
+##  7    5.30    4.90
+##  8    6.20    5.30
+##  9    2.20    2.00
+## 10    4.80    4.20
+## 11   11.3    11.0 
+## 12   12.1    11.0 
+## 13    6.90    6.10
+## 14    7.60    6.70
+## 15    8.40    7.50</code></pre>
+<p>I presume the units here are hundreds of dollars. A cursory glance at the data reveals that the estimate at Garage 1 is higher than the estimate at Garage 2 in all the cases except one.</p>
+<p>Before we move on, it is perhaps worth noting that this data frame looks “untidy” in that both columns are repair cost estimates, just at different garages, and it is tempting to tidy the data using <code>gather</code>. Here, though, this would be a mistake, because we want to keep together the two repair estimates that belong to the vehicle from the same collision.</p>
+<p>Some of the same issues arise in a genuine repeated-measures analysis: the “profile analysis” approach using <code>Manova</code> from <code>car</code> needs all the reponses for the same subject in the same row (as here), but the mixed models approach using <code>lme4</code> wants one column with all the responses regardless of time and subject, and separate columns indicating which subject and time each response came from.</p>
+</div>
+<div id="the-standard-matched-pairs-t-test" class="section level2">
+<h2>The standard matched-pairs <span class="math inline">\(t\)</span>-test</h2>
+<p>This uses the version of <code>t.test</code> that does <em>not</em> take a model formula or a <code>data=</code> data frame. When the columns we want to compare are in a data frame, as here, we therefore need to use the dollar sign, or, as I prefer, <code>with</code>:</p>
+<pre class="r"><code>with(repairs,t.test(garage1, garage2, paired=T, alternative=&quot;greater&quot;))</code></pre>
+<pre><code>## 
+##  Paired t-test
+## 
+## data:  garage1 and garage2
+## t = 6.0234, df = 14, p-value = 1.563e-05
+## alternative hypothesis: true difference in means is greater than 0
+## 95 percent confidence interval:
+##  0.4339886       Inf
+## sample estimates:
+## mean of the differences 
+##               0.6133333</code></pre>
+<p>This shows that garage 1 does indeed give higher estimates on average than garage 2. Because of the supposition that Garage 1’s estimates would be higher if anything, a one-sided test is appropriate.</p>
+<p>To see <em>how much</em> higher, we can look at a confidence interval for the mean difference, but a confidence interval is a two-sided thing, so we have to run the test again two-sided:</p>
+<pre class="r"><code>with(repairs,t.test(garage1, garage2, paired=T))</code></pre>
+<pre><code>## 
+##  Paired t-test
+## 
+## data:  garage1 and garage2
+## t = 6.0234, df = 14, p-value = 3.126e-05
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  0.3949412 0.8317254
+## sample estimates:
+## mean of the differences 
+##               0.6133333</code></pre>
+<p>Less than 1 but definitely bigger than zero.</p>
+</div>
+<div id="using-and-examining-the-differences" class="section level2">
+<h2>Using and examining the differences</h2>
+<p>The version of <code>t.test</code> we just saw is in some ways “syntactic sugar” in that it calculates the differences and then does a one-sample <span class="math inline">\(t\)</span>-test on them, which we could almost as easily do ourselves. I want to do that here, because it illustrates a couple of things. First, let’s calculate the differences and save them, using right-arrow assignment because I can:</p>
+<pre class="r"><code>repairs %&gt;% mutate(diff=garage1-garage2) -&gt;
+repairs2</code></pre>
+<p>So now we need to test <code>diff</code> by a one-sample <span class="math inline">\(t\)</span>-test. It is tempting to start with this:</p>
+<pre class="r"><code>repairs2 %&gt;% </code></pre>
+<p>and then we get stuck, because this form of <code>t.test</code> doesn’t take a data frame <em>at all</em>. It needs that column of differences as its first input, <em>as a vector</em>, and Tidyverse things tend to output data frames. So what we have to do is to use <code>pull</code> to get the appropriate column, and then feed <em>that</em> into <code>t.test</code>:</p>
+<pre class="r"><code>repairs2 %&gt;% pull(diff) %&gt;% 
+  t.test(mu=0,alternative=&quot;greater&quot;)</code></pre>
+<pre><code>## 
+##  One Sample t-test
+## 
+## data:  .
+## t = 6.0234, df = 14, p-value = 1.563e-05
+## alternative hypothesis: true mean is greater than 0
+## 95 percent confidence interval:
+##  0.4339886       Inf
+## sample estimates:
+## mean of x 
+## 0.6133333</code></pre>
+<p>and this gets identical results to before.</p>
+</div>
+<div id="assessing-the-assumptions" class="section level2">
+<h2>Assessing the assumptions</h2>
+<p>A benefit to actually having the differences is that we can assess the assumptions of the paired <span class="math inline">\(t\)</span>-test. The assumption that we are concerned with is that the <em>differences</em> should have an approximate normal distribution. The distributions of each garage’s estimates don’t concern us, because these could be all over the place (the study used 15 cars all in different collisions that could have suffered very different amounts of damage). We have to be somewhat careful about normality here because there were only <span class="math inline">\(n=15\)</span> cars and we can’t expect much help from the Central Limit Theorem.</p>
+<p>The best graph for assessing normality as such is a normal quantile plot. I was delighted to discover that the <code>ggplot2</code> version of this now has a line, so that I could remove all the <code>qqnorm</code> and <code>qqline</code> from my lecture notes:</p>
+<pre class="r"><code>ggplot(repairs2,aes(sample=diff))+stat_qq()+stat_qq_line()</code></pre>
+<p><img src="../../../../post/2018-06-13-tidy-matched-pairs-t-test_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>I think I am happy with the normality and thus with the matched-pairs <span class="math inline">\(t\)</span>. The highest difference could be a little bigger, but other than that I see no problems with normality that I need to be concerned about.</p>
+<p>I mentally took a step back from this and mused that when both garages think the repair cost should be large, the difference between them is likely to be bigger (since we might expect things to increase in proportion: garage 1 might pay its mechanics more per hour or use more expensive parts). What happens if we plot the sum of the estimates against their difference?</p>
+<pre class="r"><code>repairs2 %&gt;% mutate(sum=garage1+garage2) %&gt;% 
+  ggplot(aes(x=sum, y=diff))+geom_point()+geom_smooth(se=F)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="../../../../post/2018-06-13-tidy-matched-pairs-t-test_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>The difference does tend to be bigger when the sum is bigger. Maybe we should try log-transforming the repair cost estimates, which would be equivalent to looking at their ratio rather than their difference.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://www.abebooks.com/Introduction-Statistical-Methods-Data-Analysis-4th/20271787237/bd">Ott, Introduction to Statistical Methods and Data Analysis, 4th ed</a></p>
+<p><a href="http://ggplot2.tidyverse.org/reference/geom_qq.html">stat_qq documentation in ggplot2</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2018
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
