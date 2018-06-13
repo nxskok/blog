@@ -6,10 +6,19 @@
     <description>Recent content on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 01 Jun 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 13 Jun 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tidy matched pairs t-test</title>
+      <link>/2018/06/13/tidy-matched-pairs-t-test/</link>
+      <pubDate>Wed, 13 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/06/13/tidy-matched-pairs-t-test/</guid>
+      <description>Introduction The matched pairs \(t\)-test is for comparing two measurements obtained on the same individual, such as a before and an after measurement. This is different from the two-sample \(t\)-test, which has two independent sets of measurements, one for each experimental condition, with each set collected on different individuals. The matched-pairs \(t\)-test is typically the first time we meet repeated-measures data (more than one measurement on the same individual, collected at different times or under different conditions), but we sidestep having to learn anything too new by looking at the difference between the two measurements on the same individual, thus turning the two measurements for each individual into one.</description>
+    </item>
     
     <item>
       <title>Getting data from a frequency table, the tidyverse way</title>

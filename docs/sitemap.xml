@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/2018/06/13/tidy-matched-pairs-t-test/</loc>
+    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2018/06/01/getting-data-from-a-frequency-table-the-tidyverse-way/</loc>
     <lastmod>2018-06-01T00:00:00+00:00</lastmod>
   </url>
@@ -414,7 +419,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2018-06-01T00:00:00+00:00</lastmod>
+    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -426,13 +431,13 @@
   
   <url>
     <loc>/categories/r/</loc>
-    <lastmod>2018-05-17T00:00:00+00:00</lastmod>
+    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/</loc>
-    <lastmod>2018-06-01T00:00:00+00:00</lastmod>
+    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -444,7 +449,7 @@
   
   <url>
     <loc>/tags/rstats/</loc>
-    <lastmod>2018-06-01T00:00:00+00:00</lastmod>
+    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -468,7 +473,7 @@
   
   <url>
     <loc>/categories/statistics/</loc>
-    <lastmod>2018-06-01T00:00:00+00:00</lastmod>
+    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -480,7 +485,7 @@
   
   <url>
     <loc>/tags/tidyverse/</loc>
-    <lastmod>2018-06-01T00:00:00+00:00</lastmod>
+    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
