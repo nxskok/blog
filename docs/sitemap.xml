@@ -8,6 +8,11 @@
   </url>
   
   <url>
+    <loc>/2018/08/04/testing-means-and-medians/</loc>
+    <lastmod>2018-08-04T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2018/07/13/how-to-change-the-significant-digits-in-a-tibble/</loc>
     <lastmod>2018-07-13T00:00:00+00:00</lastmod>
   </url>
@@ -435,7 +440,7 @@
   
   <url>
     <loc>/tags/r/</loc>
-    <lastmod>2018-05-01T00:00:00+00:00</lastmod>
+    <lastmod>2018-08-04T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -483,7 +488,7 @@
   
   <url>
     <loc>/categories/statistics/</loc>
-    <lastmod>2018-06-13T00:00:00+00:00</lastmod>
+    <lastmod>2018-08-04T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

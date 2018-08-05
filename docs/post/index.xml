@@ -23,6 +23,15 @@ cat dates.csv ## date,date_words,id ## 2007-09-04,September 4 2007,M ## 1963-09-
     </item>
     
     <item>
+      <title>Testing means and medians</title>
+      <link>/2018/08/04/testing-means-and-medians/</link>
+      <pubDate>Sat, 04 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/08/04/testing-means-and-medians/</guid>
+      <description>Introduction The data set that inspired this post comes from this edition of Mendenhall and Sincich. It comes from an investigation of how you learn people’s names effectively. 139 students were randomly divided into three groups, and had to learn the first and last names of all the people in the group they had been randomized to (between 40 and 50 other students). The study investigated three methods of learning names:</description>
+    </item>
+    
+    <item>
       <title>How to change the significant digits in a tibble</title>
       <link>/2018/07/13/how-to-change-the-significant-digits-in-a-tibble/</link>
       <pubDate>Fri, 13 Jul 2018 00:00:00 +0000</pubDate>
