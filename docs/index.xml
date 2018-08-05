@@ -6,10 +6,30 @@
     <description>Recent content on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 13 Jun 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 04 Aug 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Dates and lubridate</title>
+      <link>/2018/08/04/dates-and-lubridate/</link>
+      <pubDate>Sat, 04 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/08/04/dates-and-lubridate/</guid>
+      <description>Did somebody say dates? Well, actually not those. I meant the other kind.
+ Some birth dates Let’s suppose that we have some people and their birth dates, and we want to know how old they are:
+cat dates.csv ## date,date_words,id ## 2007-09-04,September 4 2007,M ## 1963-09-24,September 24 1963,Dad ## 1970-06-01,June 1 1970,Mom There are three people (who may or may not be real), and their birth dates are expressed two ways, once as year-month-day, and once in English with month names.</description>
+    </item>
+    
+    <item>
+      <title>How to change the significant digits in a tibble</title>
+      <link>/2018/07/13/how-to-change-the-significant-digits-in-a-tibble/</link>
+      <pubDate>Fri, 13 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/07/13/how-to-change-the-significant-digits-in-a-tibble/</guid>
+      <description>packages library(tidyverse) ## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 2.2.1.9000 ✔ purrr 0.2.4 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.4 ## ✔ tidyr 0.8.0 ✔ stringr 1.3.0 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() library(lubridate) ## ## Attaching package: &amp;#39;lubridate&amp;#39; ## The following object is masked from &amp;#39;package:base&amp;#39;: ## ## date  Introduction When you display a tibble, or a data frame as a tibble, it is made to look nice and to show the most important digits.</description>
+    </item>
     
     <item>
       <title>Tidy matched pairs t-test</title>

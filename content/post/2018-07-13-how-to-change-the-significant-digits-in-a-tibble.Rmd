@@ -1,0 +1,121 @@
+---
+title: How to change the significant digits in a tibble
+author: Ken
+date: '2018-07-13'
+slug: how-to-change-the-significant-digits-in-a-tibble
+categories:
+  - R
+tags:
+  - rstats
+  - tidyverse
+---
+
+## packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+
+## Introduction
+
+When you display a tibble, or a data frame as a tibble, it is made to look nice and to show the most important digits. Let's illustrate with the inevitable `mtcars`:
+
+```{r}
+as_tibble(mtcars)
+```
+
+This shows, by default, three significant digits. Compare that with displaying it as a `data.frame` (which is what `mtcars`) actually is:
+
+```{r}
+mtcars
+```
+
+Usually, this is what you want. But not always. So how do you change it, if you want to? There's a simple answer, but I have a story to tell first.
+
+## The Ice Classic
+
+There is [a competition](http://www.nenanaakiceclassic.com/) each year in Nenana, Alaska, where people have to guess when the ice will melt, down to the nearest minute. Precisely, 
+A wooden tripod is
+placed on the frozen river, and people try to guess the exact minute
+when the ice melts enough for the tripod to fall through the ice. The
+contest started in 1917 as an amusement for railway workers, and has
+taken place every year since. Now, hundreds of thousands of people
+enter their guesses on the Internet and the prize for the winner can
+be as much as $300,000. 
+
+Because so much money is at stake, and because the exact same tripod
+is placed at the exact same spot on the ice every year, the data are
+consistent and accurate. `r tufte::margin_note("Does this sound like the preamble of an assignment question? It was.")`
+
+Let's read in the data:
+
+```{r}
+myurl="http://www.utsc.utoronto.ca/~butler/c32/nenana.txt"
+nenana=read_tsv(myurl)
+nenana
+```
+
+The interesting thing here is `JulianDate`. This is the fractional number of days from January 1 when the ice melted, each year. Perhaps the most interesting thing to do with these data is to see whether there is a trend in this with `Year`:
+
+```{r}
+ggplot(nenana,aes(x=Year,y=JulianDate))+geom_point()+geom_smooth()
+```
+
+There is a lot of variability, but since about 1960 there appears to be a downward trend in `JulianDate`: that is, the ice is typically melting earlier each year.
+
+I wanted to see whether the Julian date had been calculated correctly. In particular, there is a function `yday` in `lubridate` that calculates the number of the day within a year from a date, and since we have the actual dates we can check this. The first step is to turn the `Date&Time` into a proper date-time, and the first part of that step is to glue the `Year` onto the front of it. I use `str_c` from `stringr` for this:
+
+```{r}
+nenana %>% 
+  mutate(long_date=str_c(Year," ",`Date&Time`)) %>% 
+  mutate(dt=ymd_hm(long_date,tz="America/Anchorage")) %>% 
+  select(-`Date&Time`)
+```
+
+That seems to have worked. Note that `lubridate` has handled the AM/PM properly.
+Now I can calculate the Julian dates from `dt` and compare with `JulianDate` that came from the data file:
+
+```{r}
+nenana %>% 
+  mutate(long_date=str_c(Year," ",`Date&Time`)) %>% 
+  mutate(dt=ymd_hm(long_date,tz="America/Anchorage")) %>% 
+  mutate(jd=yday(dt)) ->
+nenana2 
+nenana2 %>% 
+  select(Year,JulianDate,jd)
+```
+
+Wait, some of these are not the same. Did the Ice Classic people make an error, or did I? (Place your bets now.)
+
+There is a clue here, which is the `dbl` at the top of each column: these are decimal numbers that got rounded to 3 significant digits. What is it about the ones that got rounded wrong?
+
+```{r}
+nenana2 %>% 
+  filter(round(JulianDate) != round(jd)) %>% 
+  select(Year, JulianDate, jd, `Date&Time`)
+```
+
+These are all PMs, and the `JulianDate` in the data file is one more than the `jd` I calculated. You can certainly reason out what happened, but can we display a couple more decimal places in `JulianDate` and `jd`?
+
+## Getting extra decimal places
+
+When you display a `tibble`, the display is controlled by the package `pillar` (one of the many packages loaded by the `tidyverse`: the philosophy is that each aspect of the `tidyverse` is controlled by a separate relatively small package). So how do you control what `pillar` does? There is a variable `pillar.sigfigs` (that I had to do a fair amount of digging to find), which is set as an Option:
+
+*** this doesn't actually display with more decimals
+
+```{r}
+options(pillar.sigfigs=100)
+nenana2 %>% 
+  filter(round(JulianDate) != round(jd)) %>% 
+  select(JulianDate, jd
+         ) %>% 
+  print(width=80)
+```
+
+Now we have an answer to our question. `yday` calculates the *integer part* of the Julian date, but if the ice melted after noon, the fractional part of `JulianDate` is bigger than 0.5, and `JulianDate` will get rounded *up* to the next integer. That's why those `JulianDate` values appear to be 1 too big.
+
+The solution involved thinking about what `yday` actually does, but we were deceived by the display of the tibble, and we had to realize that those apparent integers were actually rounded decimal numbers.
+
+

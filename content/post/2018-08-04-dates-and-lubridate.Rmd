@@ -1,0 +1,124 @@
+---
+title: Dates and lubridate
+author: Ken
+date: '2018-08-04'
+slug: dates-and-lubridate
+categories:
+  - R
+tags:
+  - rstats tidyverse
+---
+
+## Did somebody say dates?
+
+![](/dates.jpg)
+
+Well, actually not those. I meant the other kind.
+
+## Some birth dates
+
+Let's suppose that we have some people and their birth dates, and we want to know how old they are:
+
+
+
+```{bash}
+cat dates.csv
+```
+
+There are three people (who may or may not be real), and their birth dates are expressed two ways, once as year-month-day, and once in English with month names.
+
+We need some packages before we start:
+
+```{r message=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+## Reading in the data
+
+Reading in using `read_csv` from `readr` turns y-m-d dates into R `Date`s, but leaves other date-like things as text:
+
+```{r}
+mydates=read_csv("dates.csv")
+mydates
+```
+
+## Using `lubridate` to turn that English into dates
+
+To turn those dates in words into actual dates, we need `lubridate`. These are the month, the day and the year in that order, so `mdy` will take care of it. It doesn't matter whether the months are numbers or names:
+
+```{r}
+(mydates %>% mutate(date_from_text=mdy(date_words)) -> dates2)
+```
+
+Those appear to be the same. Are they?
+
+```{r}
+with(dates2,all.equal(date,date_from_text))
+```
+
+Yep.
+
+## How old are all these people?
+
+First find the ages by subtracting the dates from today:
+
+```{r}
+now=Sys.Date()
+now
+mydates %>% mutate(age=now-date)
+```
+
+These ages are actually stored internally as seconds. This is not very pleasant to look at. (In an R Notebook, `print` chooses what it thinks is an appropriate unit. When I did this before, this was days.)
+
+I would like those ages to be years.
+
+`lubridate` has functions `dminutes`, `ddays`, `dyears` etc that contain the number of seconds in the input number of minutes, days, years etc. So we can calculate a decimal number of years like this:
+
+```{r}
+mydates %>% mutate(age=now-date) %>%
+  mutate(age_years=age/dyears(1))
+```
+
+## Durations and periods
+
+The above are fractional years, "durations" in the `lubridate` jargon. What if we wanted to express them as months instead? The problem is that a month has a variable length, so there is no `dmonths(1)`. What you do instead is to work with "periods", an integer number of somethings plus a remainder. In this way, you can have something like a whole number of months (which is accurate) plus a whole number of days as a remainder.
+
+Let's turn `age` into a period by dividing by `years(1)`, except that this gives a error: 
+
+```{r,error=T}
+mydates %>% mutate(age=now-date) %>%
+  mutate(age_years=age/years(1))
+```
+
+and this doesn't quite fix it:
+
+```{r}
+mydates %>% mutate(age=now-date) %>%
+  mutate(age_years=as.period(age)/years(1))
+```
+
+the answers in `age_years` are slightly different. This is because fractional division doesn't work: years are different lengths.`r tufte::margin_note("If you had a fractional year, *which* year would it be a fraction of?")`
+The right way to handle this is with *integer* division, that is, the old-fashioned way with a quotient and a remainder. The code for that looks like this, the remainder being a bit odd, but I'll get to that.
+
+There seem to be lots of warnings:
+
+```{r}
+mydates %>% mutate(age=as.period(now-date)) %>%
+  mutate(age_years = age %/% years(1), remainder_months = (age %% years(1)) %/% months(1))
+```
+
+I turned `age` into a period first. This makes the ages not display properly. To get those ages in (completed) years, integer-divide by `years(1)`. To get the remainder, use `%%` to get the remainder, but that looks funny when you display it, so if we integer-divide *that* by `months(1)`, we get the remainder as a number of (completed) months. (The ten-month birthdays for M and Dad would be in July, and as I write this it is August 4. M's 11th month hasn't quite ticked over yet.)
+
+Let's do the same thing, but now calculate ages in months and days:
+
+```{r}
+mydates %>% mutate(age=as.period(now-date)) %>%
+  mutate(age_months = age %/% months(1), remainder_days= (age %% months(1)) %/% days(1))
+```
+
+## References
+
+[Lubridate vignette](https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html)
+
+[Dates and times made easy with Lubridate (the original Wickham-Grolemund paper)](https://www.jstatsoft.org/index.php/jss/article/view/v040i03/v40i03.pdf)

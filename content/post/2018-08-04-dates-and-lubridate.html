@@ -1,0 +1,152 @@
+---
+title: Dates and lubridate
+author: Ken
+date: '2018-08-04'
+slug: dates-and-lubridate
+categories:
+  - R
+tags:
+  - rstats tidyverse
+---
+
+
+
+<div id="did-somebody-say-dates" class="section level2">
+<h2>Did somebody say dates?</h2>
+<p><img src="/dates.jpg" /></p>
+<p>Well, actually not those. I meant the other kind.</p>
+</div>
+<div id="some-birth-dates" class="section level2">
+<h2>Some birth dates</h2>
+<p>Let’s suppose that we have some people and their birth dates, and we want to know how old they are:</p>
+<pre class="bash"><code>cat dates.csv</code></pre>
+<pre><code>## date,date_words,id
+## 2007-09-04,September 4 2007,M
+## 1963-09-24,September 24 1963,Dad
+## 1970-06-01,June 1 1970,Mom</code></pre>
+<p>There are three people (who may or may not be real), and their birth dates are expressed two ways, once as year-month-day, and once in English with month names.</p>
+<p>We need some packages before we start:</p>
+<pre class="r"><code>library(tidyverse)
+library(lubridate)</code></pre>
+</div>
+<div id="reading-in-the-data" class="section level2">
+<h2>Reading in the data</h2>
+<p>Reading in using <code>read_csv</code> from <code>readr</code> turns y-m-d dates into R <code>Date</code>s, but leaves other date-like things as text:</p>
+<pre class="r"><code>mydates=read_csv(&quot;dates.csv&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   date = col_date(format = &quot;&quot;),
+##   date_words = col_character(),
+##   id = col_character()
+## )</code></pre>
+<pre class="r"><code>mydates</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   date       date_words        id   
+##   &lt;date&gt;     &lt;chr&gt;             &lt;chr&gt;
+## 1 2007-09-04 September 4 2007  M    
+## 2 1963-09-24 September 24 1963 Dad  
+## 3 1970-06-01 June 1 1970       Mom</code></pre>
+</div>
+<div id="using-lubridate-to-turn-that-english-into-dates" class="section level2">
+<h2>Using <code>lubridate</code> to turn that English into dates</h2>
+<p>To turn those dates in words into actual dates, we need <code>lubridate</code>. These are the month, the day and the year in that order, so <code>mdy</code> will take care of it. It doesn’t matter whether the months are numbers or names:</p>
+<pre class="r"><code>(mydates %&gt;% mutate(date_from_text=mdy(date_words)) -&gt; dates2)</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   date       date_words        id    date_from_text
+##   &lt;date&gt;     &lt;chr&gt;             &lt;chr&gt; &lt;date&gt;        
+## 1 2007-09-04 September 4 2007  M     2007-09-04    
+## 2 1963-09-24 September 24 1963 Dad   1963-09-24    
+## 3 1970-06-01 June 1 1970       Mom   1970-06-01</code></pre>
+<p>Those appear to be the same. Are they?</p>
+<pre class="r"><code>with(dates2,all.equal(date,date_from_text))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>Yep.</p>
+</div>
+<div id="how-old-are-all-these-people" class="section level2">
+<h2>How old are all these people?</h2>
+<p>First find the ages by subtracting the dates from today:</p>
+<pre class="r"><code>now=Sys.Date()
+now</code></pre>
+<pre><code>## [1] &quot;2018-08-04&quot;</code></pre>
+<pre class="r"><code>mydates %&gt;% mutate(age=now-date)</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   date       date_words        id    age   
+##   &lt;date&gt;     &lt;chr&gt;             &lt;chr&gt; &lt;time&gt;
+## 1 2007-09-04 September 4 2007  M     3987  
+## 2 1963-09-24 September 24 1963 Dad   20038 
+## 3 1970-06-01 June 1 1970       Mom   17596</code></pre>
+<p>These ages are actually stored internally as seconds. This is not very pleasant to look at. (In an R Notebook, <code>print</code> chooses what it thinks is an appropriate unit. When I did this before, this was days.)</p>
+<p>I would like those ages to be years.</p>
+<p><code>lubridate</code> has functions <code>dminutes</code>, <code>ddays</code>, <code>dyears</code> etc that contain the number of seconds in the input number of minutes, days, years etc. So we can calculate a decimal number of years like this:</p>
+<pre class="r"><code>mydates %&gt;% mutate(age=now-date) %&gt;%
+  mutate(age_years=age/dyears(1))</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   date       date_words        id    age    age_years
+##   &lt;date&gt;     &lt;chr&gt;             &lt;chr&gt; &lt;time&gt;     &lt;dbl&gt;
+## 1 2007-09-04 September 4 2007  M     3987        10.9
+## 2 1963-09-24 September 24 1963 Dad   20038       54.9
+## 3 1970-06-01 June 1 1970       Mom   17596       48.2</code></pre>
+</div>
+<div id="durations-and-periods" class="section level2">
+<h2>Durations and periods</h2>
+<p>The above are fractional years, “durations” in the <code>lubridate</code> jargon. What if we wanted to express them as months instead? The problem is that a month has a variable length, so there is no <code>dmonths(1)</code>. What you do instead is to work with “periods”, an integer number of somethings plus a remainder. In this way, you can have something like a whole number of months (which is accurate) plus a whole number of days as a remainder.</p>
+<p>Let’s turn <code>age</code> into a period by dividing by <code>years(1)</code>, except that this gives a error:</p>
+<pre class="r"><code>mydates %&gt;% mutate(age=now-date) %&gt;%
+  mutate(age_years=age/years(1))</code></pre>
+<pre><code>## Error in mutate_impl(.data, dots): Evaluation error: Incompatible timespan classes:
+##   change class with as.duration() or as.period().</code></pre>
+<p>and this doesn’t quite fix it:</p>
+<pre class="r"><code>mydates %&gt;% mutate(age=now-date) %&gt;%
+  mutate(age_years=as.period(age)/years(1))</code></pre>
+<pre><code>## estimate only: convert to intervals for accuracy</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   date       date_words        id    age    age_years
+##   &lt;date&gt;     &lt;chr&gt;             &lt;chr&gt; &lt;time&gt;     &lt;dbl&gt;
+## 1 2007-09-04 September 4 2007  M     3987        10.9
+## 2 1963-09-24 September 24 1963 Dad   20038       54.9
+## 3 1970-06-01 June 1 1970       Mom   17596       48.2</code></pre>
+<p>the answers in <code>age_years</code> are slightly different. This is because fractional division doesn’t work: years are different lengths.<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">If you had a fractional year, <em>which</em> year would it be a fraction of?</span>
+The right way to handle this is with <em>integer</em> division, that is, the old-fashioned way with a quotient and a remainder. The code for that looks like this, the remainder being a bit odd, but I’ll get to that.</p>
+<p>There seem to be lots of warnings:</p>
+<pre class="r"><code>mydates %&gt;% mutate(age=as.period(now-date)) %&gt;%
+  mutate(age_years = age %/% years(1), remainder_months = (age %% years(1)) %/% months(1))</code></pre>
+<pre><code>## Note: method with signature &#39;Timespan#Timespan&#39; chosen for function &#39;%/%&#39;,
+##  target signature &#39;Period#Period&#39;.
+##  &quot;Period#ANY&quot;, &quot;ANY#Period&quot; would also be valid</code></pre>
+<pre><code>## estimate only: convert to intervals for accuracy
+## estimate only: convert to intervals for accuracy</code></pre>
+<pre><code>## Note: method with signature &#39;Period#ANY&#39; chosen for function &#39;-&#39;,
+##  target signature &#39;Period#Period&#39;.
+##  &quot;ANY#Period&quot; would also be valid</code></pre>
+<pre><code>## estimate only: convert to intervals for accuracy</code></pre>
+<pre><code>## Warning in compute_exp(abs_x): NAs introduced by coercion to integer range</code></pre>
+<pre><code>## Warning in compute_exp(x): NAs introduced by coercion to integer range</code></pre>
+<pre><code>## Warning in compute_exp(abs_x): NAs introduced by coercion to integer range</code></pre>
+<pre><code>## # A tibble: 3 x 6
+##   date       date_words        id           age age_years remainder_months
+##   &lt;date&gt;     &lt;chr&gt;             &lt;chr&gt; &lt;S4: Peri&gt;     &lt;dbl&gt;            &lt;dbl&gt;
+## 1 2007-09-04 September 4 2007  M              0      10.0            10.0 
+## 2 1963-09-24 September 24 1963 Dad            0      54.0            10.0 
+## 3 1970-06-01 June 1 1970       Mom            0      48.0             2.00</code></pre>
+<p>I turned <code>age</code> into a period first. This makes the ages not display properly. To get those ages in (completed) years, integer-divide by <code>years(1)</code>. To get the remainder, use <code>%%</code> to get the remainder, but that looks funny when you display it, so if we integer-divide <em>that</em> by <code>months(1)</code>, we get the remainder as a number of (completed) months. (The ten-month birthdays for M and Dad would be in July, and as I write this it is August 4. M’s 11th month hasn’t quite ticked over yet.)</p>
+<p>Let’s do the same thing, but now calculate ages in months and days:</p>
+<pre class="r"><code>mydates %&gt;% mutate(age=as.period(now-date)) %&gt;%
+  mutate(age_months = age %/% months(1), remainder_days= (age %% months(1)) %/% days(1))</code></pre>
+<pre><code>## estimate only: convert to intervals for accuracy
+## estimate only: convert to intervals for accuracy
+## estimate only: convert to intervals for accuracy</code></pre>
+<pre><code>## Warning in compute_exp(abs_x): NAs introduced by coercion to integer range</code></pre>
+<pre><code>## Warning in compute_exp(x): NAs introduced by coercion to integer range</code></pre>
+<pre><code>## Warning in compute_exp(abs_x): NAs introduced by coercion to integer range</code></pre>
+<pre><code>## # A tibble: 3 x 6
+##   date       date_words        id            age age_months remainder_days
+##   &lt;date&gt;     &lt;chr&gt;             &lt;chr&gt; &lt;S4: Perio&gt;      &lt;dbl&gt;          &lt;dbl&gt;
+## 1 2007-09-04 September 4 2007  M               0        130          30.0 
+## 2 1963-09-24 September 24 1963 Dad             0        658          10.0 
+## 3 1970-06-01 June 1 1970       Mom             0        578           3.00</code></pre>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html">Lubridate vignette</a></p>
+<p><a href="https://www.jstatsoft.org/index.php/jss/article/view/v040i03/v40i03.pdf">Dates and times made easy with Lubridate (the original Wickham-Grolemund paper)</a></p>
+</div>

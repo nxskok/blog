@@ -6,10 +6,21 @@
     <description>Recent content in Rstats Tidyverse on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 18 Feb 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 04 Aug 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/rstats-tidyverse/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Dates and lubridate</title>
+      <link>/2018/08/04/dates-and-lubridate/</link>
+      <pubDate>Sat, 04 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/08/04/dates-and-lubridate/</guid>
+      <description>Did somebody say dates? Well, actually not those. I meant the other kind.
+ Some birth dates Let’s suppose that we have some people and their birth dates, and we want to know how old they are:
+cat dates.csv ## date,date_words,id ## 2007-09-04,September 4 2007,M ## 1963-09-24,September 24 1963,Dad ## 1970-06-01,June 1 1970,Mom There are three people (who may or may not be real), and their birth dates are expressed two ways, once as year-month-day, and once in English with month names.</description>
+    </item>
     
     <item>
       <title>On crossing the rubicon, or how never to use expand.grid again</title>
