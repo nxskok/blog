@@ -105,7 +105,7 @@ tags:
 ## # ... with 126 more rows</code></pre>
 <p>I always get <code>rename</code> confused: it turns out to be “new name equals old name”.</p>
 <p>Except that we want to use all the outcome variables at once.</p>
-<p>This is where some forward thinking is called for. In due course we want to make a graph of outcome, or outcome against baseline, for each of the outcome variables. The slick way to do this is via <code>facet_wrap</code>, which means that we need to have <em>all</em> the outcome variables in <em>one</em> column, and a second column with the names of the outcome variables, which will be used to label the facets. This is <code>gather</code>, which we do <em>first</em>, because it makes everything else easier. Well, not quite first: first we have to grab the outcome variables we want, which are the ones starting with “daily” or ending with “freq”:</p>
+<p>This is where some forward thinking is called for. In due course we want to make a graph of outcome, or outcome against baseline, for each of the outcome variables. The slick way to do this is via <code>facet_wrap</code>, which means that we need to have <em>all</em> the outcome variables in <em>one</em> column, and a second column with the names of the outcome variables, which will be used to label the facets. This is <code>gather</code>, which we do <em>first</em>, because it makes everything else easier. Well, not quite first: first we have to grab the outcome variables we want:</p>
 <pre class="r"><code>clinical %&gt;% 
   select(1:4,starts_with(&quot;daily&quot;),ends_with(&quot;freq&quot;)) %&gt;% 
   gather(xname,x,-(1:4))</code></pre>
@@ -188,7 +188,7 @@ called <code>baseline</code> above). This uses the same kind of idea to make sca
 ##  9      2      1 B     daily_heart     1.97    1.70 
 ## 10      2      1 B     daily_hrdq      3.77    3.36 
 ## # ... with 942 more rows</code></pre>
-<p>When you’re doing something for each of several subsets of a data frame, the <code>nest</code> and “list-column” ideas come into play. Let’s look at <code>nest</code> first. If you <code>nest</code> everything the facetting variable, you get this:</p>
+<p>When you’re doing something for each of several subsets of a data frame, the <code>nest</code> and “list-column” ideas come into play. Let’s look at <code>nest</code> first. If you <code>nest</code> everything except the facetting variable, you get this:</p>
 <pre class="r"><code>clinical_long %&gt;% nest(-xname)</code></pre>
 <pre><code>## # A tibble: 7 x 2
 ##   xname        data              

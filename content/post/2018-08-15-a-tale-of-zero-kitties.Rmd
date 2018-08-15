@@ -49,7 +49,7 @@ I always get `rename` confused: it turns out to be "new name equals old name".
 
 Except that we want to use all the outcome variables at once.
 
-This is where some forward thinking is called for. In due course we want to make a graph of outcome, or outcome against baseline, for each of the outcome variables. The slick way to do this is via `facet_wrap`, which means that we need to have *all* the outcome variables in *one* column, and a second column with the names of the outcome variables, which will be used to label the facets. This is `gather`, which we do *first*, because it makes everything else easier. Well, not quite first: first we have to grab the outcome variables we want, which are the ones starting with "daily" or ending with "freq":
+This is where some forward thinking is called for. In due course we want to make a graph of outcome, or outcome against baseline, for each of the outcome variables. The slick way to do this is via `facet_wrap`, which means that we need to have *all* the outcome variables in *one* column, and a second column with the names of the outcome variables, which will be used to label the facets. This is `gather`, which we do *first*, because it makes everything else easier. Well, not quite first: first we have to grab the outcome variables we want:
 
 ```{r}
 clinical %>% 
@@ -114,7 +114,7 @@ Can we do each of those seven regressions, and get out the intercepts and slopes
 clinical_long
 ```
 
-When you're doing something for each of several subsets of a data frame, the `nest` and "list-column" ideas come into play. Let's look at `nest` first. If you `nest` everything the facetting variable, you get this:
+When you're doing something for each of several subsets of a data frame, the `nest` and "list-column" ideas come into play. Let's look at `nest` first. If you `nest` everything except the facetting variable, you get this:
 
 ```{r}
 clinical_long %>% nest(-xname)
