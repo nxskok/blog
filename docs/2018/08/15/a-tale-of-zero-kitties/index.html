@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - A tale of zero kitties</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/08/15/a-tale-of-zero-kitties/">A tale of zero kitties</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Aug 15, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;11 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I was reading <a href="https://sastoudt.github.io/blog/2018/08/15/adventures-in-tidyverse-purrr">this</a> by Sara Stoudt and Kellie Ottoboni, and, looking at Kellie’s analysis, I wondered “how would <em>I</em> do it”, realizing that there are many ways to do things in the Tidyverse world. Kellie was kind enough to share her data, so I could go right ahead and experiment.</p>
+<p>Let’s load the <code>tidyverse</code> and read in the data: <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I used “read_csv” from “readr” which avoids having to do the “stringsAsFactors” thing.</span></p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
+## ✔ tibble  1.4.2     ✔ dplyr   0.7.6
+## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
+## ✔ readr   1.1.1     ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>my_url=&quot;https://raw.githubusercontent.com/kellieotto/ancova-permutations/master/data/clinical_cleaned.csv&quot;
+(clinical=read_csv(my_url))</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   SUBJID = col_integer(),
+##   SITEID = col_integer(),
+##   VISITNUM = col_integer(),
+##   tr = col_character(),
+##   country = col_integer(),
+##   heart_sev = col_double(),
+##   regurg_sev = col_double(),
+##   dysp_sev = col_double(),
+##   heart_freq = col_double(),
+##   regurg_freq = col_double(),
+##   dysp_freq = col_double(),
+##   daily_heart = col_double(),
+##   daily_regurg = col_double(),
+##   daily_hrdq = col_double(),
+##   daily_dysp = col_double()
+## )</code></pre>
+<pre><code>## # A tibble: 272 x 15
+##    SUBJID SITEID VISITNUM tr    country heart_sev regurg_sev dysp_sev
+##     &lt;int&gt;  &lt;int&gt;    &lt;int&gt; &lt;chr&gt;   &lt;int&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;
+##  1      1      1        1 A           1      1.43      1.43      1.57
+##  2      1      1        2 A           1      1.43      1.29      2.14
+##  3      2      1        1 B           1      2.71      2.57      2   
+##  4      2      1        2 B           1      2.29      2.29      1.86
+##  5      3      1        1 A           1      2         1.86      1.71
+##  6      3      1        2 A           1      1.86      1.29      1.14
+##  7      4      1        1 B           1      2         0.286     0   
+##  8      4      1        2 B           1      2         0         0   
+##  9      5      1        1 A           1      2         2.43      2.14
+## 10      5      1        2 A           1      2         2         2   
+## # ... with 262 more rows, and 7 more variables: heart_freq &lt;dbl&gt;,
+## #   regurg_freq &lt;dbl&gt;, dysp_freq &lt;dbl&gt;, daily_heart &lt;dbl&gt;,
+## #   daily_regurg &lt;dbl&gt;, daily_hrdq &lt;dbl&gt;, daily_dysp &lt;dbl&gt;</code></pre>
+<p>272 measurements on 15 variables.</p>
+</div>
+<div id="preliminary-processing-and-looking-ahead" class="section level2">
+<h2>Preliminary processing and looking ahead</h2>
+<p>We only want some of those columns, namely the first four, and the outcome variables that begin with <code>daily</code> or that end with <code>freq</code> (we don’t want those <code>sev</code> variables that you probably see above). Also, each subject was measured at two time points, and we want to have a column for each of those, so that each subject is on only one line. (This last is the opposite of the usual situation where you have multiple response variables at different times for the same person and you want to have them one per row.)</p>
+<p>This means that we have to do a <code>select</code> and a <code>spread</code>, for each of our seven outcome variables. For <code>heart-sev</code>, for example, it would look like this:</p>
+<pre class="r"><code>clinical %&gt;% 
+  select(VISITNUM, SUBJID, tr, SITEID, heart_sev) %&gt;% 
+  spread(VISITNUM, heart_sev) </code></pre>
+<pre><code>## # A tibble: 136 x 5
+##    SUBJID tr    SITEID   `1`   `2`
+##     &lt;int&gt; &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1      1 A          1 1.43  1.43 
+##  2      2 B          1 2.71  2.29 
+##  3      3 A          1 2     1.86 
+##  4      4 B          1 2     2    
+##  5      5 A          1 2     2    
+##  6      6 B          1 1.71  1.43 
+##  7      7 B          1 0.857 0.143
+##  8      8 A          1 2.43  2.86 
+##  9      9 A          1 2.43  1    
+## 10     10 B          1 1.29  0.571
+## # ... with 126 more rows</code></pre>
+<p>What has happened is that the values in <code>VISITNUM</code> have been used as column names for the new columns. This isn’t very meaningful , so we’ll call them “baseline” and “outcome” instead:</p>
+<pre class="r"><code>clinical %&gt;% 
+  select(VISITNUM, SUBJID, tr, SITEID, heart_sev) %&gt;% 
+  spread(VISITNUM, heart_sev) %&gt;% 
+  rename(&quot;baseline&quot;=`1`, &quot;outcome&quot;=`2`)</code></pre>
+<pre><code>## # A tibble: 136 x 5
+##    SUBJID tr    SITEID baseline outcome
+##     &lt;int&gt; &lt;chr&gt;  &lt;int&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+##  1      1 A          1    1.43    1.43 
+##  2      2 B          1    2.71    2.29 
+##  3      3 A          1    2       1.86 
+##  4      4 B          1    2       2    
+##  5      5 A          1    2       2    
+##  6      6 B          1    1.71    1.43 
+##  7      7 B          1    0.857   0.143
+##  8      8 A          1    2.43    2.86 
+##  9      9 A          1    2.43    1    
+## 10     10 B          1    1.29    0.571
+## # ... with 126 more rows</code></pre>
+<p>I always get <code>rename</code> confused: it turns out to be “new name equals old name”.</p>
+<p>Except that we want to use all the outcome variables at once.</p>
+<p>This is where some forward thinking is called for. In due course we want to make a graph of outcome, or outcome against baseline, for each of the outcome variables. The slick way to do this is via <code>facet_wrap</code>, which means that we need to have <em>all</em> the outcome variables in <em>one</em> column, and a second column with the names of the outcome variables, which will be used to label the facets. This is <code>gather</code>, which we do <em>first</em>, because it makes everything else easier. Well, not quite first: first we have to grab the outcome variables we want, which are the ones starting with “daily” or ending with “freq”:</p>
+<pre class="r"><code>clinical %&gt;% 
+  select(1:4,starts_with(&quot;daily&quot;),ends_with(&quot;freq&quot;)) %&gt;% 
+  gather(xname,x,-(1:4))</code></pre>
+<pre><code>## # A tibble: 1,904 x 6
+##    SUBJID SITEID VISITNUM tr    xname           x
+##     &lt;int&gt;  &lt;int&gt;    &lt;int&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;
+##  1      1      1        1 A     daily_heart 0.8  
+##  2      1      1        2 A     daily_heart 0.783
+##  3      2      1        1 B     daily_heart 1.97 
+##  4      2      1        2 B     daily_heart 1.70 
+##  5      3      1        1 A     daily_heart 1.24 
+##  6      3      1        2 A     daily_heart 1    
+##  7      4      1        1 B     daily_heart 1.54 
+##  8      4      1        2 B     daily_heart 1.54 
+##  9      5      1        1 A     daily_heart 1.21 
+## 10      5      1        2 A     daily_heart 1.11 
+## # ... with 1,894 more rows</code></pre>
+<p><code>x</code> is the <em>value</em> of the variable whose <em>name</em> is in <code>xname</code>.</p>
+<p>Now we can do our <code>spread</code> to get baseline and outcome in separate columns:</p>
+<pre class="r"><code>(clinical %&gt;% 
+  select(1:4,starts_with(&quot;daily&quot;),ends_with(&quot;freq&quot;)) %&gt;% 
+  gather(xname,x,-(1:4)) %&gt;% 
+  spread(VISITNUM,x) %&gt;% 
+  rename(&quot;baseline&quot;=`1`, &quot;outcome&quot;=`2`) -&gt; clinical_long)</code></pre>
+<pre><code>## # A tibble: 952 x 6
+##    SUBJID SITEID tr    xname        baseline outcome
+##     &lt;int&gt;  &lt;int&gt; &lt;chr&gt; &lt;chr&gt;           &lt;dbl&gt;   &lt;dbl&gt;
+##  1      1      1 A     daily_dysp      0.9     1.39 
+##  2      1      1 A     daily_heart     0.8     0.783
+##  3      1      1 A     daily_hrdq      1.61    1.45 
+##  4      1      1 A     daily_regurg    0.815   0.669
+##  5      1      1 A     dysp_freq       3.93    5.57 
+##  6      1      1 A     heart_freq      3.64    3.64 
+##  7      1      1 A     regurg_freq     4.29    3.43 
+##  8      2      1 B     daily_dysp      1.22    1.26 
+##  9      2      1 B     daily_heart     1.97    1.70 
+## 10      2      1 B     daily_hrdq      3.77    3.36 
+## # ... with 942 more rows</code></pre>
+<p>The value of doing the <code>gather</code> first is that this gets <em>all</em> the outcome variables divided up into “baseline” and “outcome”, all at once, without needing a loop or map.</p>
+</div>
+<div id="making-some-plots" class="section level2">
+<h2>Making some plots</h2>
+<p>Now we can assess the effect of treatment <code>tr</code> on each of our outcome variables. In the blog post, Kellie plotted outcome value against treatment (for each outcome variable). I tell my students to look at the types of variables being plotted: outcome is quantitative and treatment is categorical, which (according to the chart in my lecture notes) means boxplots:</p>
+<pre class="r"><code>ggplot(clinical_long,aes(x=tr, y=outcome))+
+  geom_boxplot()+
+  facet_wrap(~xname,scales=&quot;free&quot;)</code></pre>
+<p><img src="../../../../post/2018-08-15-a-tale-of-zero-kitties_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The facetting idea is to pretend that you were plotting outcome variable against treatment for all the data combined, and at the end, say that you want it done separately for each variable named in <code>xname</code>. When you have very disparate <span class="math inline">\(x\)</span>-variables combined into one column, the scales for all the facets will be different, so it is usually best to allow <code>ggplot</code> to choose them independently.</p>
+<p>All the distributions are right-skewed, and the upper-end outliers make it difficult to compare the distributions (you have to look at the medians crushed into the bottom of the plots and compare those). Kellie had a better idea, which was to make a density plot of each distribution for each treatment, and overlay the ones for the different treatments:</p>
+<pre class="r"><code>ggplot(clinical_long, aes(x=outcome, fill=tr))+
+  geom_density(alpha=0.3)+
+  facet_wrap(~xname, scales=&quot;free&quot;)</code></pre>
+<p><img src="../../../../post/2018-08-15-a-tale-of-zero-kitties_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>I chose a smaller <code>alpha</code> than Kellie did, to make the front graph more transparent. The story here, clearer than on the boxplots, is that treatment A is more likely to produce a smaller value than treatment B is (treatment B is a bit more likely to produce any value except for the very small ones.)</p>
+<p>The reason for measuring the subjects at two time points was to see if the second one depended on the first one (which we
+called <code>baseline</code> above). This uses the same kind of idea to make scatterplots for each outcome variable:</p>
+<pre class="r"><code>ggplot(clinical_long, aes(x=baseline, y=outcome))+
+  geom_point()+geom_smooth(se=F)+
+  facet_wrap(~xname, scales=&quot;free&quot;)</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="../../../../post/2018-08-15-a-tale-of-zero-kitties_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>I put a smooth trend on each plot.</p>
+<p>It looks as if there is an upward trend on all of these that would be pretty well described by a line. That is, a larger baseline tends to go with a larger outcome, for all seven variables.</p>
+</div>
+<div id="doing-those-regressions-in-one-swoop" class="section level2">
+<h2>Doing those regressions in one swoop</h2>
+<p>Can we do each of those seven regressions, and get out the intercepts and slopes? This is what our “long” data frame looked like:</p>
+<pre class="r"><code>clinical_long</code></pre>
+<pre><code>## # A tibble: 952 x 6
+##    SUBJID SITEID tr    xname        baseline outcome
+##     &lt;int&gt;  &lt;int&gt; &lt;chr&gt; &lt;chr&gt;           &lt;dbl&gt;   &lt;dbl&gt;
+##  1      1      1 A     daily_dysp      0.9     1.39 
+##  2      1      1 A     daily_heart     0.8     0.783
+##  3      1      1 A     daily_hrdq      1.61    1.45 
+##  4      1      1 A     daily_regurg    0.815   0.669
+##  5      1      1 A     dysp_freq       3.93    5.57 
+##  6      1      1 A     heart_freq      3.64    3.64 
+##  7      1      1 A     regurg_freq     4.29    3.43 
+##  8      2      1 B     daily_dysp      1.22    1.26 
+##  9      2      1 B     daily_heart     1.97    1.70 
+## 10      2      1 B     daily_hrdq      3.77    3.36 
+## # ... with 942 more rows</code></pre>
+<p>When you’re doing something for each of several subsets of a data frame, the <code>nest</code> and “list-column” ideas come into play. Let’s look at <code>nest</code> first. If you <code>nest</code> everything the facetting variable, you get this:</p>
+<pre class="r"><code>clinical_long %&gt;% nest(-xname)</code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   xname        data              
+##   &lt;chr&gt;        &lt;list&gt;            
+## 1 daily_dysp   &lt;tibble [136 × 5]&gt;
+## 2 daily_heart  &lt;tibble [136 × 5]&gt;
+## 3 daily_hrdq   &lt;tibble [136 × 5]&gt;
+## 4 daily_regurg &lt;tibble [136 × 5]&gt;
+## 5 dysp_freq    &lt;tibble [136 × 5]&gt;
+## 6 heart_freq   &lt;tibble [136 × 5]&gt;
+## 7 regurg_freq  &lt;tibble [136 × 5]&gt;</code></pre>
+<p>These are our seven outcome variables, and the <code>data</code> column contains <em>all the rest of the data</em>, including columns called <code>outcome</code> and <code>baseline</code>. So for each of those <span class="math inline">\(136 \times 5\)</span> data frames, we want to do a regression of outcome on baseline. Here, finally, we get to use something from <code>purrr</code> (which now means that my clever title doesn’t work any more, boo hoo):</p>
+<pre class="r"><code>clinical_long %&gt;% nest(-xname) %&gt;% 
+  mutate(reg=map(data,~lm(outcome~baseline, data=.)))</code></pre>
+<pre><code>## # A tibble: 7 x 3
+##   xname        data               reg     
+##   &lt;chr&gt;        &lt;list&gt;             &lt;list&gt;  
+## 1 daily_dysp   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt;
+## 2 daily_heart  &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt;
+## 3 daily_hrdq   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt;
+## 4 daily_regurg &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt;
+## 5 dysp_freq    &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt;
+## 6 heart_freq   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt;
+## 7 regurg_freq  &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt;</code></pre>
+<p>The column <code>reg</code> now contains <em>all</em> the output from each regression, including coefficients, R-squared, F-test and all. From each of those regressions we can use <code>coef</code> to extract the intercept and slopes:</p>
+<pre class="r"><code>clinical_long %&gt;% nest(-xname) %&gt;% 
+  mutate(reg=map(data,~lm(outcome~baseline, data=.))) %&gt;% 
+  mutate(coeffs=map(reg,~coef(.)))</code></pre>
+<pre><code>## # A tibble: 7 x 4
+##   xname        data               reg      coeffs   
+##   &lt;chr&gt;        &lt;list&gt;             &lt;list&gt;   &lt;list&gt;   
+## 1 daily_dysp   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;
+## 2 daily_heart  &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;
+## 3 daily_hrdq   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;
+## 4 daily_regurg &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;
+## 5 dysp_freq    &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;
+## 6 heart_freq   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;
+## 7 regurg_freq  &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;</code></pre>
+<p>and now we extract those two things for each regression:</p>
+<pre class="r"><code>clinical_long %&gt;% nest(-xname) %&gt;% 
+  mutate(reg=map(data,~lm(outcome~baseline, data=.))) %&gt;% 
+  mutate(coeffs=map(reg,~coef(.))) %&gt;% 
+  mutate(intcpt=map_dbl(coeffs,~pluck(.,1)),
+         slope=map_dbl(coeffs,~pluck(.,2)))</code></pre>
+<pre><code>## # A tibble: 7 x 6
+##   xname        data               reg      coeffs     intcpt slope
+##   &lt;chr&gt;        &lt;list&gt;             &lt;list&gt;   &lt;list&gt;      &lt;dbl&gt; &lt;dbl&gt;
+## 1 daily_dysp   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;  0.0848 0.549
+## 2 daily_heart  &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt; -0.0440 0.632
+## 3 daily_hrdq   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;  0.0229 0.564
+## 4 daily_regurg &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;  0.0343 0.529
+## 5 dysp_freq    &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;  0.391  0.537
+## 6 heart_freq   &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt; -0.137  0.640
+## 7 regurg_freq  &lt;tibble [136 × 5]&gt; &lt;S3: lm&gt; &lt;dbl [2]&gt;  0.505  0.433</code></pre>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2018
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

@@ -6,10 +6,20 @@
     <description>Recent content in Statistics on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 04 Aug 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 15 Aug 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/statistics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>A tale of zero kitties</title>
+      <link>/2018/08/15/a-tale-of-zero-kitties/</link>
+      <pubDate>Wed, 15 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/08/15/a-tale-of-zero-kitties/</guid>
+      <description>Introduction I was reading this by Sara Stoudt and Kellie Ottoboni, and, looking at Kellie’s analysis, I wondered “how would I do it”, realizing that there are many ways to do things in the Tidyverse world. Kellie was kind enough to share her data, so I could go right ahead and experiment.
+Let’s load the tidyverse and read in the data: ⊕I used “read_csv” from “readr” which avoids having to do the “stringsAsFactors” thing.</description>
+    </item>
     
     <item>
       <title>Testing means and medians</title>
