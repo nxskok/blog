@@ -120,7 +120,7 @@ When you're doing something for each of several subsets of a data frame, the `ne
 clinical_long %>% nest(-xname)
 ```
 
-These are our seven outcome variables, and the `data` column contains *all the rest of the data*, including columns called `outcome` and `baseline`. So for each of those $136 \times 5$ data frames, we want to do a regression of outcome on baseline. Here, finally, we get to use something from `purrr` (which now means that my clever title doesn't work any more, boo hoo):
+These are our seven outcome variables, and the `data` column contains *all the rest of the data*, including columns called `outcome` and `baseline`. So for each of those seven $136 \times 5$ data frames, we want to do a regression of outcome on baseline. Here, finally, we get to use something from `purrr` (which now means that my clever title doesn't work any more, boo hoo):
 
 ```{r}
 clinical_long %>% nest(-xname) %>% 
@@ -145,3 +145,36 @@ clinical_long %>% nest(-xname) %>%
          slope=map_dbl(coeffs,~pluck(.,2)))
 ```
 
+## Concluding remarks
+
+There are two ways to use `map` functions. You can write a function (or use a pre-written one) that takes the "for-each" as its *first* input. This is rather a silly example:
+
+```{r}
+triple_plus_one=function(x) {
+  3*x+1
+}
+```
+
+So, if you have a data frame of numbers to triple-plus-one, the obvious way is this:
+
+```{r}
+tibble(x=1:10) %>% mutate(y=triple_plus_one(x))
+```
+
+but you can use `map` thus:
+
+```{r}
+tibble(x=1:10) %>% mutate(y=map_dbl(x,triple_plus_one))
+```
+
+("for each `x`, run `triple_plus_one`").
+
+A more flexible way of running the `map` functions is the squiggle-plus-dot way, which in this case would look like this:
+
+```{r}
+tibble(x=1:10) %>% mutate(y=map_dbl(x,~triple_plus_one(.)))
+```
+
+This last in English might be "for each `x`, run `triple_plus_one` on *it*". This is more flexible because the for-each input to the function doesn't have to be first; it can be anywhere, and wherever it is, you use the dot to represent it. 
+`r tufte::margin_note("The dot plays the same role as the i or j does in a for loop.")`
+I used this idea above to run regressions, where the for-each input was the data frame of outcome and baseline values for each outcome variable, and this needed to go into `lm` as the `data=` input. I started out with `purrr` the function way, by writing functions for everything, including silly little helper functions to switch the inputs around, but I've rather gone over to the squiggle-plus-dot way even in cases where I don't really need it.
