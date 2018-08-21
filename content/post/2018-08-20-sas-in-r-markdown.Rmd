@@ -74,10 +74,92 @@ This is all fine and wonderful for text output, but what about graphs? In fact, 
 
 ## SAS Markdown
 
-If there is R Markdown, then surely there is SAS Markdown, right? Right, an R package by that name.
+If there is R Markdown, then surely there is SAS Markdown, right? Right, an R package by that name. The package provides two "engines" that will run SAS on code chunks (in the same manner that you can run `bash`, python etc. on code chunks rather than R by saying in the header of the code chunk what kind of code it is).
+
+There is a bit of setup first. You might find that running `sas` at the command line works for you (in which case it is on your "path", and you won't need `saspath` below), and you might be happy with the SAS defaults, in which case you won't need `sasopts` below, but if you want or need either, mimic the examples in the code chunk below:
+
+```{r}
+library(SASmarkdown)
+saspath = '/usr/local/SASHome/SASFoundation/9.4/sas'
+sasopts = "-ls 75"
+```
+
+If SAS is not on your path, what `saspath` needs to contain is the path to the executable SAS file (which will end in `sas.exe` if you are on Windows). I am on Linux, so mine looks like the above; I think `/usr/local/bin/sas` also will work for me.
+
+SAS by default uses a line width for text of I think 132 characters, which probably comes from the width of an old-fashioned line printer. My option sets the default "line size" to 75, which will fit on the screen better.
+
+Let's start with text output, and see if we can mimic what I did before at the command line. I take everything that was in the command file `soap.sas` before, and put it in a SAS code chunk like this:
+
+```{r, engine="sas", engine.path=saspath, engine.opts=sasopts}
+filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
+
+proc import
+  datafile=myurl
+  out=soap
+  dbms=dlm
+  replace;
+  getnames=yes;
+  delimiter=" ";
+  
+proc means;
+  var scrap speed;
+```
+
+Success! (The output is a bit narrower than it was before, thanks to my "linesize" option).
+
+There is something to worry about here: the SAS code chunks are independent of each other, and so, for example, data read in in one will not be available in another:
+
+```{r, engine="sas", engine.path=saspath, engine.opts=sasopts}
+filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
+
+proc import
+  datafile=myurl
+  out=soap
+  dbms=dlm
+  replace;
+  getnames=yes;
+  delimiter=" ";
+```
+
+That's the end of my first chunk, and the `proc means` is in here:
+
+```{r, engine="sas", engine.path=saspath, engine.opts=sasopts, echo=T, error=T}
+proc means;
+  var scrap speed;
+```
+
+I put `error=T` on my code chunk to allow processing of this post to continue and not stop if there is an error. SAS veterans will recognize the output here: it's the SAS log file, and if you look at the ERRORs, there is (a) no default, that is, most recently created, data set (the one read in by the `proc import` has disappeared) and (b) thereby no data set to get the variables `scrap` and `speed` from. 
+
+All right, so how do we get HTML output, including graphs? `SASmarkdown` contains an engine called `sashtml` that will do that. I'm going to repeat the above (so that you can compare), and also obtain a scatter plot, all in one code chunk:
+
+```{r, engine="sashtml", engine.path=saspath, engine.opts=sasopts}
+filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
+
+proc import
+  datafile=myurl
+  out=soap
+  dbms=dlm
+  replace;
+  getnames=yes;
+  delimiter=" ";
+
+proc means;
+  var scrap speed;
+  
+proc sgplot;
+  scatter x=speed y=scrap;
+```
+
+
 
 ## References
 
 [Statweave](http://homepage.divms.uiowa.edu/~rlenth/StatWeave/)
 
 [Statrep](https://support.sas.com/rnd/app/papers/statrep.html)
+
+[SASmarkdown package intro](https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/SASmdpackage.html)
+
+SASmarkdown usage: for [Windows](https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/SASmarkdown.html) and [Linux](https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/sasmarkdownlinux.html)
+
+[SAS HTML output](https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/SAShtmlengine.html)

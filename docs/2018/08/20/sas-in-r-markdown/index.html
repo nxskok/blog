@@ -80,7 +80,7 @@
   
   
   &nbsp;<i class="fa fa-clock-o"></i>
-    &nbsp;6 min read
+    &nbsp;9 min read
   
   
   
@@ -146,7 +146,7 @@ a1.pdf: a1.tex
 <pre class="bash"><code>sas soap.sas</code></pre>
 <p>which gives <em>no output</em>, <em>whether it worked or not</em>, and then you look at the output:</p>
 <pre class="bash"><code>cat soap.lst</code></pre>
-<pre><code>##                                                            The SAS System                          22:34 Monday, August 20, 2018   1
+<pre><code>##                                                            The SAS System                         11:47 Tuesday, August 21, 2018   1
 ## 
 ##                                                         The MEANS Procedure
 ## 
@@ -159,12 +159,233 @@ a1.pdf: a1.tex
 </div>
 <div id="sas-markdown" class="section level2">
 <h2>SAS Markdown</h2>
-<p>If there is R Markdown, then surely there is SAS Markdown, right? Right, an R package by that name.</p>
+<p>If there is R Markdown, then surely there is SAS Markdown, right? Right, an R package by that name. The package provides two “engines” that will run SAS on code chunks (in the same manner that you can run <code>bash</code>, python etc. on code chunks rather than R by saying in the header of the code chunk what kind of code it is).</p>
+<p>There is a bit of setup first. You might find that running <code>sas</code> at the command line works for you (in which case it is on your “path”, and you won’t need <code>saspath</code> below), and you might be happy with the SAS defaults, in which case you won’t need <code>sasopts</code> below, but if you want or need either, mimic the examples in the code chunk below:</p>
+<pre class="r"><code>library(SASmarkdown)</code></pre>
+<pre><code>## sas, saslog, sashtml, and sashtmllog engines</code></pre>
+<pre><code>##    are now ready to use.</code></pre>
+<pre class="r"><code>saspath = &#39;/usr/local/SASHome/SASFoundation/9.4/sas&#39;
+sasopts = &quot;-ls 75&quot;</code></pre>
+<p>If SAS is not on your path, what <code>saspath</code> needs to contain is the path to the executable SAS file (which will end in <code>sas.exe</code> if you are on Windows). I am on Linux, so mine looks like the above; I think <code>/usr/local/bin/sas</code> also will work for me.</p>
+<p>SAS by default uses a line width for text of I think 132 characters, which probably comes from the width of an old-fashioned line printer. My option sets the default “line size” to 75, which will fit on the screen better.</p>
+<p>Let’s start with text output, and see if we can mimic what I did before at the command line. I take everything that was in the command file <code>soap.sas</code> before, and put it in a SAS code chunk like this:</p>
+<pre class="sas"><code>filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
+
+proc import
+  datafile=myurl
+  out=soap
+  dbms=dlm
+  replace;
+  getnames=yes;
+  delimiter=&quot; &quot;;
+  
+proc means;
+  var scrap speed;</code></pre>
+<pre><code>##                             The MEANS Procedure
+## 
+##  Variable    N           Mean        Std Dev        Minimum        Maximum
+##  -------------------------------------------------------------------------
+##  scrap      27    315.4814815     82.9895129    140.0000000    470.0000000
+##  speed      27    210.1851852     63.4198689    100.0000000    320.0000000
+##  -------------------------------------------------------------------------</code></pre>
+<p>Success! (The output is a bit narrower than it was before, thanks to my “linesize” option).</p>
+<p>There is something to worry about here: the SAS code chunks are independent of each other, and so, for example, data read in in one will not be available in another:</p>
+<pre class="sas"><code>filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
+
+proc import
+  datafile=myurl
+  out=soap
+  dbms=dlm
+  replace;
+  getnames=yes;
+  delimiter=&quot; &quot;;</code></pre>
+<p>That’s the end of my first chunk, and the <code>proc means</code> is in here:</p>
+<pre class="sas"><code>2          proc means;
+WARNING: The Base SAS Software product with which MEANS is associated will 
+         be expiring soon, and is currently in warning mode to indicate 
+         this upcoming expiration. Please run PROC SETINIT to obtain more 
+         information on your warning period.
+ERROR: There is not a default input data set (_LAST_ is _NULL_).
+3            var scrap speed;
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: PROCEDURE MEANS used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+ERROR: Errors printed on page 1.</code></pre>
+<p>I put <code>error=T</code> on my code chunk to allow processing of this post to continue and not stop if there is an error. SAS veterans will recognize the output here: it’s the SAS log file, and if you look at the ERRORs, there is (a) no default, that is, most recently created, data set (the one read in by the <code>proc import</code> has disappeared) and (b) thereby no data set to get the variables <code>scrap</code> and <code>speed</code> from.</p>
+<p>All right, so how do we get HTML output, including graphs? <code>SASmarkdown</code> contains an engine called <code>sashtml</code> that will do that. I’m going to repeat the above (so that you can compare), and also obtain a scatter plot, all in one code chunk:</p>
+<pre class="sashtml"><code>filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
+
+proc import
+  datafile=myurl
+  out=soap
+  dbms=dlm
+  replace;
+  getnames=yes;
+  delimiter=&quot; &quot;;
+
+proc means;
+  var scrap speed;
+  
+proc sgplot;
+  scatter x=speed y=scrap;</code></pre>
+<div class="branch">
+<a name="IDX"></a>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure Means: Summary statistics">
+<colgroup>
+<col>
+</colgroup>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="l b header" scope="col">
+Variable
+</th>
+<th class="r b header" scope="col">
+N
+</th>
+<th class="r b header" scope="col">
+Mean
+</th>
+<th class="r b header" scope="col">
+Std Dev
+</th>
+<th class="r b header" scope="col">
+Minimum
+</th>
+<th class="r b header" scope="col">
+Maximum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="l stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<th class="l data top_stacked_value">
+scrap
+</th>
+</tr>
+<tr>
+<th class="l data bottom_stacked_value">
+speed
+</th>
+</tr>
+</table>
+</th>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+27
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+27
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+315.4814815
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+210.1851852
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+82.9895129
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+63.4198689
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+140.0000000
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+100.0000000
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+470.0000000
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+320.0000000
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+</div>
+<div class="branch">
+<p style="page-break-after: always;">
+<br/>
+</p>
+<hr size="3"/>
+<a name="IDX1"></a>
+<div>
+<div class="c">
+<p><img alt="The SGPlot Procedure" src="../../../../unnamed-chunk-8.png" style=" height: 480px; width: 640px;" border="0" class="c"></p>
+</div>
+</div>
+<br>
+</div>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
 <p><a href="http://homepage.divms.uiowa.edu/~rlenth/StatWeave/">Statweave</a></p>
 <p><a href="https://support.sas.com/rnd/app/papers/statrep.html">Statrep</a></p>
+<p><a href="https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/SASmdpackage.html">SASmarkdown package intro</a></p>
+<p>SASmarkdown usage: for <a href="https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/SASmarkdown.html">Windows</a> and <a href="https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/sasmarkdownlinux.html">Linux</a></p>
+<p><a href="https://www.ssc.wisc.edu/~hemken/SASworkshops/Markdown/SAShtmlengine.html">SAS HTML output</a></p>
 </div>
 </section>
 <section>
