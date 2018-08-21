@@ -1,0 +1,83 @@
+---
+title: SAS in R Markdown
+author: Ken
+date: '2018-08-20'
+slug: sas-in-r-markdown
+categories:
+  - R Markdown
+  - SAS
+tags:
+  - Rmarkdown
+  - SAS
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>One of the courses I teach is called Applications of Statistical Methods. It uses (mostly) familiar statistical techniques to provide the background for an introduction to R and SAS. (Students taking it have a course in statistical inference, but I find the ideas of that haven’t typically stuck very well.) In previous years, I have introduced both R and SAS at the same time, which posed a challenge for constructing lecture notes and assignment solutions: how do you run code, that might be in either language, and get the output, without a great deal of copying and pasting?</p>
+<p>It became clear to me that the answer lay in some kind of “literate programming”. I used to use a thing called <code>statweave</code>, which worked, but is getting rather old, and is a little finicky (you had to distinguish between output that was a graph and output that was text). It uses LaTeX as its base, with <code>SAScode</code> and <code>Rcode</code> environments that play the role of code chunks in R Markdown. Running Statweave first runs R and/or SAS to get the output, places it in with the LaTeX, and then runs LaTeX on the whole thing. I have a feeling that you had to do something like the <code>ods output</code> thing to get nice graphs, but I might have mis-remembered that.</p>
+<p>My current “solution” is a bit of a home-brew. I learned that SAS has a thing called <code>statrep</code>, which is also LaTeX-based, that is SAS’s contribution to the world of reproducible research. The way this works is that you put code chunks (and, in fact, “output chunks”) in special environments in LaTeX code, the same idea as Statweave, but it handles graphs more smoothly. This is a bit awkward to run: first you run LaTeX once, which produces a file of SAS code (taken from the SAS code chunks on your document). You run that code through SAS, which produces no output but which creates files in folders <code>lst</code> and <code>fig</code> with text output and graphs respectively. Then you run LaTeX again, which incorporates the output in the right places in your document.</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">LaTeX users will be familiar with the idea of running it several times.</span></p>
+<p>My home-brewed part was to handle source files with code in both R and SAS. I’m familiar enough with LaTeX, so I know about Sweave and files with extension <code>.Rnw</code>. I thought I could probably rig up something that would process both languages at once. After a bit of experimentation, I figured out that it could be done this way:</p>
+<ul>
+<li>run the <code>.Rnw</code> file through Sweave to produce a <code>.tex</code> file with all the R code and output</li>
+<li>run the <code>.tex</code> file through Statrep via LaTeX to produce SAS code to run</li>
+<li>run the SAS code</li>
+<li>run LaTeX again to turn the previous <code>.tex</code> file into a PDF with all the code and output from both languages.</li>
+</ul>
+<p>This is a lot to keep straight, so a good way to handle it is via a Makefile. My Makefiles have lines in them like this, this one for a file <code>a1.Rnw</code> that contains child <code>.Rnw</code> files to make an Assignment 1:</p>
+<pre><code>a1.tex: a1.Rnw # plus lots of .Rnw files, one per question
+    Rscript -e &quot;knitr::knit(\&quot;a1.Rnw\&quot;)&quot;
+a1.pdf: a1.tex
+    pdflatex a1
+    sas a1_SR.sas
+    pdflatex a1
+    pdflatex a1</code></pre>
+<p>The two unindented lines with colons say what depends on what. The first one says that you make <code>a1.tex</code> from <code>a1.Rnw</code>, and so if the latter has changed, you have to re-make the former. The indented line(s) are a “recipe” for making the first file from the second one. In the case of <code>a1.tex</code>, the way to make it is to do the command-line version of “knitting” it. The second unindented line says how to get the final <code>.pdf</code> file from the <code>.tex</code> file: run LaTeX to get the SAS code, run the SAS code, run LaTeX again (and once more for luck).</p>
+<p>So, at the command line, I type <code>make a1.pdf</code> and it runs whichever of those lines need re-running (depending on what has changed since the last <code>make</code>).</p>
+<p>This works, and produces gorgeous output (it is, after all, LaTeX). I use the <code>exam</code> document class for assignments as well, since this provides a nice organization for numbered questions with or without solutions. (I do the solutions first, to make sure the questions work, then hide the solutions to the questions that are to be handed in.)</p>
+<p>But, it is LaTeX. Can I do the same kind of thing in R Markdown, which is much nicer to write in? The sticking point is evidently running SAS via R Markdown. Today I learned that this is indeed possible, HTML output and all.</p>
+</div>
+<div id="using-sas-at-the-command-line-to-get-text-output" class="section level2">
+<h2>Using SAS at the command line to get text output</h2>
+<p>SAS distinguishes, or at least used to distinguish, two kinds of output: output that is purely tables of numbers, and output that is graphics. (Statrep still makes this distinction.) SAS used to make graphs out of text as well, like so much ASCII art. It’s sometimes hard to shake the impression that SAS hasn’t really progressed far since the days of punched cards, and that graphics was bolted on as something of an after-thought. Text output can be obtained at the command line by putting the commands into a file, running <code>sas</code> on that file, and inspecting a file with a <code>.lst</code> extension (if you have one; if you don’t, you study the <code>.log</code> file to find out what went wrong.)</p>
+<p>This file, for example, reads in a data file from the web and finds the means of the numeric variables <code>scrap</code> and <code>speed</code>:</p>
+<pre class="bash"><code>cat soap.sas</code></pre>
+<pre><code>## filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
+## 
+## proc import
+##   datafile=myurl
+##   out=soap
+##   dbms=dlm
+##   replace;
+##   getnames=yes;
+##   delimiter=&quot; &quot;;
+##   
+## proc means;
+##   var scrap speed;
+## </code></pre>
+<p>then you run SAS (installed on your machine) from the command line, like this:</p>
+<pre class="bash"><code>sas soap.sas</code></pre>
+<p>which gives <em>no output</em>, <em>whether it worked or not</em>, and then you look at the output:</p>
+<pre class="bash"><code>cat soap.lst</code></pre>
+<pre><code>##                                                            The SAS System                          22:34 Monday, August 20, 2018   1
+## 
+##                                                         The MEANS Procedure
+## 
+##                            Variable     N            Mean         Std Dev         Minimum         Maximum
+##                            ------------------------------------------------------------------------------
+##                            scrap       27     315.4814815      82.9895129     140.0000000     470.0000000
+##                            speed       27     210.1851852      63.4198689     100.0000000     320.0000000
+##                            ------------------------------------------------------------------------------</code></pre>
+<p>This is all fine and wonderful for text output, but what about graphs? In fact, those people who know SAS through the online SAS Studio only know output in HTML format, text and graphics alike. Can we get that? The answer turns out to be “yes”.</p>
+</div>
+<div id="sas-markdown" class="section level2">
+<h2>SAS Markdown</h2>
+<p>If there is R Markdown, then surely there is SAS Markdown, right? Right, an R package by that name.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="http://homepage.divms.uiowa.edu/~rlenth/StatWeave/">Statweave</a></p>
+<p><a href="https://support.sas.com/rnd/app/papers/statrep.html">Statrep</a></p>
+</div>

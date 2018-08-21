@@ -6,10 +6,19 @@
     <description>Recent content on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 15 Aug 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 20 Aug 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>SAS in R Markdown</title>
+      <link>/2018/08/20/sas-in-r-markdown/</link>
+      <pubDate>Mon, 20 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/08/20/sas-in-r-markdown/</guid>
+      <description>Introduction One of the courses I teach is called Applications of Statistical Methods. It uses (mostly) familiar statistical techniques to provide the background for an introduction to R and SAS. (Students taking it have a course in statistical inference, but I find the ideas of that haven’t typically stuck very well.) In previous years, I have introduced both R and SAS at the same time, which posed a challenge for constructing lecture notes and assignment solutions: how do you run code, that might be in either language, and get the output, without a great deal of copying and pasting?</description>
+    </item>
     
     <item>
       <title>A tale of zero kitties</title>
