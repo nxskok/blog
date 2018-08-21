@@ -1,0 +1,61 @@
+---
+title: SAS in R Markdown
+author: Ken
+date: '2018-08-20'
+slug: sas-in-r-markdown
+categories:
+  - R Markdown
+  - SAS
+tags:
+  - Rmarkdown
+  - SAS
+---
+
+## Introduction
+
+One of the courses I teach is called Applications of Statistical Methods. It uses (mostly) familiar statistical techniques to provide the background for an introduction to R and SAS. (Students taking it have a course in statistical inference, but I find the ideas of that haven't typically stuck very well.) In previous years, I have introduced both R and SAS at the same time, which posed a challenge for constructing lecture notes and assignment solutions: how do you run code, that might be in either language, and get the output, without a great deal of copying and pasting?
+
+It became clear to me that the answer lay in some kind of "literate programming". I used to use a thing called `statweave`, which worked, but is getting rather old, and is a little finicky (you had to distinguish between output that was a graph and output that was text). It uses \LaTeX\ as its base, with `SAScode` and `Rcode` environments that play the role of code chunks in R Markdown. Running Statweave first runs R and/or SAS to get the output, places it in with the \LaTeX\, and then runs \LaTeX\ on the whole thing. I have a feeling that you had to do something like the `ods output` thing to get nice graphs, but I might have mis-remembered that.
+
+My current "solution" is a bit of a home-brew. I learned that SAS has a thing called `statrep`, which is also \LaTeX-based, that is SAS's contribution to the world of reproducible research. The way this works is that you put code chunks (and, in fact, "output chunks") in special environments in \LaTeX\ code, the same idea as Statweave, but it handles graphs more smoothly. This is a bit awkward to run: first you run \LaTeX\ once, which produces a file of SAS code (taken from the SAS code chunks on your document). You run that code through SAS, which produces no output but which creates files in folders `lst` and `fig` with text output and graphs respectively. Then you run \LaTeX\ again, which incorporates the output in the right places in your document.
+
+`r tufte::margin_note("\LaTeX\ users will be familiar with the idea of running it several times.")`
+
+My home-brewed part was to handle source files with code in both R and SAS. I'm familiar enough with \LaTeX\, so I know about Sweave and files with extension `.Rnw`. I thought I could probably rig up something that would process both languages at once. After a bit of experimentation, I figured out that it could be done this way:
+
+- run the `.Rnw` file through Sweave to produce a `.tex` file with all the R code and output
+- run the `.tex` file through Statrep via \LaTeX\ to produce SAS code to run
+- run the SAS code
+- run \LaTeX\ again to turn the previous `.tex` file into a PDF with all the code and output from both languages.
+
+This is a lot to keep straight, so a good way to handle it is via a Makefile. My Makefiles have lines in them like this, this one for a file `a1.Rnw` that contains child `.Rnw` files to make an Assignment 1: 
+
+```
+a1.tex: a1.Rnw # plus lots of .Rnw files, one per question
+	Rscript -e "knitr::knit(\"a1.Rnw\")"
+a1.pdf: a1.tex
+	pdflatex a1
+	sas a1_SR.sas
+	pdflatex a1
+	pdflatex a1
+```
+
+The two unindented lines with colons say what depends on what. The first one says that you make `a1.tex` from `a1.Rnw`, and so if the latter has changed, you have to re-make the former. The indented line(s) are a "recipe" for making the first file from the second one. In the case of `a1.tex`, the way to make it is to do the command-line version of "knitting" it. The second unindented line says how to get the final `.pdf` file from the `.tex` file: run \LaTeX\ to get the SAS code, run the SAS code, run \LaTeX\ again (and once more for luck). 
+
+So, at the command line, I type `make a1.pdf` and it runs whichever of those lines need re-running (depending on what has changed since the last `make`). 
+
+This works, and produces gorgeous output (it is, after all, \LaTeX\). I use the `exam` document class for assignments as well, since this provides a nice organization for numbered questions with or without solutions. (I do the solutions first, to make sure the questions work, then hide the solutions to the questions that are to be handed in.)
+
+But, it is \LaTeX\. Can I do the same kind of thing in R Markdown, which is much nicer to write in? The sticking point is evidently running SAS via R Markdown. Today I learned that this is indeed possible, HTML output and all.
+
+## Using SAS at the command line to get text output
+
+SAS distinguishes, or at least used to distinguish, two kinds of output: output that is purely tables of numbers, and output that is graphics. (Statrep still makes this distinction.) SAS used to make graphs out of text as well, like so much ASCII art. It's sometimes hard to shake the impression that SAS hasn't really progressed far since the days of punched cards, and that graphics was bolted on as something of an after-thought. Text output can be obtained at the command line by putting the commands into a file, running `sas` on that file, and inspecting a file with a `.lst` extension (if you have one; if you don't, you study the `.log` file to find out what went wrong.)
+
+
+
+
+## References
+
+[Statweave](http://homepage.divms.uiowa.edu/~rlenth/StatWeave/)
+[Statrep](https://support.sas.com/rnd/app/papers/statrep.html)
