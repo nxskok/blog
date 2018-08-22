@@ -34,7 +34,7 @@ a1.pdf: a1.tex
     sas a1_SR.sas
     pdflatex a1
     pdflatex a1</code></pre>
-<p>The two unindented lines with colons say what depends on what. The first one says that you make <code>a1.tex</code> from <code>a1.Rnw</code>, and so if the latter has changed, you have to re-make the former. The indented line(s) are a “recipe” for making the first file from the second one. In the case of <code>a1.tex</code>, the way to make it is to do the command-line version of “knitting” it. The second unindented line says how to get the final <code>.pdf</code> file from the <code>.tex</code> file: run LaTeX to get the SAS code, run the SAS code, run LaTeX again (and once more for luck).</p>
+<p>The two unindented lines with colons say what depends on what. The first one says that you make <code>a1.tex</code> from <code>a1.Rnw</code>, and so if the latter has changed, you have to re-make the former. The indented line(s) are a “recipe” for making the first file from the second one. In the case of <code>a1.tex</code>, the way to make it is to do the command-line version of “knitting” it. The second unindented line, and the four indented lines below it, say how to get the final <code>.pdf</code> file from the <code>.tex</code> file: run LaTeX to get the SAS code, run the SAS code, run LaTeX again (and once more for luck).</p>
 <p>So, at the command line, I type <code>make a1.pdf</code> and it runs whichever of those lines need re-running (depending on what has changed since the last <code>make</code>).</p>
 <p>This works, and produces gorgeous output (it is, after all, LaTeX). I use the <code>exam</code> document class for assignments as well, since this provides a nice organization for numbered questions with or without solutions. (I do the solutions first, to make sure the questions work, then hide the solutions to the questions that are to be handed in.)</p>
 <p>But, it is LaTeX. Can I do the same kind of thing in R Markdown, which is much nicer to write in? The sticking point is evidently running SAS via R Markdown. Today I learned that this is indeed possible, HTML output and all.</p>
@@ -61,7 +61,7 @@ a1.pdf: a1.tex
 <pre class="bash"><code>sas soap.sas</code></pre>
 <p>which gives <em>no output</em>, <em>whether it worked or not</em>, and then you look at the output:</p>
 <pre class="bash"><code>cat soap.lst</code></pre>
-<pre><code>##                                                            The SAS System                         11:47 Tuesday, August 21, 2018   1
+<pre><code>##                                                            The SAS System                       17:17 Wednesday, August 22, 2018   1
 ## 
 ##                                                         The MEANS Procedure
 ## 
@@ -70,7 +70,8 @@ a1.pdf: a1.tex
 ##                            scrap       27     315.4814815      82.9895129     140.0000000     470.0000000
 ##                            speed       27     210.1851852      63.4198689     100.0000000     320.0000000
 ##                            ------------------------------------------------------------------------------</code></pre>
-<p>This is all fine and wonderful for text output, but what about graphs? In fact, those people who know SAS through the online SAS Studio only know output in HTML format, text and graphics alike. Can we get that? The answer turns out to be “yes”.</p>
+<p>This is all fine and wonderful for text output. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Except for the fact that the output lines might be longer than the screen lines for you, and so the Maximum column might be over on the left instead of on the right where it belongs.</span>
+But what about graphs? In fact, those people who know SAS through the online SAS Studio only know output in HTML format, text and graphics alike. Can we get that? The answer turns out to be “yes”.</p>
 </div>
 <div id="sas-markdown" class="section level2">
 <h2>SAS Markdown</h2>
@@ -81,7 +82,7 @@ a1.pdf: a1.tex
 <pre><code>##    are now ready to use.</code></pre>
 <pre class="r"><code>saspath = &#39;/usr/local/SASHome/SASFoundation/9.4/sas&#39;
 sasopts = &quot;-ls 75&quot;</code></pre>
-<p>If SAS is not on your path, what <code>saspath</code> needs to contain is the path to the executable SAS file (which will end in <code>sas.exe</code> if you are on Windows). I am on Linux, so mine looks like the above; I think <code>/usr/local/bin/sas</code> also will work for me.</p>
+<p>If SAS is not on your path, what <code>saspath</code> needs to contain is the path to the executable SAS file (which will end in <code>sas.exe</code> if you are on Windows). I am on Linux, so mine looks like the above; I think <code>/usr/local/bin/sas</code> also will work for me. (In fact, leaving this out entirely will work for me, since <code>/usr/local/bin</code> is on my path.)</p>
 <p>SAS by default uses a line width for text of I think 132 characters, which probably comes from the width of an old-fashioned line printer. My option sets the default “line size” to 75, which will fit on the screen better.</p>
 <p>Let’s start with text output, and see if we can mimic what I did before at the command line. I take everything that was in the command file <code>soap.sas</code> before, and put it in a SAS code chunk like this:</p>
 <pre class="sas"><code>filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
@@ -104,6 +105,7 @@ proc means;
 ##  speed      27    210.1851852     63.4198689    100.0000000    320.0000000
 ##  -------------------------------------------------------------------------</code></pre>
 <p>Success! (The output is a bit narrower than it was before, thanks to my “linesize” option).</p>
+<p>In case you are wondering, the data set comes from a factory that makes soap. The production line can be run at different speeds, and <code>scrap</code> measures the amount of scrap soap pieces that is produced (that is, pieces that cannot be made into soap bars and must be thrown away). You might guess that running the line faster produces more scrap. We investigate that later.</p>
 <p>There is something to worry about here: the SAS code chunks are independent of each other, and so, for example, data read in in one will not be available in another:</p>
 <pre class="sas"><code>filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
 
@@ -126,13 +128,13 @@ ERROR: No data set open to look up variables.
 ERROR: No data set open to look up variables.
 NOTE: The SAS System stopped processing this step because of errors.
 NOTE: PROCEDURE MEANS used (Total process time):
-      real time           0.01 seconds
+      real time           0.00 seconds
       cpu time            0.00 seconds
       
 
 ERROR: Errors printed on page 1.</code></pre>
 <p>I put <code>error=T</code> on my code chunk to allow processing of this post to continue and not stop if there is an error. SAS veterans will recognize the output here: it’s the SAS log file, and if you look at the ERRORs, there is (a) no default, that is, most recently created, data set (the one read in by the <code>proc import</code> has disappeared) and (b) thereby no data set to get the variables <code>scrap</code> and <code>speed</code> from.</p>
-<p>All right, so how do we get HTML output, including graphs? <code>SASmarkdown</code> contains an engine called <code>sashtml</code> that will do that. I’m going to repeat the above (so that you can compare), and also obtain a scatter plot, all in one code chunk:</p>
+<p>All right, so how do we get HTML output, including graphs? <code>SASmarkdown</code> contains an engine called <code>sashtml</code> that will do that. I’m going to repeat the above (so that you can compare), and also obtain a scatter plot, all in one code chunk. The raw R Markdown is <a href="https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/content/post/2018-08-20-sas-in-r-markdown.Rmd">here</a>.</p>
 <pre class="sashtml"><code>filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
 
 proc import
@@ -288,11 +290,19 @@ speed
 <a name="IDX1"></a>
 <div>
 <div class="c">
-<p><img alt="The SGPlot Procedure" src="/unnamed-chunk-8.png" style=" height: 480px; width: 640px;" border="0" class="c"></p>
+<p><img alt="The SGPlot Procedure" src="bigsas.png" style=" height: 480px; width: 640px;" border="0" class="c"></p>
 </div>
 </div>
 <br>
 </div>
+<p><img src="/bigsas.png" /></p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I had to cheat slightly, since SASmarkdown didn’t put the image where blogdown expected it to be.</span></p>
+<p>The table of means has come out exactly as before, and the scatterplot confirms what we suspected, that running the production line at a higher speed tends to produce more scrap.</p>
+</div>
+<div id="concluding-remarks" class="section level2">
+<h2>Concluding remarks</h2>
+<p>The way to run SAS in R Markdown is to put the <em>whole</em> analysis in one chunk, so that the data set is accessible all the way through. This is rather reminiscent of the 1970s way of running SAS on punched cards: submit the job, wait, then get pages of output to leaf through. A better way would be to save the data as a permanent data set, then refer to the permanent data set using <code>data=</code> all the way through. That way, you could stick with small code chunks for each piece of the analysis.</p>
+<p>The output comes out nicely in HTML, but when I tried to knit as PDF or Word, things didn’t come out properly. So the package would be excellent for producing output intended for web viewing. I think I’m going to stick with my Sweave approach for now, but it’s very nice to know that this kind of thing exists.</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>

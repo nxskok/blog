@@ -1,4 +1,4 @@
-1                                                          The SAS System                             11:47 Tuesday, August 21, 2018
+1                                                          The SAS System                           17:17 Wednesday, August 22, 2018
 
 NOTE: Copyright (c) 2002-2012 by SAS Institute Inc., Cary, NC, USA. 
 NOTE: SAS (r) Proprietary Software 9.4 (TS1M4) 
@@ -15,7 +15,7 @@ NOTE: Updated analytical products:
       SAS/IML 14.2
       SAS/QC 14.2
 
-WARNING: Your system is scheduled to expire on August 29, 2018, which is 8 days from now. The SAS System will no longer function on 
+WARNING: Your system is scheduled to expire on August 29, 2018, which is 7 days from now. The SAS System will no longer function on 
          or after that date. Please contact your SAS Installation Representative to obtain your updated SAS Installation Data (SID) 
          file, which includes SETINIT information.
 To locate the name of your SAS Installation Representative go to http://support.sas.com/repfinder and provide your site number 
@@ -44,8 +44,8 @@ The command line option "-nonews" will prevent this display.
 
 
 NOTE: SAS initialization used:
-      real time           0.98 seconds
-      cpu time            0.03 seconds
+      real time           0.14 seconds
+      cpu time            0.02 seconds
       
 1          filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
 2          
@@ -58,7 +58,7 @@ WARNING: The Base SAS Software product with which IMPORT is associated will be e
 7            replace;
 8            getnames=yes;
 9            delimiter=" ";
-2                                                          The SAS System                             11:47 Tuesday, August 21, 2018
+2                                                          The SAS System                           17:17 Wednesday, August 22, 2018
 
 10         
 
@@ -67,7 +67,7 @@ WARNING: The Base SAS Software product with which IMPORT is associated will be e
 13          *   PRODUCT:   SAS
 14          *   VERSION:   9.4
 15          *   CREATOR:   External File Interface
-16          *   DATE:      21AUG18
+16          *   DATE:      22AUG18
 17          *   DESC:      Generated SAS Datastep Code
 18          *   TEMPLATE SOURCE:  (None Specified.)
 19          ***********************************************************************/
@@ -104,8 +104,8 @@ NOTE: 27 records were read from the infile MYURL.
       The maximum record length was 12.
 NOTE: The data set WORK.SOAP has 27 observations and 4 variables.
 NOTE: DATA statement used (Total process time):
-      real time           0.72 seconds
-      cpu time            0.06 seconds
+      real time           0.70 seconds
+      cpu time            0.04 seconds
       
 
 27 rows created in WORK.SOAP from MYURL.
@@ -115,10 +115,10 @@ NOTE: DATA statement used (Total process time):
 NOTE: WORK.SOAP data set was successfully created.
 NOTE: The data set WORK.SOAP has 27 observations and 4 variables.
 NOTE: PROCEDURE IMPORT used (Total process time):
-      real time           4.54 seconds
-      cpu time            0.29 seconds
+      real time           3.58 seconds
+      cpu time            0.28 seconds
       
-3                                                          The SAS System                             11:47 Tuesday, August 21, 2018
+3                                                          The SAS System                           17:17 Wednesday, August 22, 2018
 
 
 39           var scrap speed;
@@ -126,12 +126,12 @@ NOTE: PROCEDURE IMPORT used (Total process time):
 NOTE: There were 27 observations read from the data set WORK.SOAP.
 NOTE: The PROCEDURE MEANS printed page 1.
 NOTE: PROCEDURE MEANS used (Total process time):
-      real time           0.33 seconds
-      cpu time            0.04 seconds
+      real time           0.03 seconds
+      cpu time            0.03 seconds
       
 
 NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
 NOTE: The SAS System used:
-      real time           6.01 seconds
-      cpu time            0.37 seconds
+      real time           3.77 seconds
+      cpu time            0.34 seconds
       

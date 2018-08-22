@@ -40,7 +40,7 @@ a1.pdf: a1.tex
 	pdflatex a1
 ```
 
-The two unindented lines with colons say what depends on what. The first one says that you make `a1.tex` from `a1.Rnw`, and so if the latter has changed, you have to re-make the former. The indented line(s) are a "recipe" for making the first file from the second one. In the case of `a1.tex`, the way to make it is to do the command-line version of "knitting" it. The second unindented line says how to get the final `.pdf` file from the `.tex` file: run LaTeX to get the SAS code, run the SAS code, run LaTeX again (and once more for luck). 
+The two unindented lines with colons say what depends on what. The first one says that you make `a1.tex` from `a1.Rnw`, and so if the latter has changed, you have to re-make the former. The indented line(s) are a "recipe" for making the first file from the second one. In the case of `a1.tex`, the way to make it is to do the command-line version of "knitting" it. The second unindented line, and the four indented lines below it, say how to get the final `.pdf` file from the `.tex` file: run LaTeX to get the SAS code, run the SAS code, run LaTeX again (and once more for luck). 
 
 So, at the command line, I type `make a1.pdf` and it runs whichever of those lines need re-running (depending on what has changed since the last `make`). 
 
@@ -70,7 +70,8 @@ which gives *no output*, *whether it worked or not*, and then you look at the ou
 cat soap.lst
 ```
 
-This is all fine and wonderful for text output, but what about graphs? In fact, those people who know SAS through the online SAS Studio only know output in HTML format, text and graphics alike. Can we get that? The answer turns out to be "yes".
+This is all fine and wonderful for text output. `r tufte::margin_note("Except for the fact that the output lines might be longer than the screen lines for you, and so the Maximum column might be over on the left instead of on the right where it belongs.")`
+But what about graphs? In fact, those people who know SAS through the online SAS Studio only know output in HTML format, text and graphics alike. Can we get that? The answer turns out to be "yes".
 
 ## SAS Markdown
 
@@ -84,7 +85,7 @@ saspath = '/usr/local/SASHome/SASFoundation/9.4/sas'
 sasopts = "-ls 75"
 ```
 
-If SAS is not on your path, what `saspath` needs to contain is the path to the executable SAS file (which will end in `sas.exe` if you are on Windows). I am on Linux, so mine looks like the above; I think `/usr/local/bin/sas` also will work for me.
+If SAS is not on your path, what `saspath` needs to contain is the path to the executable SAS file (which will end in `sas.exe` if you are on Windows). I am on Linux, so mine looks like the above; I think `/usr/local/bin/sas` also will work for me. (In fact, leaving this out entirely will work for me, since `/usr/local/bin` is on my path.)
 
 SAS by default uses a line width for text of I think 132 characters, which probably comes from the width of an old-fashioned line printer. My option sets the default "line size" to 75, which will fit on the screen better.
 
@@ -106,6 +107,8 @@ proc means;
 ```
 
 Success! (The output is a bit narrower than it was before, thanks to my "linesize" option).
+
+In case you are wondering, the data set comes from a factory that makes soap. The production line can be run at different speeds, and `scrap` measures the amount of scrap soap pieces that is produced (that is, pieces that cannot be made into soap bars and must be thrown away). You might guess that running the line faster produces more scrap. We investigate that later.
 
 There is something to worry about here: the SAS code chunks are independent of each other, and so, for example, data read in in one will not be available in another:
 
@@ -130,9 +133,9 @@ proc means;
 
 I put `error=T` on my code chunk to allow processing of this post to continue and not stop if there is an error. SAS veterans will recognize the output here: it's the SAS log file, and if you look at the ERRORs, there is (a) no default, that is, most recently created, data set (the one read in by the `proc import` has disappeared) and (b) thereby no data set to get the variables `scrap` and `speed` from. 
 
-All right, so how do we get HTML output, including graphs? `SASmarkdown` contains an engine called `sashtml` that will do that. I'm going to repeat the above (so that you can compare), and also obtain a scatter plot, all in one code chunk:
+All right, so how do we get HTML output, including graphs? `SASmarkdown` contains an engine called `sashtml` that will do that. I'm going to repeat the above (so that you can compare), and also obtain a scatter plot, all in one code chunk. The raw R Markdown is [here](https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/content/post/2018-08-20-sas-in-r-markdown.Rmd).
 
-```{r, engine="sashtml", engine.path=saspath, engine.opts=sasopts}
+```{r bigsas, engine="sashtml", engine.path=saspath, engine.opts=sasopts}
 filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
 
 proc import
@@ -150,6 +153,17 @@ proc sgplot;
   scatter x=speed y=scrap;
 ```
 
+![](/bigsas.png)
+
+`r tufte::margin_note("I had to cheat slightly, since SASmarkdown didn't put the image where blogdown expected it to be.")`
+
+The table of means has come out exactly as before, and the scatterplot confirms what we suspected, that running the production line at a higher speed tends to produce more scrap.
+
+## Concluding remarks
+
+The way to run SAS in R Markdown is to put the *whole* analysis in one chunk, so that the data set is accessible all the way through. This is rather reminiscent of the 1970s way of running SAS on punched cards: submit the job, wait, then get pages of output to leaf through. A better way would be to save the data as a permanent data set, then refer to the permanent data set using `data=` all the way through. That way, you could stick with small code chunks for each piece of the analysis.
+
+The output comes out nicely in HTML, but when I tried to knit as PDF or Word, things didn't come out properly. So the package would be excellent for producing output intended for web viewing. I think I'm going to stick with my Sweave approach for now, but it's very nice to know that this kind of thing exists.
 
 
 ## References
