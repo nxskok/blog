@@ -10,4 +10,9 @@ proc import
   
 proc means;
   var scrap speed;
-  
+
+ods graphics on / imagename="scatter";
+
+proc sgplot;
+  scatter x=speed y=scrap;
+

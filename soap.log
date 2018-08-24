@@ -1,4 +1,4 @@
-1                                                          The SAS System                            21:39 Thursday, August 23, 2018
+1                                                          The SAS System                            21:17 Thursday, August 23, 2018
 
 NOTE: Copyright (c) 2002-2012 by SAS Institute Inc., Cary, NC, USA. 
 NOTE: SAS (r) Proprietary Software 9.4 (TS1M4) 
@@ -44,8 +44,8 @@ The command line option "-nonews" will prevent this display.
 
 
 NOTE: SAS initialization used:
-      real time           0.19 seconds
-      cpu time            0.02 seconds
+      real time           0.13 seconds
+      cpu time            0.01 seconds
       
 1          filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
 2          
@@ -58,7 +58,7 @@ WARNING: The Base SAS Software product with which IMPORT is associated will be e
 7            replace;
 8            getnames=yes;
 9            delimiter=" ";
-2                                                          The SAS System                            21:39 Thursday, August 23, 2018
+2                                                          The SAS System                            21:17 Thursday, August 23, 2018
 
 10         
 
@@ -104,7 +104,7 @@ NOTE: 27 records were read from the infile MYURL.
       The maximum record length was 12.
 NOTE: The data set WORK.SOAP has 27 observations and 4 variables.
 NOTE: DATA statement used (Total process time):
-      real time           0.63 seconds
+      real time           0.67 seconds
       cpu time            0.05 seconds
       
 
@@ -115,15 +115,15 @@ NOTE: DATA statement used (Total process time):
 NOTE: WORK.SOAP data set was successfully created.
 NOTE: The data set WORK.SOAP has 27 observations and 4 variables.
 NOTE: PROCEDURE IMPORT used (Total process time):
-      real time           3.38 seconds
-      cpu time            0.25 seconds
+      real time           3.53 seconds
+      cpu time            0.24 seconds
       
-3                                                          The SAS System                            21:39 Thursday, August 23, 2018
+3                                                          The SAS System                            21:17 Thursday, August 23, 2018
 
 
 39           var scrap speed;
 40         
-41         ods graphics / imagename="scatter";
+41         ods graphics on / imagename="scatter";
 42         
 
 NOTE: There were 27 observations read from the data set WORK.SOAP.
@@ -137,14 +137,14 @@ NOTE: PROCEDURE MEANS used (Total process time):
 44           scatter x=speed y=scrap;
 45         
 NOTE: PROCEDURE SGPLOT used (Total process time):
-      real time           3.02 seconds
-      cpu time            0.06 seconds
+      real time           3.30 seconds
+      cpu time            0.04 seconds
       
-NOTE: Listing image output written to /home/ken/teaching/blog/content/post/scatter.png.
+NOTE: Listing image output written to /home/ken/teaching/blog/scatter.png.
 NOTE: There were 27 observations read from the data set WORK.SOAP.
 
 NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
 NOTE: The SAS System used:
-      real time           6.64 seconds
-      cpu time            0.37 seconds
+      real time           7.01 seconds
+      cpu time            0.34 seconds
       

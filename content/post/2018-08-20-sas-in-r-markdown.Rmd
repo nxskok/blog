@@ -48,11 +48,11 @@ This works, and produces gorgeous output (it is, after all, LaTeX). I use the `e
 
 But, it is LaTeX. Can I do the same kind of thing in R Markdown, which is much nicer to write in? The sticking point is evidently running SAS via R Markdown. Today I learned that this is indeed possible, HTML output and all.
 
-## Using SAS at the command line to get text output
+## Using SAS at the command line
 
 SAS distinguishes, or at least used to distinguish, two kinds of output: output that is purely tables of numbers, and output that is graphics. (Statrep still makes this distinction.) SAS used to make graphs out of text as well, like so much ASCII art. It's sometimes hard to shake the impression that SAS hasn't really progressed far since the days of punched cards, and that graphics was bolted on as something of an after-thought. Text output can be obtained at the command line by putting the commands into a file, running `sas` on that file, and inspecting a file with a `.lst` extension (if you have one; if you don't, you study the `.log` file to find out what went wrong.)
 
-This file, for example, reads in a data file from the web and finds the means of the numeric variables `scrap` and `speed`:
+This file, for example, reads in a data file from the web and finds the means of the numeric variables `scrap` and `speed`, and then draws a scatterplot of them:
 
 ```{bash}
 cat soap.sas
@@ -64,14 +64,19 @@ then you run SAS (installed on your machine) from the command line, like this:
 sas soap.sas
 ```
 
-which gives *no output*, *whether it worked or not*, and then you look at the output:
+which gives *no output*, *whether it worked or not*, and then you look at the output in here:
 
 ```{bash}
 cat soap.lst
 ```
 
-This is all fine and wonderful for text output. `r tufte::margin_note("Except for the fact that the output lines might be longer than the screen lines for you, and so the Maximum column might be over on the left instead of on the right where it belongs.")`
-But what about graphs? In fact, those people who know SAS through the online SAS Studio only know output in HTML format, text and graphics alike. Can we get that? The answer turns out to be "yes".
+This gives the text part of the output properly. `r tufte::margin_note("Except for the fact that the output lines might be longer than the screen lines for you, and so the Maximum column might be over on the left instead of on the right where it belongs.")`
+
+What happened to the graph? This is an image, and comes out in a `.png` file with the name given in `imagename` in the code:
+
+![](/scatter.png)
+
+This is rather fiddly to organize. Can we do better? Yes. See the next section.
 
 ## SAS Markdown
 
@@ -89,7 +94,7 @@ If SAS is not on your path, what `saspath` needs to contain is the path to the e
 
 SAS by default uses a line width for text of I think 132 characters, which probably comes from the width of an old-fashioned line printer. My option sets the default "line size" to 75, which will fit on the screen better.
 
-Let's start with text output, and see if we can mimic what I did before at the command line. I take everything that was in the command file `soap.sas` before, and put it in a SAS code chunk like this:
+Let's start with text output, and see if we can mimic what I did before at the command line. I take everything that was in the command file `soap.sas` up to the `proc means`, and put it in a SAS code chunk like this:
 
 ```{r, engine="sas", engine.path=saspath, engine.opts=sasopts}
 filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
