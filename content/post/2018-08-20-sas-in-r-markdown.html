@@ -61,7 +61,7 @@ a1.pdf: a1.tex
 <pre class="bash"><code>sas soap.sas</code></pre>
 <p>which gives <em>no output</em>, <em>whether it worked or not</em>, and then you look at the output:</p>
 <pre class="bash"><code>cat soap.lst</code></pre>
-<pre><code>##                                                            The SAS System                       17:17 Wednesday, August 22, 2018   1
+<pre><code>##                                                            The SAS System                        21:06 Thursday, August 23, 2018   1
 ## 
 ##                                                         The MEANS Procedure
 ## 
@@ -299,9 +299,1086 @@ speed
 <p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I had to cheat slightly, since SASmarkdown didn’t put the image where blogdown expected it to be.</span></p>
 <p>The table of means has come out exactly as before, and the scatterplot confirms what we suspected, that running the production line at a higher speed tends to produce more scrap.</p>
 </div>
+<div id="chaining-sas-code-chunks" class="section level2">
+<h2>Chaining SAS code chunks</h2>
+<p>A little reading of the documentation reveals a code chunk option <code>collectcode</code>. What this does is to collect up the code for the chunk it’s attached to, and then repeat that code on the beginning of all subsequent chunks. A way to use this is to put <code>collectcode=T</code> on the chunk that reads in the data, and then thereafter the data will be read in and be available for any other chunk. See <a href="https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/content/post/2018-08-20-sas-in-r-markdown.Rmd">the R Markdown code</a> for the details, but the effect is as below. First read in the data again with <code>collectcode=T</code> on the top of the code chunk:</p>
+<pre class="sashtml"><code>filename myurl url &quot;https://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;;
+
+proc import
+  datafile=myurl
+  out=soap
+  dbms=dlm
+  replace;
+  getnames=yes;
+  delimiter=&quot; &quot;;</code></pre>
+<p>After that, proceed as you would in the SAS IDE (or on SAS Studio online), <em>without</em> <code>collectcode</code> on the top of the code chunk:</p>
+<pre class="sashtml"><code>proc means;
+  var scrap speed;</code></pre>
+<div class="branch">
+<a name="IDX"></a>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure Means: Summary statistics">
+<colgroup>
+<col>
+</colgroup>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="l b header" scope="col">
+Variable
+</th>
+<th class="r b header" scope="col">
+N
+</th>
+<th class="r b header" scope="col">
+Mean
+</th>
+<th class="r b header" scope="col">
+Std Dev
+</th>
+<th class="r b header" scope="col">
+Minimum
+</th>
+<th class="r b header" scope="col">
+Maximum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="l stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<th class="l data top_stacked_value">
+scrap
+</th>
+</tr>
+<tr>
+<th class="l data bottom_stacked_value">
+speed
+</th>
+</tr>
+</table>
+</th>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+27
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+27
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+315.4814815
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+210.1851852
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+82.9895129
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+63.4198689
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+140.0000000
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+100.0000000
+</td>
+</tr>
+</table>
+</td>
+<td class="r stacked_cell data">
+<table width="100%" border="0" cellpadding="7" cellspacing="0">
+<tr>
+<td class="r data top_stacked_value">
+470.0000000
+</td>
+</tr>
+<tr>
+<td class="r data bottom_stacked_value">
+320.0000000
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+</div>
+<p>This works because the “collected” chunk with the <code>proc import</code> in it is added to the top of this code, so that the data set is read in again, and because it “belongs” to this chunk, the variables <code>scrap</code> and <code>speed</code> will be found. We could also run a regression in the same way:</p>
+<pre class="sashtml"><code>proc reg;
+  model scrap=speed;</code></pre>
+<div class="branch">
+<a name="IDX"></a>
+<div class="c proctitle">
+Model: MODEL1
+</div>
+<div class="c proctitle">
+Dependent Variable: scrap
+</div>
+<p>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure Reg: Number of Observations">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<tbody>
+<tr>
+<th class="l rowheader" scope="row">
+Number of Observations Read
+</th>
+<td class="r data">
+27
+</td>
+</tr>
+<tr>
+<th class="l rowheader" scope="row">
+Number of Observations Used
+</th>
+<td class="r data">
+27
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+<a name="IDX1"></a>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure Reg: Analysis of Variance">
+<colgroup>
+<col>
+</colgroup>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="c b header" colspan="6" scope="colgroup">
+Analysis of Variance
+</th>
+</tr>
+<tr>
+<th class="l b header" scope="col">
+Source
+</th>
+<th class="r b header" scope="col">
+DF
+</th>
+<th class="r b header" scope="col">
+Sum of<br/>Squares
+</th>
+<th class="r b header" scope="col">
+Mean<br/>Square
+</th>
+<th class="r b header" scope="col">
+F Value
+</th>
+<th class="r b header" scope="col">
+Pr &gt; F
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="l rowheader" scope="row">
+Model
+</th>
+<td class="r data">
+1
+</td>
+<td class="r data">
+149661
+</td>
+<td class="r data">
+149661
+</td>
+<td class="r data">
+127.23
+</td>
+<td class="r data">
+&lt;.0001
+</td>
+</tr>
+<tr>
+<th class="l rowheader" scope="row">
+Error
+</th>
+<td class="r data">
+25
+</td>
+<td class="r data">
+29408
+</td>
+<td class="r data">
+1176.31033
+</td>
+<td class="r data">
+</td>
+<td class="r data">
+</td>
+</tr>
+<tr>
+<th class="l rowheader" scope="row">
+Corrected Total
+</th>
+<td class="r data">
+26
+</td>
+<td class="r data">
+179069
+</td>
+<td class="r data">
+</td>
+<td class="r data">
+</td>
+<td class="r data">
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+<a name="IDX2"></a>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure Reg: Fit Statistics">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<tbody>
+<tr>
+<th class="l rowheader" scope="row">
+Root MSE
+</th>
+<td class="r data">
+34.29738
+</td>
+<th class="l rowheader" scope="row">
+R-Square
+</th>
+<td class="r data">
+0.8358
+</td>
+</tr>
+<tr>
+<th class="l rowheader" scope="row">
+Dependent Mean
+</th>
+<td class="r data">
+315.48148
+</td>
+<th class="l rowheader" scope="row">
+Adj R-Sq
+</th>
+<td class="r data">
+0.8292
+</td>
+</tr>
+<tr>
+<th class="l rowheader" scope="row">
+Coeff Var
+</th>
+<td class="r data">
+10.87144
+</td>
+<th class="l rowheader" scope="row">
+</th>
+<td class="r data">
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+<a name="IDX3"></a>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure Reg: Parameter Estimates">
+<colgroup>
+<col>
+<col>
+</colgroup>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="c b header" colspan="6" scope="colgroup">
+Parameter Estimates
+</th>
+</tr>
+<tr>
+<th class="l b header" scope="col">
+Variable
+</th>
+<th class="r b header" scope="col">
+DF
+</th>
+<th class="r b header" scope="col">
+Parameter<br/>Estimate
+</th>
+<th class="r b header" scope="col">
+Standard<br/>Error
+</th>
+<th class="r b header" scope="col">
+t Value
+</th>
+<th class="r b header" scope="col">
+Pr &gt; |t|
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="l rowheader" scope="row">
+Intercept
+</th>
+<th class="r data">
+1
+</th>
+<td class="r data">
+64.03568
+</td>
+<td class="r data">
+23.24876
+</td>
+<td class="r data">
+2.75
+</td>
+<td class="r data">
+0.0108
+</td>
+</tr>
+<tr>
+<th class="l rowheader" scope="row">
+speed
+</th>
+<th class="r data">
+1
+</th>
+<td class="r data">
+1.19631
+</td>
+<td class="r data">
+0.10606
+</td>
+<td class="r data">
+11.28
+</td>
+<td class="r data">
+&lt;.0001
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+<p style="page-break-after: always;">
+<br/>
+</p>
+<hr size="3"/>
+<a name="IDX4"></a>
+<div class="c proctitle">
+Model: MODEL1
+</div>
+<div class="c proctitle">
+Dependent Variable: scrap
+</div>
+<p>
+<div>
+<div class="c">
+<p><img alt="Panel of fit diagnostics for scrap." src="unnamed-chunk-10.png" style=" height: 640px; width: 640px;" border="0" class="c"></p>
+</div>
+</div>
+<br>
+<a name="IDX5"></a>
+<div>
+<div class="c">
+<p><img alt="Scatter plot of residuals by speed for scrap." src="unnamed-chunk-101.png" style=" height: 480px; width: 640px;" border="0" class="c"></p>
+</div>
+</div>
+<br>
+<a name="IDX6"></a>
+<div>
+<div class="c">
+<p><img alt="Scatterplot of scrap by speed overlaid with the fit line, a 95% confidence band and lower and upper 95% prediction limits." src="unnamed-chunk-102.png" style=" height: 480px; width: 640px;" border="0" class="c"></p>
+</div>
+</div>
+<br>
+</div>
+<p>(there are also supposed to be some plots which you won’t see here)
+and once again the reading in of the data is added behind the scenes to the top of this code. In this case, as we suspected from the scatterplot, there is a significantly positive relationship between the speed of the production line and the amount of scrap produced.</p>
+<p>You could also have a second chunk of “collected” code. For example, you might want to run a regression, saving an output data set (say, with the residuals in it), and, later, do something with the residuals. My example below saves the leverages (along with all the original variables). The <code>noprint</code> on the first line suppresses the regression output, which we saw before and don’t want to see again:</p>
+<pre class="sashtml"><code>proc reg noprint;
+  model scrap=speed;
+  output out=saved h=leverage;</code></pre>
+<div class="branch">
+
+</div>
+<p>Because I put <code>collectcode=T</code> in <em>this</em> code chunk header, our collection of code now includes (a) reading in the data and (b) running this regression, obtaining the output data set with the leverages in it. Thus, to display the leverages in order, I now only need to do this:</p>
+<pre class="sashtml"><code>proc sort;
+  by descending leverage;
+proc print;</code></pre>
+<div class="branch">
+
+</div>
+<div class="branch">
+<a name="IDX"></a>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure Print: Data Set WORK.SAVED">
+<colgroup>
+<col>
+</colgroup>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="r header" scope="col">
+Obs
+</th>
+<th class="r header" scope="col">
+case
+</th>
+<th class="r header" scope="col">
+scrap
+</th>
+<th class="r header" scope="col">
+speed
+</th>
+<th class="l header" scope="col">
+line
+</th>
+<th class="r header" scope="col">
+leverage
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="r rowheader" scope="row">
+1
+</th>
+<td class="r data">
+1
+</td>
+<td class="r data">
+218
+</td>
+<td class="r data">
+100
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.15313
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+2
+</th>
+<td class="r data">
+25
+</td>
+<td class="r data">
+422
+</td>
+<td class="r data">
+320
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.15236
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+3
+</th>
+<td class="r data">
+16
+</td>
+<td class="r data">
+140
+</td>
+<td class="r data">
+105
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.14284
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+4
+</th>
+<td class="r data">
+5
+</td>
+<td class="r data">
+470
+</td>
+<td class="r data">
+300
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.11418
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+5
+</th>
+<td class="r data">
+2
+</td>
+<td class="r data">
+248
+</td>
+<td class="r data">
+125
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.10643
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+6
+</th>
+<td class="r data">
+27
+</td>
+<td class="r data">
+410
+</td>
+<td class="r data">
+295
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.10583
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+7
+</th>
+<td class="r data">
+14
+</td>
+<td class="r data">
+425
+</td>
+<td class="r data">
+290
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.09795
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+8
+</th>
+<td class="r data">
+21
+</td>
+<td class="r data">
+180
+</td>
+<td class="r data">
+135
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.09109
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+9
+</th>
+<td class="r data">
+13
+</td>
+<td class="r data">
+275
+</td>
+<td class="r data">
+140
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.08414
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+10
+</th>
+<td class="r data">
+23
+</td>
+<td class="r data">
+361
+</td>
+<td class="r data">
+275
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.07721
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+11
+</th>
+<td class="r data">
+9
+</td>
+<td class="r data">
+410
+</td>
+<td class="r data">
+270
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.07125
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+12
+</th>
+<td class="r data">
+18
+</td>
+<td class="r data">
+384
+</td>
+<td class="r data">
+270
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.07125
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+13
+</th>
+<td class="r data">
+11
+</td>
+<td class="r data">
+241
+</td>
+<td class="r data">
+155
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.06616
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+14
+</th>
+<td class="r data">
+24
+</td>
+<td class="r data">
+252
+</td>
+<td class="r data">
+155
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.06616
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+15
+</th>
+<td class="r data">
+15
+</td>
+<td class="r data">
+367
+</td>
+<td class="r data">
+265
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.06577
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+16
+</th>
+<td class="r data">
+6
+</td>
+<td class="r data">
+394
+</td>
+<td class="r data">
+255
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.05624
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+17
+</th>
+<td class="r data">
+19
+</td>
+<td class="r data">
+341
+</td>
+<td class="r data">
+255
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.05624
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+18
+</th>
+<td class="r data">
+10
+</td>
+<td class="r data">
+260
+</td>
+<td class="r data">
+170
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.05248
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+19
+</th>
+<td class="r data">
+8
+</td>
+<td class="r data">
+321
+</td>
+<td class="r data">
+175
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.04888
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+20
+</th>
+<td class="r data">
+20
+</td>
+<td class="r data">
+215
+</td>
+<td class="r data">
+175
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.04888
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+21
+</th>
+<td class="r data">
+12
+</td>
+<td class="r data">
+331
+</td>
+<td class="r data">
+190
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.04093
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+22
+</th>
+<td class="r data">
+26
+</td>
+<td class="r data">
+273
+</td>
+<td class="r data">
+190
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.04093
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+23
+</th>
+<td class="r data">
+7
+</td>
+<td class="r data">
+332
+</td>
+<td class="r data">
+225
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.03914
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+24
+</th>
+<td class="r data">
+22
+</td>
+<td class="r data">
+260
+</td>
+<td class="r data">
+200
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.03803
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+25
+</th>
+<td class="r data">
+3
+</td>
+<td class="r data">
+360
+</td>
+<td class="r data">
+220
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.03796
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+26
+</th>
+<td class="r data">
+4
+</td>
+<td class="r data">
+351
+</td>
+<td class="r data">
+205
+</td>
+<td class="l data">
+a
+</td>
+<td class="r data">
+0.03729
+</td>
+</tr>
+<tr>
+<th class="r rowheader" scope="row">
+27
+</th>
+<td class="r data">
+17
+</td>
+<td class="r data">
+277
+</td>
+<td class="r data">
+215
+</td>
+<td class="l data">
+b
+</td>
+<td class="r data">
+0.03726
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+</div>
+<p>and everything will work. I sorted the leverages so that you can observe that the highest leverages go with the most extreme (highest or lowest) <code>speed</code> values.</p>
+</div>
 <div id="concluding-remarks" class="section level2">
 <h2>Concluding remarks</h2>
-<p>The way to run SAS in R Markdown is to put the <em>whole</em> analysis in one chunk, so that the data set is accessible all the way through. This is rather reminiscent of the 1970s way of running SAS on punched cards: submit the job, wait, then get pages of output to leaf through. A better way would be to save the data as a permanent data set, then refer to the permanent data set using <code>data=</code> all the way through. That way, you could stick with small code chunks for each piece of the analysis.</p>
 <p>The output comes out nicely in HTML, but when I tried to knit as PDF or Word, things didn’t come out properly. So the package would be excellent for producing output intended for web viewing. I think I’m going to stick with my Sweave approach for now, but it’s very nice to know that this kind of thing exists.</p>
 </div>
 <div id="references" class="section level2">
