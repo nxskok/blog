@@ -1,0 +1,231 @@
+---
+title: Scraping Icelandic soccer results with rvest and selenium
+author: Ken
+date: '2018-09-01'
+slug: scraping-icelandic-soccer-results-with-rvest-and-selenium
+categories:
+  - R
+tags:
+  - rstats
+  - tidyverse
+  - scraping
+---
+
+## Introduction
+
+The other day, I wanted to download all of this season's results in the Icelandic soccer league. I'm sure you often want to do this. Or, more seriously, you want to grab something from a web page, but something is standing in the way of making it simple. In this post, we explore the use of `rvest` for this task, along with `RSelenium`, which we need for the more sophisticated stuff later.
+
+The website I like to use for this is [Scoresway](http://www.scoresway.com/?sport=soccer&page=home). I checked the `robots.txt` file, and we are good to go. Responsibly, of course.
+
+## Packages
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(lubridate)
+library(RSelenium)
+```
+
+Note the capitalization on the last one.
+
+## Downloading page 1 with `rvest`
+
+The purpose of `rvest` is to download  a web page and extract information from it. Suppose we are staring at [this page, accessed on the eveing of September 1, 2018](http://www.scoresway.com/?sport=soccer&page=competition&id=31&view=matches). These are the most recent matches in the Icelandic soccer league, ones that have been played, with a score in them, and ones that have not been played yet, with a kickoff time in the middle column. The dates, we note, are European style, day before month.
+
+The way to use `rvest` is to feed `read_html` a URL, and then to create a pipe that pulls out what you need, in this case an HTML table that we want to turn into a data frame. Let's build the pipe step by step, so that we can see what's going on. The reading of the web page is the slowest part of the enterprise, so let's do that first and save it:
+
+```{r}
+url="http://www.scoresway.com/?sport=soccer&page=competition&id=31&view=matches"
+(html=read_html(url))
+```
+
+As far as `rvest` is concerned, a web page consists of a head and a body. They have something in them, so it looks as if we are good so far. Let's take another step. `html_nodes` pulls out all the HTML entities by the name we give it, `table`s here:
+
+```{r}
+html %>% 
+  html_nodes(css="table")
+```
+
+There is only one table here. To turn it into a data frame (well, a list of data frames), we run it through `html_table`:
+
+```{r}
+html %>% 
+  html_nodes(css="table") %>% 
+  html_table()
+```
+
+and you see that this reproduces the (text of the) table on the website. There is actually more information in the HTML than displays here; for example, each team has an ID number, and clicking on a team name on the website will take you to that team's home page. Also, clicking on the score will take you to the page for that match, where you find the team line-ups, goalscorers, attendance and suchlike things.
+
+This is good, but there is an immediate problem. It only goes back (as I write this) to August 19. The Icelandic season starts in April (and runs through the summer). What happened to the rest of the games? 
+
+If you look at the list of matches on the website, you see little clickable things marked Previous and Next at the top right. Clicking on them will bring up the Previous or Next page of matches. On some websites, you can get to a certain page number via a link that ends with something like `Page 3`, but that isn't the case here: all you can do is click on Previous and Next, which fires up a bit of Javascript that pulls the previous or next page from a database. So there seems to be no way to get to the previous page other than by physically clicking the link.
+
+## Enter Selenium
+
+Selenium is a web browser that you "drive" (that is, control) programmatically rather than by being physically present to clikc buttons. It enables you to do other things programatically apart from click buttons (like fill out forms). `rvest` can do *that* but it can't do what I want it to do here.
+
+The recommended way, these days, to run Selenium is via Docker. Docker is a mechanism for running different things in their own separate "containers" so that they don't interfere with each other. [Callum Taylor's blog post](https://callumgwtaylor.github.io/blog/2018/02/01/using-rselenium-and-docker-to-webscrape-in-r-using-the-who-snake-database/) shows how it goes. Once I had downloaded and installed everything, I fired up a terminal window and ran
+
+```{r, eval=F}
+docker run -d -p 4445:4444 selenium/standalone-firefox
+```
+
+(my virtual browser is apparently Firefox). I checked that it was running by
+
+```{bash}
+docker ps
+```
+
+which shows that this is the only Docker container I am running now. (I have also used Docker with `splashr`.)
+
+Next, we have to connect to our virtual browser, which is done like this:
+
+```{r}
+remdr <- RSelenium::remoteDriver(remoteServerAddr = "localhost",
+                                 port = 4445L,
+                                 browserName = "firefox")
+remdr$open()
+```
+
+Up and running. Let's go back to where we were before. The way you operate this virtual browser is to add a dollar sign after its name (here `remdr`) and then the name of something for it to do. `navigate` goes to a URL:
+
+```{r}
+url="http://www.scoresway.com/?sport=soccer&page=competition&id=31&view=matches"
+remdr$navigate(url)
+```
+
+Since we are not physically operating this browser, we don't know that it has actually connected to this website. If, however, you run this:
+
+```{r, eval=F}
+remdr$screenshot()
+```
+
+you see a screenshot of the page that Selenium is connected to, in the R Studio Viewer window.
+
+## Finding things on a page and sending events to them
+
+What we want to do here is to click that Previous link. The first thing we need to do is to refer to it. I like to inspect the HTML in (my real) browser by pressing control-shift-I. This has a box with an arrow in it at the top left, whose tooltip is "Select an element in the page to inspect it". Click that. Then click on the Previous link. This highlights the piece of the HTML code that produces the "Previous" link. It is an `a` tag with class `previous`. You can get the CSS selector for it by right-clicking the highlighted HTML and then selecting Copy and Copy Selector. This is what will enable you to select this link and send a click to it. I got a very long CSS selector and reasoned that `a.previous` also ought to work (it does).
+
+To select the Previous link in code, you do something like this:
+
+```{r}
+element=remdr$findElement(using="css", "a.previous")
+```
+
+and then to click on it, you do this:
+
+```{r}
+element$clickElement()
+```
+
+Now, if you grab another screenshot via
+
+```{r, eval=F}
+remdr$screenshot()
+```
+
+you will find that you are indeed on the previous page of matches. And if you repeat the process of selecting *that* page's Previous link, clicking on it, and screenshotting the result, you will see that you have gone a page further back. I was very excited when I did this and *it worked*!
+
+## Getting the matches from each page
+
+We are not home yet, though. What I was lacking in my mind was the way of getting hold of each page's HTML code, so that I could throw it into `rvest` and pull out what I wanted. A Stack Overflow answer alerted me to `getPageSource`, which grabs the HTML of the page that the virtual browser is looking at. *This* can be thrown into `rvest` and that page's matches turned into a data frame. 
+
+I have been trying to get my mind onto `purrr::map` and to avoid thinking about loops, but this is a natural for a loop, because the pages come to us one at a time and all we can do is get the previous one. So I came up with this pseudocode:
+
+```
+repeat
+  get the current page
+  get its HTML
+  turn the HTML into a data frame for that page
+  find the Previous link and click on it
+until error (or we otherwise know when to stop)
+```
+
+To my mind this is more naturally a repeat-until rather than a while-do since we won't know whether to stop until the end of the loop, or at least the middle. I was surprised to learn that R has `repeat` (having never used it before). After `repeat` comes a code block in curly brackets, and instead of an explicit `until` (which is what I remember from my Pascal days) you use a `break` to jump out of the loop at any point. In that sense it's a lot like a `while(TRUE)` loop that is infinite unless you explicitly break out of it. 
+
+I wasn't quite sure about my exit condition until I played with it a bit. If you point your real browser at the page and click Previous a few times, when you get back to the beginning of the season, the Previous link is greyed out and doesn't do anything when you click on it, but `a.previous` *will still exist*. So I changed tack: if I "clicked" on Previous and got back the same page that I just had, with the same matches I had previously, I would stop there (and throw away the last one).
+
+So, in code, that comes out like this:
+
+```{r}
+gamelist=list()
+i=0
+remdr$navigate(url)
+repeat {
+  i=i+1
+  html=remdr$getPageSource()[[1]]
+  read_html(html) %>% 
+    html_node(css="table") %>% 
+    html_table() ->
+  gamelist[[i]]
+  if (i>=2) 
+    if (identical(gamelist[[i]], gamelist[[i-1]])) 
+      break
+  element=remdr$findElement(using="css", "a.previous")
+  element$clickElement()
+  if (i>20) break
+}
+```
+
+Each time through the loop would give me a data frame, so I thought I would use a list to store them in. `getPageSource` actually returns a list itself, of which I need the first element. Then I pass the HTML to `rvest` and save it. Then my exit condition: if I've been through at least twice, check whether this time's data frame of games is identical to last time's, and if so quit. Otherwise, find the Previous link and click on it. Finally, to make sure that I end the loop eventually, I break out if `i` has gotten bigger than I think it ought to be.
+
+So now I should have a thing called `gamelist` that is a list of data frames, each one earlier than the previous. How many data frames do I have in the list?
+
+```{r}
+(ll=length(gamelist))
+```
+
+`r ll` pages. The last one will be thrown away (since it is a repeat of the second-last one), but let's take a look at the dates on the last one:
+
+```{r}
+gamelist[[ll]]
+```
+
+Late April. For Iceland, that is right.
+
+There should be 25 matches on each page, except for the last one, which might have fewer. How many are there?
+
+```{r}
+gamelist %>% map_dbl(~nrow(.))
+```
+
+
+## Tidying up
+
+We want to glue this list of data frames into one data frame, and also:
+
+- throw away any games that don't have scores (just a kickoff time)
+- turn the dates into real dates
+- fill in the blank ones (with the value above)
+- separate out the score column into the home team's score and the away team's score
+
+which can be achieved this way:
+
+```{r}
+gamelist %>% 
+  enframe() %>% 
+  filter(name<ll) %>% unnest() %>% 
+  select(Date:`Away team`) %>% 
+  filter(str_detect(`Score/Time`," - ")) %>% 
+  mutate(thedate=dmy(Date)) %>% 
+  fill(thedate) %>% 
+  separate(`Score/Time`, into=c("s1", "s2")) %>% 
+  select(date=thedate, t1=`Home team`, s1, t2=`Away team`, s2)
+```
+
+
+## References 
+
+[Stack Overflow answer by Alistaire that alerted me to getPageSource](https://stackoverflow.com/questions/46019367/how-to-access-a-page-scraped-using-rselenium-with-rvest)
+
+[Sharon Machlis' tutorial on driving a web browser with R](https://www.computerworld.com/article/2971265/application-development/how-to-drive-a-web-browser-with-r-and-rselenium.html)
+
+[Callum Taylor's blog post on RSelenium and Docker](https://callumgwtaylor.github.io/blog/2018/02/01/using-rselenium-and-docker-to-webscrape-in-r-using-the-who-snake-database/)
+
+[Petr Keil on webscraping in R](https://rawgit.com/petrkeil/Blog/master/2017_08_15_Web_scraping/web_scraping.html)
+
+[Selenium and Docker](http://rpubs.com/johndharrison/RSelenium-Docker)
+
+[Tutorial on Selenium Server](https://ropensci.org/tutorials/rselenium_tutorial/)
+
+[Splashr vignette](https://cran.r-project.org/web/packages/splashr/vignettes/intro_to_splashr.html)

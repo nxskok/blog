@@ -6,10 +6,19 @@
     <description>Recent content in Tidyverse on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 15 Aug 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 01 Sep 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/tidyverse/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Scraping Icelandic soccer results with rvest and selenium</title>
+      <link>/2018/09/01/scraping-icelandic-soccer-results-with-rvest-and-selenium/</link>
+      <pubDate>Sat, 01 Sep 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/09/01/scraping-icelandic-soccer-results-with-rvest-and-selenium/</guid>
+      <description>Introduction The other day, I wanted to download all of this season’s results in the Icelandic soccer league. I’m sure you often want to do this. Or, more seriously, you want to grab something from a web page, but something is standing in the way of making it simple. In this post, we explore the use of rvest for this task, along with RSelenium, which we need for the more sophisticated stuff later.</description>
+    </item>
     
     <item>
       <title>A tale of zero kitties</title>
