@@ -30,7 +30,7 @@ Note the capitalization on the last one.
 
 ## Downloading page 1 with `rvest`
 
-The purpose of `rvest` is to download  a web page and extract information from it. Suppose we are staring at [this page, accessed on the eveing of September 1, 2018](http://www.scoresway.com/?sport=soccer&page=competition&id=31&view=matches). These are the most recent matches in the Icelandic soccer league, ones that have been played, with a score in them, and ones that have not been played yet, with a kickoff time in the middle column. The dates, we note, are European style, day before month.
+The purpose of `rvest` is to download  a web page and extract information from it. Suppose we are staring at [this page, accessed on the evening of September 3, 2018](http://www.scoresway.com/?sport=soccer&page=competition&id=31&view=matches). These are the most recent matches in the Icelandic soccer league, ones that have been played, with a score in them, and ones that have not been played yet, with a kickoff time in the middle column. The dates, we note, are European style, day before month.
 
 The way to use `rvest` is to feed `read_html` a URL, and then to create a pipe that pulls out what you need, in this case an HTML table that we want to turn into a data frame. Let's build the pipe step by step, so that we can see what's going on. The reading of the web page is the slowest part of the enterprise, so let's do that first and save it:
 
@@ -62,7 +62,7 @@ If you look at the list of matches on the website, you see little clickable thin
 
 ## Enter Selenium
 
-Selenium is a web browser that you "drive" (that is, control) programmatically rather than by being physically present to clikc buttons. It enables you to do other things programatically apart from click buttons (like fill out forms). `rvest` can do *that* but it can't do what I want it to do here.
+Selenium is a web browser that you "drive" (that is, control) programmatically rather than by being physically present to click buttons. It enables you to do other things programatically apart from click buttons (like fill out forms). `rvest` can do *that* but it can't do what I want it to do here. `r tufte::margin_note("After I thought about this I realized that rvest does have \"follow_link\" for use in a session. Maybe this will work; it seems to use the same idea of clicking on something that isn't a URL.")`
 
 The recommended way, these days, to run Selenium is via Docker. Docker is a mechanism for running different things in their own separate "containers" so that they don't interfere with each other. [Callum Taylor's blog post](https://callumgwtaylor.github.io/blog/2018/02/01/using-rselenium-and-docker-to-webscrape-in-r-using-the-who-snake-database/) shows how it goes. Once I had downloaded and installed everything, I fired up a terminal window and ran
 
@@ -100,7 +100,7 @@ Since we are not physically operating this browser, we don't know that it has ac
 remdr$screenshot()
 ```
 
-you see a screenshot of the page that Selenium is connected to, in the R Studio Viewer window.
+you see a screenshot of the page that Selenium is connected to, in the R Studio Viewer window. This is *very* handy for debugging. 
 
 ## Finding things on a page and sending events to them
 
@@ -183,12 +183,13 @@ gamelist[[ll]]
 
 Late April. For Iceland, that is right.
 
-There should be 25 matches on each page, except for the last one, which might have fewer. How many are there?
+There should be 25 matches on each page, except for the last one (repeated), which might have fewer. How many are there?
 
 ```{r}
 gamelist %>% map_dbl(~nrow(.))
 ```
 
+It so happens that the earliest page (in terms of date) has 1 game on it.
 
 ## Tidying up
 
@@ -213,6 +214,15 @@ gamelist %>%
   select(date=thedate, t1=`Home team`, s1, t2=`Away team`, s2)
 ```
 
+Some observations on this:
+
+- I am deliberately creating a list column via `enframe` with names 1 through `r ll` and values the data frames for each page.
+- This is to enable me to pick out (and throw away) the last one I found.
+- Matches that have happened have a score in them, two numbers separated by space-dash-space. (Matches that have not happened yet have a kickoff time with a colon in it.)
+- `dmy` is from `lubridate`, for turning date-as-text into a real date.
+- `fill` turns missing values in a column into the previous non-missing value. This one is a bit of a cheat, since the `Date` lines without a date are actually empty, but `dmy` will turn things it cannot parse as dates (such as blanks) into missings. Thus `thedate` when created has `NA`s in it, which `fill` replaces with the previous non-missing value.
+- I wanted the individual team scores (for modelling). `separate` splits the `Score/Time` column into its two constituent numbers. I'm not quite sure how I got away without using a `sep=`, but `-` must be in its list of default delimiters.
+- Using `=` in `select` allows you to rename columns as you select them.
 
 ## References 
 

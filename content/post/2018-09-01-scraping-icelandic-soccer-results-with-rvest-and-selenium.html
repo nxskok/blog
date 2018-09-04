@@ -50,7 +50,7 @@ tags:
 </div>
 <div id="downloading-page-1-with-rvest" class="section level2">
 <h2>Downloading page 1 with <code>rvest</code></h2>
-<p>The purpose of <code>rvest</code> is to download a web page and extract information from it. Suppose we are staring at <a href="http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=31&amp;view=matches">this page, accessed on the eveing of September 1, 2018</a>. These are the most recent matches in the Icelandic soccer league, ones that have been played, with a score in them, and ones that have not been played yet, with a kickoff time in the middle column. The dates, we note, are European style, day before month.</p>
+<p>The purpose of <code>rvest</code> is to download a web page and extract information from it. Suppose we are staring at <a href="http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=31&amp;view=matches">this page, accessed on the evening of September 3, 2018</a>. These are the most recent matches in the Icelandic soccer league, ones that have been played, with a score in them, and ones that have not been played yet, with a kickoff time in the middle column. The dates, we note, are European style, day before month.</p>
 <p>The way to use <code>rvest</code> is to feed <code>read_html</code> a URL, and then to create a pipe that pulls out what you need, in this case an HTML table that we want to turn into a data frame. Let’s build the pipe step by step, so that we can see what’s going on. The reading of the web page is the slowest part of the enterprise, so let’s do that first and save it:</p>
 <pre class="r"><code>url=&quot;http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=31&amp;view=matches&quot;
 (html=read_html(url))</code></pre>
@@ -105,7 +105,7 @@ tags:
 ## 8  View events More info
 ## 9  View events More info
 ## 10 View events More info
-## 11             More info
+## 11 View events More info
 ## 12 View events More info
 ## 13 View events More info
 ## 14             More info
@@ -126,13 +126,13 @@ tags:
 </div>
 <div id="enter-selenium" class="section level2">
 <h2>Enter Selenium</h2>
-<p>Selenium is a web browser that you “drive” (that is, control) programmatically rather than by being physically present to clikc buttons. It enables you to do other things programatically apart from click buttons (like fill out forms). <code>rvest</code> can do <em>that</em> but it can’t do what I want it to do here.</p>
+<p>Selenium is a web browser that you “drive” (that is, control) programmatically rather than by being physically present to click buttons. It enables you to do other things programatically apart from click buttons (like fill out forms). <code>rvest</code> can do <em>that</em> but it can’t do what I want it to do here. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">After I thought about this I realized that rvest does have “follow_link” for use in a session. Maybe this will work; it seems to use the same idea of clicking on something that isn’t a URL.</span></p>
 <p>The recommended way, these days, to run Selenium is via Docker. Docker is a mechanism for running different things in their own separate “containers” so that they don’t interfere with each other. <a href="https://callumgwtaylor.github.io/blog/2018/02/01/using-rselenium-and-docker-to-webscrape-in-r-using-the-who-snake-database/">Callum Taylor’s blog post</a> shows how it goes. Once I had downloaded and installed everything, I fired up a terminal window and ran</p>
 <pre class="r"><code>docker run -d -p 4445:4444 selenium/standalone-firefox</code></pre>
 <p>(my virtual browser is apparently Firefox). I checked that it was running by</p>
 <pre class="bash"><code>docker ps</code></pre>
 <pre><code>## CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS                    NAMES
-## b67f41f896df        selenium/standalone-firefox   &quot;/opt/bin/entry_poin…&quot;   3 minutes ago       Up 3 minutes        0.0.0.0:4445-&gt;4444/tcp   admiring_murdock</code></pre>
+## 336e5084439b        selenium/standalone-firefox   &quot;/opt/bin/entry_poin…&quot;   7 minutes ago       Up 7 minutes        0.0.0.0:4445-&gt;4444/tcp   nostalgic_spence</code></pre>
 <p>which shows that this is the only Docker container I am running now. (I have also used Docker with <code>splashr</code>.)</p>
 <p>Next, we have to connect to our virtual browser, which is done like this:</p>
 <pre class="r"><code>remdr &lt;- RSelenium::remoteDriver(remoteServerAddr = &quot;localhost&quot;,
@@ -156,10 +156,10 @@ remdr$open()</code></pre>
 ## [1] FALSE
 ## 
 ## $`moz:processID`
-## [1] 297
+## [1] 854
 ## 
 ## $`moz:profile`
-## [1] &quot;/tmp/rust_mozprofile.ddUpXMYffVFP&quot;
+## [1] &quot;/tmp/rust_mozprofile.5lTWARc2iZzx&quot;
 ## 
 ## $`moz:useNonSpecCompliantPointerOrigin`
 ## [1] FALSE
@@ -191,16 +191,16 @@ remdr$open()</code></pre>
 ## 
 ## 
 ## $webdriver.remote.sessionid
-## [1] &quot;57df450d-2396-40bc-a726-b12a500228ef&quot;
+## [1] &quot;7906155a-f868-4aa9-8c39-e407cbb8241b&quot;
 ## 
 ## $id
-## [1] &quot;57df450d-2396-40bc-a726-b12a500228ef&quot;</code></pre>
+## [1] &quot;7906155a-f868-4aa9-8c39-e407cbb8241b&quot;</code></pre>
 <p>Up and running. Let’s go back to where we were before. The way you operate this virtual browser is to add a dollar sign after its name (here <code>remdr</code>) and then the name of something for it to do. <code>navigate</code> goes to a URL:</p>
 <pre class="r"><code>url=&quot;http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=31&amp;view=matches&quot;
 remdr$navigate(url)</code></pre>
 <p>Since we are not physically operating this browser, we don’t know that it has actually connected to this website. If, however, you run this:</p>
 <pre class="r"><code>remdr$screenshot()</code></pre>
-<p>you see a screenshot of the page that Selenium is connected to, in the R Studio Viewer window.</p>
+<p>you see a screenshot of the page that Selenium is connected to, in the R Studio Viewer window. This is <em>very</em> handy for debugging.</p>
 </div>
 <div id="finding-things-on-a-page-and-sending-events-to-them" class="section level2">
 <h2>Finding things on a page and sending events to them</h2>
@@ -252,9 +252,10 @@ repeat {
 <pre><code>##   Day     Date Home team Score/Time Away team                      
 ## 1 Fri 27/04/18     Valur      2 - 1        KR View events More info</code></pre>
 <p>Late April. For Iceland, that is right.</p>
-<p>There should be 25 matches on each page, except for the last one, which might have fewer. How many are there?</p>
+<p>There should be 25 matches on each page, except for the last one (repeated), which might have fewer. How many are there?</p>
 <pre class="r"><code>gamelist %&gt;% map_dbl(~nrow(.))</code></pre>
 <pre><code>## [1] 25 25 25 25 25  1  1</code></pre>
+<p>It so happens that the earliest page (in terms of date) has 1 game on it.</p>
 </div>
 <div id="tidying-up" class="section level2">
 <h2>Tidying up</h2>
@@ -289,6 +290,16 @@ repeat {
 ##  9 2018-09-02 Fjölnir            1     Stjarnan   3    
 ## 10 2018-09-02 KA                 3     Valur      3    
 ## # ... with 104 more rows</code></pre>
+<p>Some observations on this:</p>
+<ul>
+<li>I am deliberately creating a list column via <code>enframe</code> with names 1 through 7 and values the data frames for each page.</li>
+<li>This is to enable me to pick out (and throw away) the last one I found.</li>
+<li>Matches that have happened have a score in them, two numbers separated by space-dash-space. (Matches that have not happened yet have a kickoff time with a colon in it.)</li>
+<li><code>dmy</code> is from <code>lubridate</code>, for turning date-as-text into a real date.</li>
+<li><code>fill</code> turns missing values in a column into the previous non-missing value. This one is a bit of a cheat, since the <code>Date</code> lines without a date are actually empty, but <code>dmy</code> will turn things it cannot parse as dates (such as blanks) into missings. Thus <code>thedate</code> when created has <code>NA</code>s in it, which <code>fill</code> replaces with the previous non-missing value.</li>
+<li>I wanted the individual team scores (for modelling). <code>separate</code> splits the <code>Score/Time</code> column into its two constituent numbers. I’m not quite sure how I got away without using a <code>sep=</code>, but <code>-</code> must be in its list of default delimiters.</li>
+<li>Using <code>=</code> in <code>select</code> allows you to rename columns as you select them.</li>
+</ul>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
