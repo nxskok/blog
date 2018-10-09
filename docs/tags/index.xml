@@ -6,10 +6,19 @@
     <description>Recent content in Tags on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 20 Jan 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 09 Oct 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>#Rstats</title>
+      <link>/tags/#rstats/</link>
+      <pubDate>Tue, 09 Oct 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/#rstats/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>#Tidyverse</title>
@@ -17,6 +26,15 @@
       <pubDate>Sat, 20 Jan 2018 00:00:00 +0000</pubDate>
       
       <guid>/tags/#tidyverse/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>#Xaringan</title>
+      <link>/tags/#xaringan/</link>
+      <pubDate>Tue, 09 Oct 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/#xaringan/</guid>
       <description></description>
     </item>
     

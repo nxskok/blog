@@ -6,10 +6,21 @@
     <description>Recent content on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 01 Sep 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 09 Oct 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>My first go at Xaringan</title>
+      <link>/2018/10/09/my-first-go-at-xaringan/</link>
+      <pubDate>Tue, 09 Oct 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/10/09/my-first-go-at-xaringan/</guid>
+      <description>I had a go at Xaringan to make a small and pointless presentation. Here is the presentation, and here is the R Markdown that produced it.
+The whole Github repo is an R Studio project. Feel free to clone it and play with it.
+I got the pdf of the presentation by printing the HTML to pdf in Chrome. (It seems to be easier to share the pdf than share the HTML, because the latter requires extra stuff with it.</description>
+    </item>
     
     <item>
       <title>Scraping Icelandic soccer results with rvest and selenium</title>

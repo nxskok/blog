@@ -1,0 +1,16 @@
+---
+title: My first go at Xaringan
+author: Ken
+date: '2018-10-09'
+slug: my-first-go-at-xaringan
+categories: []
+tags:
+  - '#rstats'
+  - '#xaringan'
+---
+
+I had a go at Xaringan to make a small and pointless presentation. Here is [the presentation](https://github.com/nxskok/xaringan/blob/master/A%20Very%20Small%20Test.pdf), and here is [the R Markdown](https://raw.githubusercontent.com/nxskok/xaringan/master/my_test.Rmd) that produced it.
+
+The whole Github repo is an R Studio project. Feel free to clone it and play with it.
+
+I got the pdf of the presentation by printing the HTML to pdf in Chrome. (It seems to be easier to share the pdf than share the HTML, because the latter requires extra stuff with it.)
