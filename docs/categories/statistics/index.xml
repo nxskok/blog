@@ -6,10 +6,20 @@
     <description>Recent content in Statistics on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 15 Aug 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 13 Dec 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/statistics/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Estimating sigma using quantiles</title>
+      <link>/2018/12/13/estimating-sigma-using-quantiles/</link>
+      <pubDate>Thu, 13 Dec 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/12/13/estimating-sigma-using-quantiles/</guid>
+      <description>Packages There will be some R later, with some random number generation. I set the random number seed for reproducibility:
+library(tidyverse) ## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ── ## ✔ ggplot2 3.1.0 ✔ purrr 0.2.5 ## ✔ tibble 1.4.2 ✔ dplyr 0.7.8 ## ✔ tidyr 0.8.1 ✔ stringr 1.3.1 ## ✔ readr 1.1.1 ✔ forcats 0.3.0 ## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ── ## ✖ dplyr::filter() masks stats::filter() ## ✖ dplyr::lag() masks stats::lag() set.</description>
+    </item>
     
     <item>
       <title>A tale of zero kitties</title>

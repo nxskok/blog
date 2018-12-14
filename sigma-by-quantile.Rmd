@@ -1,0 +1,131 @@
+---
+title: "investigating quantile estimation of sigma in a normal distribution"
+output: html_notebook
+---
+
+## packages
+
+```{r}
+library(tidyverse)
+set.seed(457299)
+```
+
+## Drawing a normal quantile plot in SAS
+
+I was using SAS to estimate normality assumptions for some $t$-tests. It has a mechanism (hidden in `proc univariate`) for drawing these, but to obtain a line on them (as `stat_qq_line` does), you need to supply a $\mu$ and $\sigma$ for the normal distribution. The default way of specifying these is to let SAS estimate them, which it does using the sample mean and sample SD. 
+(This is in contrast to R, which puts the line through the first and third quartiles). 
+
+But estimating $\sigma$ from the sample standard deviation has a problem: in the common cases where normality fails, such as long tails, skewness or outliers, the estimate of $\sigma$ is bigger than it should be, inflated by the observations far from the mean. On a SAS normal quantile plot, this means that the line is steeper than it would otherwise be, and it will tend to go nearer the outliers (or values in the long tail or tails), making them look less extreme than it should. One might be tempted in such cases to conclude that normality is all right, when an R normal quantile plot would look very different.
+
+## Estimating $\sigma$ from quantiles
+
+This made me wonder whether there is a more useful way to estimate $\sigma$, one that is not affected by outliers. An obvious alternative measure of spread is the interquartile range.
+In a standard normal distribution, what is the interquartile range?
+
+```{r}
+qnorm(0.75)-qnorm(0.25)
+```
+
+Since any normal distribution is a linear rescaling of the standard one, this means that the interquartile range of *any* normal distribution is about $1.35\sigma$. That means that we can do what you might call a "method of quantiles" estimation of $\sigma$ by taking the sample IQR and dividing it by 1.35 to get an unbiased estimator of $\sigma$. 
+
+The same idea could be applied to any pair of percentiles. It seems logical to arrange them symmetrically. Let's try the 10th and 90th percentiles:
+
+```{r}
+qnorm(0.90)-qnorm(0.10)
+```
+
+Using the 10th and 90th percentiles, we would estimate $\sigma$ by taking the difference between them and dividing by 2.56. Let's make a collection of possible percentile pairs and what we have to divide by to estimate $\sigma$ unbiasedly:
+
+```{r}
+p=c(0.01, 0.05, 0.075, 0.10, 0.125, 0.15, 0.20, 0.25, 0.4)
+( enframe(p, value="lo") %>% 
+  mutate(hi=1-lo) %>% 
+  mutate(divisor=qnorm(hi)-qnorm(lo)) -> pctls)
+```
+
+These are probably not optimal (when the distribution is normal, the optimal estimator of $\sigma$) is the standard deviation), but are any of them better than the others?
+
+## simulation
+
+let's generate a  bunch of random samples of standard normal data, and use them to estimate $\sigma$ using quantiles. I'll start with samples of size 20.
+
+Before I start, I need a little function that estimates $\sigma$ from the percentiles in the table above for *one* sample (and then we can do it for many):
+
+```{r}
+estimators=function(x,tbl) {
+  tbl %>% mutate(xlo=quantile(x,lo), xhi=quantile(x,hi)) %>% 
+    mutate(sigma_hat=(xhi-xlo)/divisor)
+}
+```
+
+testing
+
+```{r}
+x=0:100
+estimators(x,pctls)
+```
+
+testing it with this sample makes it clear that it got the right percentiles. Now we want to return just `sigma_hat`:
+
+```{r}
+estimators=function(x,tbl) {
+  tbl %>% mutate(xlo=quantile(x,lo), xhi=quantile(x,hi)) %>% 
+    mutate(sigma_hat=(xhi-xlo)/divisor) %>% 
+    pluck("sigma_hat") %>% enframe(name="pct_up", value="estimate")
+}
+estimators(0:100, pctls)
+estimators(rnorm(50),pctls)
+```
+
+the second one is to be more realistic: the estimates of $\sigma$ are all somewhat close to 1.
+
+## Generate a bunch of random samples, and compute estimators for each:
+
+```{r}
+rerun(10000,rnorm(20)) %>% enframe(value="sample") %>% 
+  mutate(ests=map(sample,~estimators(.,pctls))) %>% unnest(ests) %>% 
+  mutate(sq_error=(estimate-1)^2) %>% 
+  group_by(pct_up) %>% 
+  summarize(sse=sum(sq_error))
+```
+
+for samples of size 20, 7.5-92.5 has the smallest mse.
+
+samples of size 10?
+
+```{r}
+rerun(10000,rnorm(10)) %>% enframe(value="sample") %>% 
+  mutate(ests=map(sample,~estimators(.,pctls))) %>% unnest(ests) %>% 
+  mutate(sq_error=(estimate-1)^2) %>% 
+  group_by(pct_up) %>% 
+  summarize(sse=sum(sq_error))
+```
+
+7.5-92.5 is the winner this time. Size 50?
+
+```{r}
+rerun(10000,rnorm(50)) %>% enframe(value="sample") %>% 
+  mutate(ests=map(sample,~estimators(.,pctls))) %>% unnest(ests) %>% 
+  mutate(sq_error=(estimate-1)^2) %>% 
+  group_by(pct_up) %>% 
+  summarize(sse=sum(sq_error))
+```
+
+same (just)
+
+size 100?
+
+```{r}
+rerun(10000,rnorm(100)) %>% enframe(value="sample") %>% 
+  mutate(ests=map(sample,~estimators(.,pctls))) %>% unnest(ests) %>% 
+  mutate(sq_error=(estimate-1)^2) %>% 
+  group_by(pct_up) %>% 
+  summarize(sse=sum(sq_error))
+```
+
+same again.
+
+## references
+
+Benson, F. (1949). A Note on the Estimation of Mean and Standard Deviation from Quantiles. Journal of the Royal Statistical Society. Series B (Methodological), 11(1), 91-100. Retrieved from [here](http://www.jstor.org.myaccess.library.utoronto.ca/stable/2983699)
+

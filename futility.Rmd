@@ -1,0 +1,129 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Inspired by [this](https://www.futilitycloset.com/2012/10/17/the-paradox-of-the-second-ace-2/)
+
+## packages
+
+```{r}
+library(tidyverse)
+```
+
+
+## a deck of cards
+
+```{r}
+ranks=c("A","2","3","4","5","6","7","8","9","T","J","Q","K")
+suits=c("S","H","D","C")
+deck=crossing(rank=ranks,suit=suits)
+deck
+```
+
+set random number seed
+
+```{r}
+set.seed(457299)
+```
+
+
+select 13 cards
+
+```{r}
+deck %>% sample_n(13) -> hand
+```
+
+make a function of this
+
+```{r}
+deal_hand=function(deck,cards=13) {
+  deck %>% sample_n(cards)
+}
+```
+
+
+## does a hand contain an ace, the ace of spades, more than one ace?
+
+```{r}
+count_aces=function(hand) {
+  hand %>% filter(rank=="A") %>% nrow()
+}
+count_ace_spades=function(hand) {
+  hand %>% filter(rank=="A", suit=="S") %>% nrow()
+}
+count_aces(hand)
+count_ace_spades(hand)
+```
+
+sample many of these
+
+```{r}
+rerun(10000, deal_hand(deck)) %>% bind_rows(.id="hand_number") %>% nest(-hand_number, .key="hand") %>% 
+  mutate(ace_count=map_int(hand,~count_aces(.))) %>% 
+  mutate(spade_ace_count=map_int(hand,~count_ace_spades(.))) -> d
+```
+
+```{r}
+d
+```
+
+Out of the times when there is at least one ace, how many times is there more than one?
+
+
+```{r}
+d %>% filter(ace_count>=1) %>% count(ace_count) %>% mutate(prop=n/sum(n))
+```
+
+```{r}
+d %>% filter(spade_ace_count==1) %>% count(ace_count) %>% mutate(prop=n/sum(n))
+```
+
+
+number of aces held is hypergeometric:
+
+```{r}
+p1=dhyper(0:4,4,48,13)
+p1
+```
+
+if she holds the spade ace, there are 3 aces remaining among the other 51 cards, so distribution of number of further aces held is
+
+```{r}
+p2=dhyper(0:3,3,48,12)
+```
+
+p(no further aces | spade ace):
+
+```{r}
+p2[1]/sum(p2)
+```
+
+out of the ways of holding at least one ace, how many involve holding no further aces?
+
+```{r}
+p1[2]/sum(p1[2:5])
+```
+
+or said differently:
+
+```{r}
+(tibble(x=0:4) %>% mutate(prob=dhyper(x,4,48,13)) -> p1)
+```
+
+and
+
+```{r}
+(tibble(x=0:3)) %>% mutate(prob=dhyper(x,3,48,12) -> p2)
+```
+
+distribution of total aces | at least one:
+
+```{r}
+p1 %>% filter(x>=1) %>% mutate(prob2=prob/sum(prob))
+```
+
+this reminds me of, in a 2-child family:
+
+P(both girls | first child is a girl) = 1/2
+P(both girls | at least one child is a girl) = 1/3 (only 1 possibility, BB, eliminated)
