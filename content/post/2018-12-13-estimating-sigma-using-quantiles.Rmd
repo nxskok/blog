@@ -269,6 +269,15 @@ The 7.5-92.5 percentiles seem to be consistently the best.
 
 ... and back in 1949, at that. Benson (1949) wrote about this, and noted (citing a 1920 paper of Karl Pearson) that the estimator of $\sigma$ with the smallest variance used the 7th and 93rd percentiles, for all sample sizes. My simulations are consistent with this.
 
+Benson also estimated $\mu$ using the mean of a pair of quantiles, and said that the variance of the estimator was minimized when you use the mean of the 27th and 73rd percentiles. `r tufte::margin_note("This is almost the same thing as the midhinge, where hinge is Tukey's term for the quartile.")`
+
+## An exam question
+
+I had shown my students that you can estimate $\sigma$ by taking the IQR and dividing by 1.35, so on my final exam I played with that idea a bit more. I had them use the 68-95-99.7 rule (which they have seen before) to show that the 16th and 84th 
+percentiles of a normal distribution are at $\mu \pm \sigma$, and thus that taking the difference between those two percentiles and dividing by 2 (since they are $2\sigma$ apart) is a sensible estimator of $\sigma$. (Had I included 0.16 as one of my quantiles above, `div` for it would have been 2.) I then gave them some data for which the 16th percentile was 26, the 84th percentile was 48, and the median was 36, and asked them to estimate $\mu$ and $\sigma$. I thought the "obvious" estimator of $\mu$ was the median 36, but I saw that quite a lot of people noted that $\mu-\sigma=26$ and $\mu+\sigma=48$, and then solved the two equations for the two variables, getting estimates of *37* and 11. Full marks, of course. Little did they know, but on about the 70th anniversary of Benson's work, they were using his idea.
+
+The idea for all of this came, in fact, from one of my students, who casually asked after class, "couldn't you use different percentiles to estimate $\sigma$ with?", and we talked about how you could, but you'd have to divide by something other than 1.35. 
+
 ## Future work
 
 What would be relatively easy now (but this blog post is too long) is to compare the mean squared error of the best percentile-based estimator of $\sigma$ with that of the sample SD. If it turns out that the mean squared error of the percentile estimator is not too much bigger, then we could recommend using the percentile estimator because of the additional protection it gives when there are outliers. (This is the same idea as using the Welch-Satterthwaite $t$-test in favour of the pooled one; W-S is not the best test if the two groups have the same variance, but it is a *lot* better if the variances are actually different.)
@@ -276,8 +285,10 @@ What would be relatively easy now (but this blog post is too long) is to compare
 
 ## References
 
+Reynold Jong (2018, personal communication, ie. a chat after class).
+
 [Newcomb data](http://people.reed.edu/~jones/141/Newcomb.html)
 
 Benson, F. (1949). A Note on the Estimation of Mean and Standard Deviation from Quantiles. Journal of the Royal Statistical Society. Series B (Methodological), 11(1), 91-100. Retrieved from [here](http://www.jstor.org.myaccess.library.utoronto.ca/stable/2983699)
 
-
+[The midhinge](https://en.wikipedia.org/wiki/Midhinge)

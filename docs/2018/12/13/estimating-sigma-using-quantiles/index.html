@@ -80,7 +80,7 @@
   
   
   &nbsp;<i class="fa fa-clock-o"></i>
-    &nbsp;12 min read
+    &nbsp;13 min read
   
   
   
@@ -102,12 +102,12 @@
 <h2>Packages</h2>
 <p>There will be some R later, with some random number generation. I set the random number seed for reproducibility:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 3.1.0     ✔ purrr   0.2.5
 ## ✔ tibble  1.4.2     ✔ dplyr   0.7.8
 ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
 ## ✔ readr   1.1.1     ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>set.seed(457299)</code></pre>
@@ -363,6 +363,13 @@ best_q(d)</code></pre>
 <div id="this-has-been-done-before" class="section level2">
 <h2>This has been done before</h2>
 <p>… and back in 1949, at that. Benson (1949) wrote about this, and noted (citing a 1920 paper of Karl Pearson) that the estimator of <span class="math inline">\(\sigma\)</span> with the smallest variance used the 7th and 93rd percentiles, for all sample sizes. My simulations are consistent with this.</p>
+<p>Benson also estimated <span class="math inline">\(\mu\)</span> using the mean of a pair of quantiles, and said that the variance of the estimator was minimized when you use the mean of the 27th and 73rd percentiles. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This is almost the same thing as the midhinge, where hinge is Tukey’s term for the quartile.</span></p>
+</div>
+<div id="an-exam-question" class="section level2">
+<h2>An exam question</h2>
+<p>I had shown my students that you can estimate <span class="math inline">\(\sigma\)</span> by taking the IQR and dividing by 1.35, so on my final exam I played with that idea a bit more. I had them use the 68-95-99.7 rule (which they have seen before) to show that the 16th and 84th
+percentiles of a normal distribution are at <span class="math inline">\(\mu \pm \sigma\)</span>, and thus that taking the difference between those two percentiles and dividing by 2 (since they are <span class="math inline">\(2\sigma\)</span> apart) is a sensible estimator of <span class="math inline">\(\sigma\)</span>. (Had I included 0.16 as one of my quantiles above, <code>div</code> for it would have been 2.) I then gave them some data for which the 16th percentile was 26, the 84th percentile was 48, and the median was 36, and asked them to estimate <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span>. I thought the “obvious” estimator of <span class="math inline">\(\mu\)</span> was the median 36, but I saw that quite a lot of people noted that <span class="math inline">\(\mu-\sigma=26\)</span> and <span class="math inline">\(\mu+\sigma=48\)</span>, and then solved the two equations for the two variables, getting estimates of <em>37</em> and 11. Full marks, of course. Little did they know, but on about the 70th anniversary of Benson’s work, they were using his idea.</p>
+<p>The idea for all of this came, in fact, from one of my students, who casually asked after class, “couldn’t you use different percentiles to estimate <span class="math inline">\(\sigma\)</span> with?”, and we talked about how you could, but you’d have to divide by something other than 1.35.</p>
 </div>
 <div id="future-work" class="section level2">
 <h2>Future work</h2>
@@ -370,8 +377,10 @@ best_q(d)</code></pre>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
+<p>Reynold Jong (2018, personal communication, ie. a chat after class).</p>
 <p><a href="http://people.reed.edu/~jones/141/Newcomb.html">Newcomb data</a></p>
 <p>Benson, F. (1949). A Note on the Estimation of Mean and Standard Deviation from Quantiles. Journal of the Royal Statistical Society. Series B (Methodological), 11(1), 91-100. Retrieved from <a href="http://www.jstor.org.myaccess.library.utoronto.ca/stable/2983699">here</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Midhinge">The midhinge</a></p>
 </div>
 </section>
 <section>

@@ -129,3 +129,13 @@ same again.
 
 Benson, F. (1949). A Note on the Estimation of Mean and Standard Deviation from Quantiles. Journal of the Royal Statistical Society. Series B (Methodological), 11(1), 91-100. Retrieved from [here](http://www.jstor.org.myaccess.library.utoronto.ca/stable/2983699)
 
+
+## play
+
+```{r}
+library(tidyverse)
+d1=tibble(n=1:7)
+d1 %>% mutate(x=map_dbl(n,~rpois(1,10))) %>% 
+  pluck("x",3)
+```
+
