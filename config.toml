@@ -1,4 +1,4 @@
-baseurl = "https://nxskok.github.io"
+baseurl = "https://nxskok.github.io/"
 publishDir = "docs"
 relativeurls = true
 languageCode = "en-us"
