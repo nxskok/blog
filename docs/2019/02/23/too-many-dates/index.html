@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Too many dates</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2019/02/23/too-many-dates/">Too many dates</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Feb 23, 2019
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;11 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.1.0     ✔ purrr   0.3.0
+## ✔ tibble  2.0.1     ✔ dplyr   0.7.8
+## ✔ tidyr   0.8.2     ✔ stringr 1.4.0
+## ✔ readr   1.3.1     ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(lubridate)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;lubridate&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:base&#39;:
+## 
+##     date</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The other day, I was trying to process a file that looked like this:</p>
+<pre><code>SUNDAY 7TH OCTOBER
+Bradford Bulls RLFC
+27
+Workington Town
+8
+FT
+SUNDAY 30TH SEPTEMBER
+Doncaster RLFC
+18
+Workington Town
+30
+FT
+Bradford Bulls RLFC
+47
+Oldham
+0
+FT
+SUNDAY 23RD SEPTEMBER
+York City Knights
+32
+Whitehaven RLFC
+14
+FT
+Newcastle Thunder
+98
+West Wales Raiders
+6
+FT
+Keighley Cougars
+24
+North Wales Crusaders
+22
+FT
+Doncaster RLFC
+44
+Workington Town
+32
+FT
+Bradford Bulls RLFC
+52
+Hemel Stags
+7
+FT
+SATURDAY 22ND SEPTEMBER
+Coventry Bears
+14
+Hunslet
+4
+FT
+London Skolars
+18
+Oldham
+46
+FT</code></pre>
+<p>This was copied-and-pasted from the BBC website, because I was too lazy to figure out how to do it better.</p>
+<p>The lines of the file are rugby league results: the home team, the home team’s score, the away team, and the away team’s score, followed by a line FT (for “full time”). In amongst these are scattered dates, which are the dates of all the games below them until the next date. In the excerpt above, there was one game played on October 7, two on September 30, a whole bunch on September 23, and so on.</p>
+<p>All right, I thought, I have <code>lubridate</code>. Let’s have it recognize, or fail to recognize, the dates. Then I can decide what to do next:</p>
+<pre class="r"><code>my_url=&quot;https://raw.githubusercontent.com/nxskok/flashscore/master/2018-l1.txt&quot;
+games=read_csv(my_url, col_names=F)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   X1 = col_character()
+## )</code></pre>
+<pre class="r"><code>games</code></pre>
+<pre><code>## # A tibble: 979 x 1
+##    X1                   
+##    &lt;chr&gt;                
+##  1 SUNDAY 7TH OCTOBER   
+##  2 Bradford Bulls RLFC  
+##  3 27                   
+##  4 Workington Town      
+##  5 8                    
+##  6 FT                   
+##  7 SUNDAY 30TH SEPTEMBER
+##  8 Doncaster RLFC       
+##  9 18                   
+## 10 Workington Town      
+## # … with 969 more rows</code></pre>
+<p>There’s only one column, and it doesn’t have a name, so I’ll get R to supply one.</p>
+<p>All right, those dates would be ready for <code>dmy</code> if they had a year, so let’s add a year and get parsing:</p>
+<pre class="r"><code>games %&gt;% mutate(the_date=dmy(str_c(X1, &quot; &quot;, 2018))) -&gt; d</code></pre>
+<pre><code>## Warning: 935 failed to parse.</code></pre>
+<p>Well, I was expecting that, since there are a lot of non-dates in there.</p>
+<p>This seems to have worked:</p>
+<pre class="r"><code>d %&gt;% slice(1:10)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    X1                    the_date  
+##    &lt;chr&gt;                 &lt;date&gt;    
+##  1 SUNDAY 7TH OCTOBER    2018-10-07
+##  2 Bradford Bulls RLFC   NA        
+##  3 27                    NA        
+##  4 Workington Town       NA        
+##  5 8                     NA        
+##  6 FT                    NA        
+##  7 SUNDAY 30TH SEPTEMBER 2018-09-30
+##  8 Doncaster RLFC        NA        
+##  9 18                    NA        
+## 10 Workington Town       NA</code></pre>
+<p>But I wasn’t expecting this:</p>
+<pre class="r"><code>d %&gt;% slice(11:20)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    X1                    the_date  
+##    &lt;chr&gt;                 &lt;date&gt;    
+##  1 30                    NA        
+##  2 FT                    NA        
+##  3 Bradford Bulls RLFC   NA        
+##  4 47                    NA        
+##  5 Oldham                NA        
+##  6 0                     NA        
+##  7 FT                    NA        
+##  8 SUNDAY 23RD SEPTEMBER NA        
+##  9 York City Knights     NA        
+## 10 32                    NA</code></pre>
+<p>Wait, what? How can the 23rd September not be a date?</p>
+<p>Most of the other dates got recognized, but not all of them. Then I realized (after some reading of the help for <code>ymd</code>) that I might be making <code>dmy</code> work rather hard by feeding it a lot of things that were not dates. The help says as much, in fact:</p>
+<blockquote>
+<p>In case of heterogeneous date formats ymd() family guesses formats based on a sub-set of the input
+vector. If the input vector contains many missing values or non-date strings, the sub-set might not
+contain meaningful dates and the date-time format won’t be guessed resulting in “All formats failed
+to parse” error.</p>
+</blockquote>
+</div>
+<div id="grabbing-just-the-dates" class="section level2">
+<h2>Grabbing just the dates</h2>
+<p>So, I thought, all those dates have the day of the week in them. I should be able to pick out just those. I had a list of days of the week handy, in fact:</p>
+<pre class="r"><code>dow=c(&quot;SUNDAY&quot;, &quot;MONDAY&quot;, &quot;TUESDAY&quot;, &quot;WEDNESDAY&quot;, &quot;THURSDAY&quot;, &quot;FRIDAY&quot;, &quot;SATURDAY&quot;)</code></pre>
+<p>and now I’m thinking that I can use <code>str_detect</code> to find out whether each row matches one of those. Except that <code>str_detect</code> matches only one string, not a vector of them. I wasn’t clever enough to think of this myself (I found it on Stack Overflow somewhere). You make a vector of strings into a regular expression with a bunch of ORs by collapsing the vector like this:</p>
+<pre class="r"><code>pat=str_c(dow, collapse=&quot;|&quot;)
+pat</code></pre>
+<pre><code>## [1] &quot;SUNDAY|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY&quot;</code></pre>
+<p>So now, if each line of the file matches that regular expression (that is to say, one of those days of the week), it is a date, and we can pull out just the dates:</p>
+<pre class="r"><code>games %&gt;% filter(str_detect(X1, pat)) %&gt;% 
+  mutate(date_of=dmy(str_c(X1, &quot; &quot;, 2018))) -&gt; lookup
+lookup</code></pre>
+<pre><code>## # A tibble: 54 x 2
+##    X1                      date_of   
+##    &lt;chr&gt;                   &lt;date&gt;    
+##  1 SUNDAY 7TH OCTOBER      2018-10-07
+##  2 SUNDAY 30TH SEPTEMBER   2018-09-30
+##  3 SUNDAY 23RD SEPTEMBER   2018-09-23
+##  4 SATURDAY 22ND SEPTEMBER 2018-09-22
+##  5 SUNDAY 16TH SEPTEMBER   2018-09-16
+##  6 SATURDAY 15TH SEPTEMBER 2018-09-15
+##  7 SUNDAY 9TH SEPTEMBER    2018-09-09
+##  8 SATURDAY 8TH SEPTEMBER  2018-09-08
+##  9 SUNDAY 2ND SEPTEMBER    2018-09-02
+## 10 FRIDAY 24TH AUGUST      2018-08-24
+## # … with 44 more rows</code></pre>
+<p>Those all got converted to dates properly.</p>
+</div>
+<div id="looking-up-the-dates-in-the-original-file" class="section level2">
+<h2>Looking up the dates in the original file</h2>
+<p>This gives us a “lookup table” of lines from the original file, plus the actual dates they correspond to. So what we can do is to look them up in the original data frame <code>games</code>, and get a date where they can be found and a missing otherwise. This is <code>left_join</code>, thus:</p>
+<pre class="r"><code>games %&gt;% left_join(lookup) %&gt;% mutate(is_missing=is.na(date_of))</code></pre>
+<pre><code>## Joining, by = &quot;X1&quot;</code></pre>
+<pre><code>## # A tibble: 979 x 3
+##    X1                    date_of    is_missing
+##    &lt;chr&gt;                 &lt;date&gt;     &lt;lgl&gt;     
+##  1 SUNDAY 7TH OCTOBER    2018-10-07 FALSE     
+##  2 Bradford Bulls RLFC   NA         TRUE      
+##  3 27                    NA         TRUE      
+##  4 Workington Town       NA         TRUE      
+##  5 8                     NA         TRUE      
+##  6 FT                    NA         TRUE      
+##  7 SUNDAY 30TH SEPTEMBER 2018-09-30 FALSE     
+##  8 Doncaster RLFC        NA         TRUE      
+##  9 18                    NA         TRUE      
+## 10 Workington Town       NA         TRUE      
+## # … with 969 more rows</code></pre>
+<p>The column we want to look up is <code>X1</code>, which is also what it’s called in the lookup table, so we are spared having to worry about <code>by</code>. I added an extra column that notes whether each date is missing or not, for use later.</p>
+</div>
+<div id="matching-dates-to-games" class="section level2">
+<h2>Matching dates to games</h2>
+<p>Back above, I said that the dates were the dates on which each of the games below them were played (until you get to another date). Thus, Bradford-Workington was played on October 7 and Doncaster-Workington on September 30. At this point I remembered using <code>fill</code> for a task like this, and in fact it does exactly what I want: it fills in all the missing values in the <code>date_of</code> column with the date above them:</p>
+<pre class="r"><code>games %&gt;% left_join(lookup) %&gt;% 
+  mutate(is_missing=is.na(date_of)) %&gt;% 
+  fill(date_of)</code></pre>
+<pre><code>## Joining, by = &quot;X1&quot;</code></pre>
+<pre><code>## # A tibble: 979 x 3
+##    X1                    date_of    is_missing
+##    &lt;chr&gt;                 &lt;date&gt;     &lt;lgl&gt;     
+##  1 SUNDAY 7TH OCTOBER    2018-10-07 FALSE     
+##  2 Bradford Bulls RLFC   2018-10-07 TRUE      
+##  3 27                    2018-10-07 TRUE      
+##  4 Workington Town       2018-10-07 TRUE      
+##  5 8                     2018-10-07 TRUE      
+##  6 FT                    2018-10-07 TRUE      
+##  7 SUNDAY 30TH SEPTEMBER 2018-09-30 FALSE     
+##  8 Doncaster RLFC        2018-09-30 TRUE      
+##  9 18                    2018-09-30 TRUE      
+## 10 Workington Town       2018-09-30 TRUE      
+## # … with 969 more rows</code></pre>
+<p>Now the text dates in the <code>X1</code> column have served their purpose, and I can get rid of them. This was why I created the column <code>is_missing</code>: this is <code>TRUE</code> if I want to keep the row, and <code>FALSE</code> if I want to get rid of it. So I use <code>is_missing</code> in a <code>filter</code>, and then I get rid of <em>it</em> too, since it has also served its purpose:</p>
+<pre class="r"><code>games %&gt;% left_join(lookup) %&gt;% 
+  mutate(is_missing=is.na(date_of)) %&gt;% 
+  fill(date_of) %&gt;% 
+  filter(is_missing) %&gt;% 
+  select(-is_missing) -&gt; games1</code></pre>
+<pre><code>## Joining, by = &quot;X1&quot;</code></pre>
+<pre class="r"><code>games1</code></pre>
+<pre><code>## # A tibble: 925 x 2
+##    X1                  date_of   
+##    &lt;chr&gt;               &lt;date&gt;    
+##  1 Bradford Bulls RLFC 2018-10-07
+##  2 27                  2018-10-07
+##  3 Workington Town     2018-10-07
+##  4 8                   2018-10-07
+##  5 FT                  2018-10-07
+##  6 Doncaster RLFC      2018-09-30
+##  7 18                  2018-09-30
+##  8 Workington Town     2018-09-30
+##  9 30                  2018-09-30
+## 10 FT                  2018-09-30
+## # … with 915 more rows</code></pre>
+</div>
+<div id="spreading-it-around" class="section level2">
+<h2>Spreading it around</h2>
+<p>Now I have each game with its date, and I also know that each game takes up exactly five rows of the dataframe (home team name, home score, away team name, away score, the text <code>FT</code>). The presence of the (text) dates meant that I previously had five rows per game plus some extra ones. Now, though, my data has 185 games in it exactly, with no extraneous stuff:</p>
+<pre class="r"><code>185*5</code></pre>
+<pre><code>## [1] 925</code></pre>
+<pre class="r"><code>nrow(games1)</code></pre>
+<pre><code>## [1] 925</code></pre>
+<p>This dataframe is now <em>too tidy</em>: it needs to have one row per game, not five. This will mean using <code>spread</code>. But we have to be careful to set things up properly: <code>spread</code> needs to know what things belong on each row of the “widened” data frame (the information for each game), and there is no indication of that yet. The first five rows belong to the first game, the next five to the second, and so on. So we have to create a column that has 1 five times, followed by 2 five times, and so on.</p>
+<p>If you think about how <code>spread</code> works, it needs two things: a column with the names of the variables to create, and a column containing the values to fill those columns with. We have the latter, <code>X1</code>, but not the former, which we will also have to create.</p>
+<p>In summary, we have to create row numbers and column names for where we want things to go after we <code>spread</code> them.</p>
+<p>Back in my graduate student days, we used software called GLIM for fitting generalized linear models (which were themselves only a few years old then). This had a very odd syntax including dollar signs for actually making things happen, and special things with percent signs on the front. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">There was syntax EXTRACT %VL which we had to use a lot, but I have no recollection of what it was.</span> One of these things was <code>%GL</code> for making sequences of numbers, eg. for factor levels in designed experiments, and because the early R coders would have been veterans of GLIM, there is <code>gl</code> in base R also.</p>
+<p><code>gl</code> takes three arguments: the number of levels, the number of times to repeat each one, and the total length of the result (which defaults to the first input times the second one). Thus:</p>
+<pre class="r"><code>gl(4,1)</code></pre>
+<pre><code>## [1] 1 2 3 4
+## Levels: 1 2 3 4</code></pre>
+<pre class="r"><code>gl(4,2)</code></pre>
+<pre><code>## [1] 1 1 2 2 3 3 4 4
+## Levels: 1 2 3 4</code></pre>
+<pre class="r"><code>gl(4,2,16)</code></pre>
+<pre><code>##  [1] 1 1 2 2 3 3 4 4 1 1 2 2 3 3 4 4
+## Levels: 1 2 3 4</code></pre>
+<p>You can see how useful this is for factor levels for designed experiments. In GLIM days, you would copy the response-variable values out of a book (or off a piece of paper), and then you would use <code>%GL</code> to create vectors of the factor levels they went with.</p>
+<p>So we want to number the games: 5 repeats of 1, 5 repeats of 2, …, 5 repeats of 185 (there being 185 games in the season).</p>
+<p>We also need to create, for each game, the five column names that we are going to <code>spread</code> the values into. <code>gl</code> takes an optional <code>labels</code> with names for the “factor levels”:</p>
+<pre class="r"><code>n_games=185
+games1 %&gt;% 
+  mutate(match_no=gl(n_games,5)) %&gt;% 
+  mutate(column_names=gl(5, 1, 5*n_games, labels=c(&quot;t1&quot;, &quot;s1&quot;, &quot;t2&quot;, &quot;s2&quot;, &quot;ft&quot;))) -&gt; games2
+games2</code></pre>
+<pre><code>## # A tibble: 925 x 4
+##    X1                  date_of    match_no column_names
+##    &lt;chr&gt;               &lt;date&gt;     &lt;fct&gt;    &lt;fct&gt;       
+##  1 Bradford Bulls RLFC 2018-10-07 1        t1          
+##  2 27                  2018-10-07 1        s1          
+##  3 Workington Town     2018-10-07 1        t2          
+##  4 8                   2018-10-07 1        s2          
+##  5 FT                  2018-10-07 1        ft          
+##  6 Doncaster RLFC      2018-09-30 2        t1          
+##  7 18                  2018-09-30 2        s1          
+##  8 Workington Town     2018-09-30 2        t2          
+##  9 30                  2018-09-30 2        s2          
+## 10 FT                  2018-09-30 2        ft          
+## # … with 915 more rows</code></pre>
+<p>Now we have all the ingredients we need for our <code>spread</code>:</p>
+<pre class="r"><code>games2 %&gt;% spread(column_names, X1, convert=T) %&gt;% 
+  select(-ft)</code></pre>
+<pre><code>## # A tibble: 185 x 6
+##    date_of    match_no t1                       s1 t2                    s2
+##    &lt;date&gt;     &lt;fct&gt;    &lt;chr&gt;                 &lt;int&gt; &lt;chr&gt;              &lt;int&gt;
+##  1 2018-02-18 180      Hemel Stags              14 Hunslet               28
+##  2 2018-02-18 181      North Wales Crusaders    24 London Skolars        24
+##  3 2018-02-18 182      Doncaster RLFC           70 Coventry Bears        10
+##  4 2018-02-18 183      Keighley Cougars         44 Workington Town       34
+##  5 2018-02-18 184      Whitehaven RLFC           0 Oldham                14
+##  6 2018-02-18 185      York City Knights        20 Bradford Bulls RL…    22
+##  7 2018-03-10 179      London Skolars           16 Newcastle Thunder     60
+##  8 2018-03-11 173      Hemel Stags              16 Coventry Bears        22
+##  9 2018-03-11 174      Workington Town          74 West Wales Raiders     6
+## 10 2018-03-11 175      Oldham                   22 York City Knights     24
+## # … with 175 more rows</code></pre>
+<p>Success! I used <code>convert</code> to make the scores into numbers, in case that mattered for my later processing (for example, in determining who won each game).</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://www.rdocumentation.org/packages/lubridate/versions/1.7.4/topics/ymd">Lubridate <code>ymd</code> help</a></p>
+<p><a href="https://tidyr.tidyverse.org/reference/fill.html">Tidyr <code>fill</code> help</a></p>
+<p><a href="https://tidyr.tidyverse.org/reference/spread.html">Tidyr <code>spread</code> help</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

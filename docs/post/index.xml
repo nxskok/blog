@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on R, it&#39;s OK I guess</title>
-    <link>/post/</link>
-    <description>Recent content in Posts on R, it&#39;s OK I guess</description>
+    <title>R, it&#39;s OK I guess</title>
+    <link>/</link>
+    <description></description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Thu, 13 Dec 2018 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -520,6 +520,16 @@ My new phone now has Human on it, which works better than on the tablet (so I un
     </item>
     
     <item>
+      <title>Victoria Day bike ride</title>
+      <link>/vicbike/</link>
+      <pubDate>Mon, 22 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/vicbike/</guid>
+      <description>I suppose I should have ridden Victoria Park on Victoria Day, but I didn’t:
+ When the wind is blowing from the west, don’t start your bike ride to the east!</description>
+    </item>
+    
+    <item>
       <title>Welch analysis of variance</title>
       <link>/2017/05/19/welch-analysis-of-variance/</link>
       <pubDate>Fri, 19 May 2017 00:00:00 +0000</pubDate>
@@ -528,6 +538,24 @@ My new phone now has Human on it, which works better than on the tablet (so I un
       <description>Introduction The standard analysis of variance based on the \(F\)-test has two major assumptions:
 Normally distributed data Equal variance within each group.  The analysis can handle a certain amount of non-normality, but the equal-variance assumption is important because it is required for the idea of “an” error variance to make sense (that is what the error mean square is estimating).
 Is it possible to make an ANOVA that can allow for the groups to have different variances?</description>
+    </item>
+    
+    <item>
+      <title>Welch analysis of variance</title>
+      <link>/welch/</link>
+      <pubDate>Fri, 19 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/welch/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Making scatterplots against multiple explanatory variables</title>
+      <link>/multi-scatter/</link>
+      <pubDate>Tue, 16 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/multi-scatter/</guid>
+      <description></description>
     </item>
     
     <item>
@@ -543,6 +571,15 @@ library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ##
     </item>
     
     <item>
+      <title>Sunday walk</title>
+      <link>/sunday-walk-20170514/</link>
+      <pubDate>Sun, 14 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/sunday-walk-20170514/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Sunday walk - Riverdale park(s)</title>
       <link>/2017/05/14/sunday-walk---riverdale-parks/</link>
       <pubDate>Sun, 14 May 2017 00:00:00 +0000</pubDate>
@@ -552,6 +589,15 @@ library(tidyverse) ## Loading tidyverse: ggplot2 ## Loading tidyverse: tibble ##
  From Broadview station, across past the Pizza Pizza, and (carefully) across the entrance ramp to the DVP, and then down the “secret” path:
  crossing the entrance ramp on a rather dilapidated-looking bridge:
  I am never quite sure about the next bit. Today, there was a tent hidden in the trees, as if someone was living back there.</description>
+    </item>
+    
+    <item>
+      <title>Fluffy yellow things</title>
+      <link>/goslings/</link>
+      <pubDate>Mon, 08 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/goslings/</guid>
+      <description>Seen on today’s walk around campus:</description>
     </item>
     
     <item>
@@ -585,6 +631,24 @@ The opposition were a mid-table Oxford side, and as I said to Megan before the g
     </item>
     
     <item>
+      <title>Rugby League</title>
+      <link>/rugbyleague/</link>
+      <pubDate>Sun, 07 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/rugbyleague/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>bikeride</title>
+      <link>/bikeride1/</link>
+      <pubDate>Sun, 07 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/bikeride1/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>A very short walk</title>
       <link>/2017/05/05/a-very-short-walk/</link>
       <pubDate>Fri, 05 May 2017 00:00:00 +0000</pubDate>
@@ -597,11 +661,29 @@ The walk around the back of the residences was still passable this afternoon. He
     
     <item>
       <title>Images</title>
+      <link>/images-in-posts/</link>
+      <pubDate>Wed, 03 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/images-in-posts/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Images</title>
       <link>/2017/05/03/images/</link>
       <pubDate>Wed, 03 May 2017 00:00:00 +0000</pubDate>
       
       <guid>/2017/05/03/images/</guid>
       <description>For my last post, I had a lot of trouble finding out how to make the images appear. It turns out that the secret is to save them in the static folder, and then to treat that folder as the “root” (that is, start its name with a forward slash) when making the R Markdown for the image. Here is a picture I took at a spot surprisingly close to where I live, in November last year:</description>
+    </item>
+    
+    <item>
+      <title>Round the back of the S wing</title>
+      <link>/back-s-wing/</link>
+      <pubDate>Wed, 03 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/back-s-wing/</guid>
+      <description></description>
     </item>
     
     <item>
@@ -639,6 +721,15 @@ This is the side of the S wing that nobody sees; it has the concrete brutalism o
       
       <guid>/2017/04/29/saturday-walk-in-the-city/</guid>
       <description>So I was at Yorkdale, with no subway south. So I figured I’d arrange a walk and see how far I got. I rode the shuttle bus to Lawrence West, seeing at first hand how ill-suited Toronto is to the car: onto the Allen, a long lineup to turn left onto Lawrence (for us, to get in front of the subway station) and a zoo of cars on Lawrence, including a line of cars waiting to turn left onto the northbound Allen and blocking one of the eastbound through lanes in the process.</description>
+    </item>
+    
+    <item>
+      <title>About</title>
+      <link>/about/</link>
+      <pubDate>Thu, 05 May 2016 21:48:51 -0700</pubDate>
+      
+      <guid>/about/</guid>
+      <description>Ken Butler is a Lecturer in Statistics at the University of Toronto Scarborough, and Supervisor of Studies of the Applied Statistics Minor program there. He also likes exploring and learning about Toronto. Hello.</description>
     </item>
     
     <item>

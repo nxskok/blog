@@ -1,0 +1,239 @@
+---
+title: Too many dates
+author: Ken
+date: '2019-02-23'
+slug: too-many-dates
+categories:
+  - statistics
+tags:
+  - tidyverse
+  - lubridate
+---
+
+## Packages
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+
+## Introduction
+
+The other day, I was trying to process a file that looked like this:
+
+```
+SUNDAY 7TH OCTOBER
+Bradford Bulls RLFC
+27
+Workington Town
+8
+FT
+SUNDAY 30TH SEPTEMBER
+Doncaster RLFC
+18
+Workington Town
+30
+FT
+Bradford Bulls RLFC
+47
+Oldham
+0
+FT
+SUNDAY 23RD SEPTEMBER
+York City Knights
+32
+Whitehaven RLFC
+14
+FT
+Newcastle Thunder
+98
+West Wales Raiders
+6
+FT
+Keighley Cougars
+24
+North Wales Crusaders
+22
+FT
+Doncaster RLFC
+44
+Workington Town
+32
+FT
+Bradford Bulls RLFC
+52
+Hemel Stags
+7
+FT
+SATURDAY 22ND SEPTEMBER
+Coventry Bears
+14
+Hunslet
+4
+FT
+London Skolars
+18
+Oldham
+46
+FT
+```
+
+This was copied-and-pasted from the BBC website, because I was too lazy to figure out how to do it better. 
+
+The lines of the file are rugby league results: the home team, the home team's score, the away team, and the away team's score, followed by a line FT (for "full time"). In amongst these are scattered dates, which are the dates of all the games below them until the next date. In the excerpt above, there was one game played on October 7, two on September 30, a whole bunch on September 23, and so on. 
+
+All right, I thought, I have `lubridate`. Let's have it recognize, or fail to recognize, the dates. Then I can decide what to do next:
+
+```{r}
+my_url="https://raw.githubusercontent.com/nxskok/flashscore/master/2018-l1.txt"
+games=read_csv(my_url, col_names=F)
+games
+```
+
+There's only one column, and it doesn't have a name, so I'll get R to supply one.
+
+All right, those dates would be ready for `dmy` if they had a year, so let's add a year and get parsing:
+
+```{r}
+games %>% mutate(the_date=dmy(str_c(X1, " ", 2018))) -> d
+```
+
+Well, I was expecting that, since there are a lot of non-dates in there. 
+
+This seems to have worked:
+
+```{r}
+d %>% slice(1:10)
+```
+
+But I wasn't expecting this:
+
+```{r}
+d %>% slice(11:20)
+```
+
+Wait, what? How can the 23rd September not be a date?
+
+Most of the other dates got recognized, but not all of them. Then I realized (after some reading of the help for `ymd`) that I might be making `dmy` work rather hard by feeding it a lot of things that were not dates. The help says as much, in fact:
+
+> In case of heterogeneous date formats ymd() family guesses formats based on a sub-set of the input
+> vector. If the input vector contains many missing values or non-date strings, the sub-set might not
+> contain meaningful dates and the date-time format won’t be guessed resulting in "All formats failed
+> to parse" error.
+
+
+## Grabbing just the dates
+
+So, I thought, all those dates have the day of the week in them. I should be able to pick out just those. I had a list of days of the week handy, in fact:
+
+```{r}
+dow=c("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY")
+```
+
+and now I'm thinking that I can use `str_detect` to find out whether each row matches one of those. Except that `str_detect` matches only one string, not a vector of them. I wasn't clever enough to think of this myself (I found it on Stack Overflow somewhere). You make a vector of strings into a regular expression with a bunch of ORs by collapsing the vector like this:
+
+```{r}
+pat=str_c(dow, collapse="|")
+pat
+```
+
+So now, if each line of the file matches that regular expression (that is to say, one of those days of the week), it is a date, and we can pull out just the dates:
+
+```{r}
+games %>% filter(str_detect(X1, pat)) %>% 
+  mutate(date_of=dmy(str_c(X1, " ", 2018))) -> lookup
+lookup
+```
+
+Those all got converted to dates properly.
+
+## Looking up the dates in the original file
+
+This gives us a "lookup table" of lines from the original file, plus the actual dates they correspond to. So what we can do is to look them up in the original data frame `games`, and get a date where they can be found and a missing otherwise. This is `left_join`, thus:
+
+```{r}
+games %>% left_join(lookup) %>% mutate(is_missing=is.na(date_of))
+```
+
+The column we want to look up is `X1`, which is also what it's called in the lookup table, so we are spared having to worry about `by`. I added an extra column that notes whether each date is missing or not, for use later.
+
+
+
+## Matching dates to games
+
+Back above, I said that the dates were the dates on which each of the games below them were played (until you get to another date). Thus, Bradford-Workington was played on October 7 and Doncaster-Workington on September 30. At this point I remembered using `fill` for a task like this, and in fact it does exactly what I want: it fills in all the missing values in the `date_of` column with the date above them:
+
+```{r}
+games %>% left_join(lookup) %>% 
+  mutate(is_missing=is.na(date_of)) %>% 
+  fill(date_of)
+```
+
+Now the text dates in the `X1` column have served their purpose, and I can get rid of them. This was why I created the column `is_missing`: this is `TRUE` if I want to keep the row, and `FALSE` if I want to get rid of it. So I use `is_missing` in a `filter`, and then I get rid of *it* too, since it has also served its purpose:
+
+```{r}
+games %>% left_join(lookup) %>% 
+  mutate(is_missing=is.na(date_of)) %>% 
+  fill(date_of) %>% 
+  filter(is_missing) %>% 
+  select(-is_missing) -> games1
+games1
+```
+
+## Spreading it around
+
+Now I have each game with its date, and I also know that each game takes up exactly five rows of the dataframe (home team name, home score, away team name, away score, the text `FT`). The presence of the (text) dates meant that I previously had five rows per game plus some extra ones. Now, though, my data has 185 games in it exactly, with no extraneous stuff:
+
+```{r}
+185*5
+nrow(games1)
+```
+
+This dataframe is now *too tidy*: it needs to have one row per game, not five. This will mean using `spread`. But we have to be careful to set things up properly: `spread` needs to know what things belong on each row of the "widened" data frame (the information for each game), and there is no indication of that yet. The first five rows belong to the first game, the next five to the second, and so on. So we have to create a column that has 1 five times, followed by 2 five times, and so on. 
+
+If you think about how `spread` works, it needs two things: a column with the names of the variables to create, and a column containing the values to fill those columns with. We have the latter, `X1`, but not the former, which we will also have to create.
+
+In summary, we have to create row numbers and column names for where we want things to go after we `spread` them. 
+
+Back in my graduate student days, we used software called GLIM for fitting generalized linear models (which were themselves only a few years old then). This had a very odd syntax including dollar signs for actually making things happen, and special things with percent signs on the front. `r tufte::margin_note("There was syntax EXTRACT %VL which we had to use a lot, but I have no recollection of what it was.")` One of these things was `%GL` for making sequences of numbers, eg. for factor levels in designed experiments, and because the early R coders would have been veterans of GLIM, there is `gl` in base R also.
+
+`gl` takes three arguments: the number of levels, the number of times to repeat each one, and the total length of the result (which defaults to the first input times the second one). Thus:
+
+```{r}
+gl(4,1)
+gl(4,2)
+gl(4,2,16)
+```
+
+
+You can see how useful this is for factor levels for designed experiments. In GLIM days, you would copy the response-variable values out of a book (or off a piece of paper), and then you would use `%GL` to create vectors of the factor levels they went with.
+
+So we want to number the games: 5 repeats of 1, 5 repeats of 2, ..., 5 repeats of 185 (there being 185 games in the season).
+
+We also need to create, for each game, the five column names that we are going to `spread` the values into. `gl` takes an optional `labels` with names for the "factor levels":
+
+```{r}
+n_games=185
+games1 %>% 
+  mutate(match_no=gl(n_games,5)) %>% 
+  mutate(column_names=gl(5, 1, 5*n_games, labels=c("t1", "s1", "t2", "s2", "ft"))) -> games2
+games2
+```
+
+Now we have all the ingredients we need for our `spread`:
+
+```{r}
+games2 %>% spread(column_names, X1, convert=T) %>% 
+  select(-ft)
+```
+
+Success! I used `convert` to make the scores into numbers, in case that mattered for my later processing (for example, in determining who won each game).
+
+## References
+
+[Lubridate `ymd` help](https://www.rdocumentation.org/packages/lubridate/versions/1.7.4/topics/ymd)
+
+[Tidyr `fill` help](https://tidyr.tidyverse.org/reference/fill.html)
+
+[Tidyr `spread` help](https://tidyr.tidyverse.org/reference/spread.html)
