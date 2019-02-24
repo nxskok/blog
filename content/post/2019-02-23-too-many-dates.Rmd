@@ -79,7 +79,7 @@ Oldham
 FT
 ```
 
-This was copied-and-pasted from the BBC website, because I was too lazy to figure out how to do it better. 
+This was copied-and-pasted from the BBC website, because I was too lazy to figure out how to do it better. On there, the five items for each game are formatted nicely, but once you copy and paste, you lose the formatting.
 
 The lines of the file are rugby league results: the home team, the home team's score, the away team, and the away team's score, followed by a line FT (for "full time"). In amongst these are scattered dates, which are the dates of all the games below them until the next date. In the excerpt above, there was one game played on October 7, two on September 30, a whole bunch on September 23, and so on. 
 
@@ -96,7 +96,7 @@ There's only one column, and it doesn't have a name, so I'll get R to supply one
 All right, those dates would be ready for `dmy` if they had a year, so let's add a year and get parsing:
 
 ```{r}
-games %>% mutate(the_date=dmy(str_c(X1, " ", 2018))) -> d
+games %>% mutate(the_date=dmy(str_c(X1, 2018, sep=" "))) -> d
 ```
 
 Well, I was expecting that, since there are a lot of non-dates in there. 
@@ -131,7 +131,7 @@ So, I thought, all those dates have the day of the week in them. I should be abl
 dow=c("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY")
 ```
 
-and now I'm thinking that I can use `str_detect` to find out whether each row matches one of those. Except that `str_detect` matches only one string, not a vector of them. I wasn't clever enough to think of this myself (I found it on Stack Overflow somewhere). You make a vector of strings into a regular expression with a bunch of ORs by collapsing the vector like this:
+and now I'm thinking that I can use `str_detect` to find out whether each row matches one of those. Except that `str_detect` matches only one string, not a vector of them. I wasn't clever enough to think of this myself (I found it on Stack Overflow somewhere): you make a vector of strings into a regular expression with a bunch of ORs by collapsing the vector like this:
 
 ```{r}
 pat=str_c(dow, collapse="|")
@@ -142,7 +142,7 @@ So now, if each line of the file matches that regular expression (that is to say
 
 ```{r}
 games %>% filter(str_detect(X1, pat)) %>% 
-  mutate(date_of=dmy(str_c(X1, " ", 2018))) -> lookup
+  mutate(date_of=dmy(str_c(X1, 2018, sep=" "))) -> lookup
 lookup
 ```
 
