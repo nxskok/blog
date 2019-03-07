@@ -1,0 +1,9 @@
+---
+title: "blog ideas"
+output: html_notebook
+---
+
+- `mutate_at` to round a bunch of columns to x decimals
+- `rename_at` with `str_replace` to rename a bunch of columns
+
+- `summary` in the tidyverse world and `mutate_if`

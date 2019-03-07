@@ -1,0 +1,150 @@
+---
+title: 'A miscellany: mutate_at, rename_at, str_replace and summary'
+author: Ken
+date: '2019-03-06'
+slug: a-miscellany-mutate-at-rename-at-str-replace-and-summary
+categories:
+  - R
+tags:
+  - rstats
+  - tidyverse
+---
+
+## Packages
+
+```{r}
+library(MASS)
+library(tidyverse)
+```
+
+
+## Introduction
+
+Take a look at this data set:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/jobs.txt"
+(jobs0=read_table(my_url))
+```
+
+This is 244 people who have one of three different jobs, customer service, mechanic and dispatcher. Each person also has scores on three different scales, in the first three columns. Can we tell, based on the scores on `outdoor`, `social` and `conservative`, what kind of job a person might do?
+
+Before we start, I'd rather have those jobs as text rather than having to remember what those numbers stand for. Let's create a lookup table:
+
+```{r}
+lookup_tab=tribble(
+~job, ~jobname,
+1, "custserv",
+2, "mechanic",
+3, "dispatcher"
+)
+lookup_tab
+```
+
+and then, up, look up those jobs. I carefully made the numerical jobs be called `job` in both places, so it's the easy form of `left_join`. `r tufte::margin_note("I have never used *right_join*. I think it would confuse me too much.")`
+
+```{r}
+(jobs0 %>% left_join(lookup_tab) -> jobs)
+```
+
+So now we have `jobname` as the text version of the original `job`.
+
+## A discriminant analysis
+
+One way of understanding data like this is a discriminant analysis. The details of this don't matter; the important thing is that we get output that is *too long to handle*, thus:
+
+```{r}
+jobs.1=lda(jobname~outdoor+social+conservative, data=jobs)
+p=predict(jobs.1)
+d=cbind(jobs, p) 
+head(d)
+```
+
+I apologize for the non-`tidyverse` `cbind` in there. The trouble is that `p` is actually a `list`, and I would have to pull its constituent bits out to use `bind_cols`. The downside is that `d` is no longer a `tibble` so I have to display it with care.
+
+Anyway, we have a data frame with a lot of columns, some of which have long names and/or a lot of decimals.
+
+## Rounding off a bunch of columns with `mutate_at`
+
+The columns I am interested in here have names that begin with `posterior` (and are rather long, but we come to that.) These are posterior probabilities that a person has a job of customer service, dispatcher or mechanic, given the scores they got on the three scales. (The highest of the three for each person is our best guess of what job they actually have, and is in `class`.) I want to eyeball these, and it is hard to do if they have a lot of decimals or are in scientific notation. Let's round the columns whose names start with `posterior` to three decimals. `mutate_at` will help us with this:
+
+```{r}
+d %>% mutate_at(vars(starts_with("posterior")), ~round(., 3)) %>% head()
+```
+
+The `_at` functions take a specification of columns, by number or name or as here a select-helper, and then a function to apply to each of them. This is specified in a `map`-like way: "for each of the columns whose name starts with `posterior`, round *it* to three decimals". The result gets saved over top of the original column; you can optionally save it under a new column name. 
+
+The `_at` functions work with columns selected somehow by name; the `_if` functions work with columns that have some property such as being text. One of those is coming up later.
+
+## Shortening column names that are too long with `rename_at`
+
+We have the *values* short enough to look at, but the column *names* are still too long. How can we shorten them?
+
+The columns with names like `posterior.custserv` ought to have names like `p.custserv`. So what we are aiming for is to look for all column names that start with `posterior` and text-replace the `posterior` with `p`. This uses the `stringr` function `str_replace` which requires three inputs: a string, a piece of text to look for, and another piece of text to replace it with. Let's keep the rounding in as well:
+
+```{r}
+d %>% 
+  mutate_at(vars(starts_with("posterior")), ~round(., 3)) %>%
+  rename_at(vars(starts_with("posterior")), ~str_replace(., "posterior", "p")) %>% 
+  head()
+```
+
+This is a much more pleasant display. We can see that the first individual is almost certainly in customer service, the second individual could be in customer service or a mechanic, and so on.
+
+## A brief digression into discriminant analysis
+
+How do the scores on the three scales play into what job an individual might do? That's where the discriminant analysis output comes in:
+
+```{r}
+jobs.1
+```
+
+Right down at the bottom:
+
+- the very bottom table says that LD1 is more important than LD2 (we'll come to what that means)
+- the "coefficients of linear discriminants" above it says that LD1 depends positively on `social` and negatively on `conservative` (and to a lesser extent negatively on `outdoor` also)
+- LD2 depends mostly (and positively) on `outdoor`.
+
+The LD's are a way of reducing our three variables to fewer, by focusing on what distinguishes the jobs best. The value of that is that we can plot the LD1 and LD2 scores (labelling the points by job name), because there are only two of them (here), whereas there were three original  variables and we would have needed a 3D plot to plot them. 
+
+So a person who is high on `social` and/or low on `conservative` will have a high score on LD1; a person with a high score on `outdoor` will have a *low* score on LD2 (negative coefficient).
+
+But what are high and low scores? For that, read on.
+
+## `summary` and text variables
+
+The first point of call for an old-stager like me is to feed the data frame into `summary`:
+
+```{r}
+summary(jobs)
+```
+
+This produces a five-number summary of the numerical variables, which is good, but that summary of `jobname` is no help at all!
+
+Some historical perspective: back in the days of `read.table` and friends, text got immediately turned into factors (unless you took trouble to stop it happening). So maybe turning `jobname` (and any other text variables we might happen to have) into factors might help:
+
+```{r}
+jobs %>% mutate_if(is.character, ~factor(.)) %>% summary()
+```
+
+Oh yes, that shows how many people of each job we have, which is much more helpful.
+
+The `mutate_if` says "for each column that is text (have the property of being `character`), run `factor` on it", temporarily creating a factor for the purpose of passing it into `summary`.
+
+## Completing the analysis
+
+With all that in mind, why was that first individual almost certainly in customer service?
+
+```{r}
+d %>% head(1)
+```
+
+Their scores were 10 on `outdoor`, 22 on `social` and 5 on `conservative`. According to the summary, this is low on `outdoor`, above the median on `social` and low on `conservative`. High social and low conservative makes this person high on LD1, and low outdoor makes this person *high* on LD2.
+
+To see where that puts them relative to others with the same job, we can plot all the LD1 and LD2 scores, with the actual job in colour:
+
+```{r}
+ggplot(d, aes(x=x.LD1, y=x.LD2, colour=jobname))+geom_point()
+```
+
+High LD1 and high LD2 puts this person squarely in with the red dots that represent customer service. With this kind of profile, it is unlikely that person #1 does any other kind of job. There is a little overlap between the colours, but not much.

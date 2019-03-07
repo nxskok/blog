@@ -1,0 +1,246 @@
+---
+title: 'A miscellany: mutate_at, rename_at, str_replace and summary'
+author: Ken
+date: '2019-03-06'
+slug: a-miscellany-mutate-at-rename-at-str-replace-and-summary
+categories:
+  - R
+tags:
+  - rstats
+  - tidyverse
+---
+
+
+
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(MASS)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.1.0       ✔ purrr   0.3.1  
+## ✔ tibble  2.0.1       ✔ dplyr   0.8.0.1
+## ✔ tidyr   0.8.3       ✔ stringr 1.4.0  
+## ✔ readr   1.3.1       ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ✖ dplyr::select() masks MASS::select()</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Take a look at this data set:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/d29/jobs.txt&quot;
+(jobs0=read_table(my_url))</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   outdoor = col_double(),
+##   social = col_double(),
+##   conservative = col_double(),
+##   job = col_double(),
+##   id = col_double()
+## )</code></pre>
+<pre><code>## # A tibble: 244 x 5
+##    outdoor social conservative   job    id
+##      &lt;dbl&gt;  &lt;dbl&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1      10     22            5     1     1
+##  2      14     17            6     1     2
+##  3      19     33            7     1     3
+##  4      14     29           12     1     4
+##  5      14     25            7     1     5
+##  6      20     25           12     1     6
+##  7       6     18            4     1     7
+##  8      13     27            7     1     8
+##  9      18     31            9     1     9
+## 10      16     35           13     1    10
+## # … with 234 more rows</code></pre>
+<p>This is 244 people who have one of three different jobs, customer service, mechanic and dispatcher. Each person also has scores on three different scales, in the first three columns. Can we tell, based on the scores on <code>outdoor</code>, <code>social</code> and <code>conservative</code>, what kind of job a person might do?</p>
+<p>Before we start, I’d rather have those jobs as text rather than having to remember what those numbers stand for. Let’s create a lookup table:</p>
+<pre class="r"><code>lookup_tab=tribble(
+~job, ~jobname,
+1, &quot;custserv&quot;,
+2, &quot;mechanic&quot;,
+3, &quot;dispatcher&quot;
+)
+lookup_tab</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##     job jobname   
+##   &lt;dbl&gt; &lt;chr&gt;     
+## 1     1 custserv  
+## 2     2 mechanic  
+## 3     3 dispatcher</code></pre>
+<p>and then, up, look up those jobs. I carefully made the numerical jobs be called <code>job</code> in both places, so it’s the easy form of <code>left_join</code>. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I have never used <em>right_join</em>. I think it would confuse me too much.</span></p>
+<pre class="r"><code>(jobs0 %&gt;% left_join(lookup_tab) -&gt; jobs)</code></pre>
+<pre><code>## Joining, by = &quot;job&quot;</code></pre>
+<pre><code>## # A tibble: 244 x 6
+##    outdoor social conservative   job    id jobname 
+##      &lt;dbl&gt;  &lt;dbl&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;   
+##  1      10     22            5     1     1 custserv
+##  2      14     17            6     1     2 custserv
+##  3      19     33            7     1     3 custserv
+##  4      14     29           12     1     4 custserv
+##  5      14     25            7     1     5 custserv
+##  6      20     25           12     1     6 custserv
+##  7       6     18            4     1     7 custserv
+##  8      13     27            7     1     8 custserv
+##  9      18     31            9     1     9 custserv
+## 10      16     35           13     1    10 custserv
+## # … with 234 more rows</code></pre>
+<p>So now we have <code>jobname</code> as the text version of the original <code>job</code>.</p>
+</div>
+<div id="a-discriminant-analysis" class="section level2">
+<h2>A discriminant analysis</h2>
+<p>One way of understanding data like this is a discriminant analysis. The details of this don’t matter; the important thing is that we get output that is <em>too long to handle</em>, thus:</p>
+<pre class="r"><code>jobs.1=lda(jobname~outdoor+social+conservative, data=jobs)
+p=predict(jobs.1)
+d=cbind(jobs, p) 
+head(d)</code></pre>
+<pre><code>##   outdoor social conservative job id  jobname    class posterior.custserv
+## 1      10     22            5   1  1 custserv custserv          0.9037622
+## 2      14     17            6   1  2 custserv mechanic          0.3677743
+## 3      19     33            7   1  3 custserv custserv          0.7302117
+## 4      14     29           12   1  4 custserv custserv          0.8100756
+## 5      14     25            7   1  5 custserv custserv          0.7677607
+## 6      20     25           12   1  6 custserv mechanic          0.1682521
+##   posterior.dispatcher posterior.mechanic     x.LD1       x.LD2
+## 1         0.0072899882         0.08894785 1.6423155  0.71477348
+## 2         0.1432467601         0.48897890 0.1480302  0.15096436
+## 3         0.0003186265         0.26946971 2.6415213 -1.68326115
+## 4         0.0077512155         0.18217319 1.5493681  0.07764901
+## 5         0.0071854904         0.22505382 1.5472314 -0.15994117
+## 6         0.0469230463         0.78482488 0.2203876 -1.07331266</code></pre>
+<p>I apologize for the non-<code>tidyverse</code> <code>cbind</code> in there. The trouble is that <code>p</code> is actually a <code>list</code>, and I would have to pull its constituent bits out to use <code>bind_cols</code>. The downside is that <code>d</code> is no longer a <code>tibble</code> so I have to display it with care.</p>
+<p>Anyway, we have a data frame with a lot of columns, some of which have long names and/or a lot of decimals.</p>
+</div>
+<div id="rounding-off-a-bunch-of-columns-with-mutate_at" class="section level2">
+<h2>Rounding off a bunch of columns with <code>mutate_at</code></h2>
+<p>The columns I am interested in here have names that begin with <code>posterior</code> (and are rather long, but we come to that.) These are posterior probabilities that a person has a job of customer service, dispatcher or mechanic, given the scores they got on the three scales. (The highest of the three for each person is our best guess of what job they actually have, and is in <code>class</code>.) I want to eyeball these, and it is hard to do if they have a lot of decimals or are in scientific notation. Let’s round the columns whose names start with <code>posterior</code> to three decimals. <code>mutate_at</code> will help us with this:</p>
+<pre class="r"><code>d %&gt;% mutate_at(vars(starts_with(&quot;posterior&quot;)), ~round(., 3)) %&gt;% head()</code></pre>
+<pre><code>##   outdoor social conservative job id  jobname    class posterior.custserv
+## 1      10     22            5   1  1 custserv custserv              0.904
+## 2      14     17            6   1  2 custserv mechanic              0.368
+## 3      19     33            7   1  3 custserv custserv              0.730
+## 4      14     29           12   1  4 custserv custserv              0.810
+## 5      14     25            7   1  5 custserv custserv              0.768
+## 6      20     25           12   1  6 custserv mechanic              0.168
+##   posterior.dispatcher posterior.mechanic     x.LD1       x.LD2
+## 1                0.007              0.089 1.6423155  0.71477348
+## 2                0.143              0.489 0.1480302  0.15096436
+## 3                0.000              0.269 2.6415213 -1.68326115
+## 4                0.008              0.182 1.5493681  0.07764901
+## 5                0.007              0.225 1.5472314 -0.15994117
+## 6                0.047              0.785 0.2203876 -1.07331266</code></pre>
+<p>The <code>_at</code> functions take a specification of columns, by number or name or as here a select-helper, and then a function to apply to each of them. This is specified in a <code>map</code>-like way: “for each of the columns whose name starts with <code>posterior</code>, round <em>it</em> to three decimals”. The result gets saved over top of the original column; you can optionally save it under a new column name.</p>
+<p>The <code>_at</code> functions work with columns selected somehow by name; the <code>_if</code> functions work with columns that have some property such as being text. One of those is coming up later.</p>
+</div>
+<div id="shortening-column-names-that-are-too-long-with-rename_at" class="section level2">
+<h2>Shortening column names that are too long with <code>rename_at</code></h2>
+<p>We have the <em>values</em> short enough to look at, but the column <em>names</em> are still too long. How can we shorten them?</p>
+<p>The columns with names like <code>posterior.custserv</code> ought to have names like <code>p.custserv</code>. So what we are aiming for is to look for all column names that start with <code>posterior</code> and text-replace the <code>posterior</code> with <code>p</code>. This uses the <code>stringr</code> function <code>str_replace</code> which requires three inputs: a string, a piece of text to look for, and another piece of text to replace it with. Let’s keep the rounding in as well:</p>
+<pre class="r"><code>d %&gt;% 
+  mutate_at(vars(starts_with(&quot;posterior&quot;)), ~round(., 3)) %&gt;%
+  rename_at(vars(starts_with(&quot;posterior&quot;)), ~str_replace(., &quot;posterior&quot;, &quot;p&quot;)) %&gt;% 
+  head()</code></pre>
+<pre><code>##   outdoor social conservative job id  jobname    class p.custserv
+## 1      10     22            5   1  1 custserv custserv      0.904
+## 2      14     17            6   1  2 custserv mechanic      0.368
+## 3      19     33            7   1  3 custserv custserv      0.730
+## 4      14     29           12   1  4 custserv custserv      0.810
+## 5      14     25            7   1  5 custserv custserv      0.768
+## 6      20     25           12   1  6 custserv mechanic      0.168
+##   p.dispatcher p.mechanic     x.LD1       x.LD2
+## 1        0.007      0.089 1.6423155  0.71477348
+## 2        0.143      0.489 0.1480302  0.15096436
+## 3        0.000      0.269 2.6415213 -1.68326115
+## 4        0.008      0.182 1.5493681  0.07764901
+## 5        0.007      0.225 1.5472314 -0.15994117
+## 6        0.047      0.785 0.2203876 -1.07331266</code></pre>
+<p>This is a much more pleasant display. We can see that the first individual is almost certainly in customer service, the second individual could be in customer service or a mechanic, and so on.</p>
+</div>
+<div id="a-brief-digression-into-discriminant-analysis" class="section level2">
+<h2>A brief digression into discriminant analysis</h2>
+<p>How do the scores on the three scales play into what job an individual might do? That’s where the discriminant analysis output comes in:</p>
+<pre class="r"><code>jobs.1</code></pre>
+<pre><code>## Call:
+## lda(jobname ~ outdoor + social + conservative, data = jobs)
+## 
+## Prior probabilities of groups:
+##   custserv dispatcher   mechanic 
+##  0.3483607  0.2704918  0.3811475 
+## 
+## Group means:
+##             outdoor   social conservative
+## custserv   12.51765 24.22353     9.023529
+## dispatcher 15.57576 15.45455    13.242424
+## mechanic   18.53763 21.13978    10.139785
+## 
+## Coefficients of linear discriminants:
+##                      LD1         LD2
+## outdoor      -0.09198065 -0.22501431
+## social        0.19427415 -0.04978105
+## conservative -0.15499199  0.08734288
+## 
+## Proportion of trace:
+##    LD1    LD2 
+## 0.7712 0.2288</code></pre>
+<p>Right down at the bottom:</p>
+<ul>
+<li>the very bottom table says that LD1 is more important than LD2 (we’ll come to what that means)</li>
+<li>the “coefficients of linear discriminants” above it says that LD1 depends positively on <code>social</code> and negatively on <code>conservative</code> (and to a lesser extent negatively on <code>outdoor</code> also)</li>
+<li>LD2 depends mostly (and positively) on <code>outdoor</code>.</li>
+</ul>
+<p>The LD’s are a way of reducing our three variables to fewer, by focusing on what distinguishes the jobs best. The value of that is that we can plot the LD1 and LD2 scores (labelling the points by job name), because there are only two of them (here), whereas there were three original variables and we would have needed a 3D plot to plot them.</p>
+<p>So a person who is high on <code>social</code> and/or low on <code>conservative</code> will have a high score on LD1; a person with a high score on <code>outdoor</code> will have a <em>low</em> score on LD2 (negative coefficient).</p>
+<p>But what are high and low scores? For that, read on.</p>
+</div>
+<div id="summary-and-text-variables" class="section level2">
+<h2><code>summary</code> and text variables</h2>
+<p>The first point of call for an old-stager like me is to feed the data frame into <code>summary</code>:</p>
+<pre class="r"><code>summary(jobs)</code></pre>
+<pre><code>##     outdoor          social       conservative        job       
+##  Min.   : 0.00   Min.   : 7.00   Min.   : 0.00   Min.   :1.000  
+##  1st Qu.:13.00   1st Qu.:17.00   1st Qu.: 8.00   1st Qu.:1.000  
+##  Median :16.00   Median :21.00   Median :11.00   Median :2.000  
+##  Mean   :15.64   Mean   :20.68   Mean   :10.59   Mean   :1.922  
+##  3rd Qu.:19.00   3rd Qu.:25.00   3rd Qu.:13.00   3rd Qu.:3.000  
+##  Max.   :28.00   Max.   :35.00   Max.   :20.00   Max.   :3.000  
+##        id          jobname         
+##  Min.   : 1.00   Length:244        
+##  1st Qu.:21.00   Class :character  
+##  Median :41.00   Mode  :character  
+##  Mean   :41.95                     
+##  3rd Qu.:61.25                     
+##  Max.   :93.00</code></pre>
+<p>This produces a five-number summary of the numerical variables, which is good, but that summary of <code>jobname</code> is no help at all!</p>
+<p>Some historical perspective: back in the days of <code>read.table</code> and friends, text got immediately turned into factors (unless you took trouble to stop it happening). So maybe turning <code>jobname</code> (and any other text variables we might happen to have) into factors might help:</p>
+<pre class="r"><code>jobs %&gt;% mutate_if(is.character, ~factor(.)) %&gt;% summary()</code></pre>
+<pre><code>##     outdoor          social       conservative        job       
+##  Min.   : 0.00   Min.   : 7.00   Min.   : 0.00   Min.   :1.000  
+##  1st Qu.:13.00   1st Qu.:17.00   1st Qu.: 8.00   1st Qu.:1.000  
+##  Median :16.00   Median :21.00   Median :11.00   Median :2.000  
+##  Mean   :15.64   Mean   :20.68   Mean   :10.59   Mean   :1.922  
+##  3rd Qu.:19.00   3rd Qu.:25.00   3rd Qu.:13.00   3rd Qu.:3.000  
+##  Max.   :28.00   Max.   :35.00   Max.   :20.00   Max.   :3.000  
+##        id              jobname  
+##  Min.   : 1.00   custserv  :85  
+##  1st Qu.:21.00   dispatcher:66  
+##  Median :41.00   mechanic  :93  
+##  Mean   :41.95                  
+##  3rd Qu.:61.25                  
+##  Max.   :93.00</code></pre>
+<p>Oh yes, that shows how many people of each job we have, which is much more helpful.</p>
+<p>The <code>mutate_if</code> says “for each column that is text (have the property of being <code>character</code>), run <code>factor</code> on it”, temporarily creating a factor for the purpose of passing it into <code>summary</code>.</p>
+</div>
+<div id="completing-the-analysis" class="section level2">
+<h2>Completing the analysis</h2>
+<p>With all that in mind, why was that first individual almost certainly in customer service?</p>
+<pre class="r"><code>d %&gt;% head(1)</code></pre>
+<pre><code>##   outdoor social conservative job id  jobname    class posterior.custserv
+## 1      10     22            5   1  1 custserv custserv          0.9037622
+##   posterior.dispatcher posterior.mechanic    x.LD1     x.LD2
+## 1          0.007289988         0.08894785 1.642316 0.7147735</code></pre>
+<p>Their scores were 10 on <code>outdoor</code>, 22 on <code>social</code> and 5 on <code>conservative</code>. According to the summary, this is low on <code>outdoor</code>, above the median on <code>social</code> and low on <code>conservative</code>. High social and low conservative makes this person high on LD1, and low outdoor makes this person <em>high</em> on LD2.</p>
+<p>To see where that puts them relative to others with the same job, we can plot all the LD1 and LD2 scores, with the actual job in colour:</p>
+<pre class="r"><code>ggplot(d, aes(x=x.LD1, y=x.LD2, colour=jobname))+geom_point()</code></pre>
+<p><img src="/post/2019-03-06-a-miscellany-mutate-at-rename-at-str-replace-and-summary_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>High LD1 and high LD2 puts this person squarely in with the red dots that represent customer service. With this kind of profile, it is unlikely that person #1 does any other kind of job. There is a little overlap between the colours, but not much.</p>
+</div>
