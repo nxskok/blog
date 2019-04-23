@@ -18,7 +18,7 @@ library(spatstat)
 
 ## Introduction
 
-Hierarchical cluster analysis is based on distances between individuals. This can be deined via Euclidean distance, Manhattan distance, a matching coefficient, etc. I won't get into these further.
+Hierarchical cluster analysis is based on distances between individuals. This can be defined via Euclidean distance, Manhattan distance, a matching coefficient, etc. I won't get into these further.
 
 There is a second problem, though, which I do wish to discuss: when you carry out a hierarchical cluster analysis, you want to join the two closest *clusters* together at each step. But how do you work out how far apart two clusters are, when all you have are distances between individuals? Here, I give some examples, and, perhaps more interesting, some visuals with the code that makes them.
 
@@ -38,7 +38,9 @@ g=ggplot(ddd,aes(x=x,y=y,colour=cluster))+geom_point()+
 g
 ```
 
-We know how to measuer distances between *individuals*, but what about distances between *clusters*?
+Note that I gave this graph a name, so that I can add things to it later.
+
+We know how to measure distances between *individuals*, but what about distances between *clusters*?
 
 ### Single linkage
 
@@ -68,7 +70,9 @@ So we can join the two closest points, now that we know where they are:
 g+geom_segment(data=closest,aes(x=x[1],y=y[1],xend=x[2],yend=y[2]),colour="darkgreen")
 ```
 
-This works, but it isn't very elegant (or very `tidyverse`). I usually use `crossing` to get all possible pairs, but the points in `A` and `B` have both an `x` and a `y` coordinate. I use a hack: `unite` to combine them together into one thing, then `separate` after making all possible pairs:
+This works, but it isn't very elegant (or very `tidyverse`). 
+
+I usually use `crossing` for this kind of thing, but the points in `A` and `B` have both an `x` and a `y` coordinate. I use a hack: `unite` to combine them together into one thing, then `separate` after making all possible pairs:
 
 ```{r}
 A %>% unite(coord, x, y) -> a1
@@ -157,7 +161,7 @@ d2=tribble(
 d2
 ```
 
-This time the difference between the groups is big compared to the variability:
+How do within-groups and between-groups compare this time?
 
 ```{r}
 d2.1=aov(y~g, data=d2)
@@ -186,7 +190,7 @@ d1 %>% left_join(d1.groups) %>%
   summarize(total=sum(diffsq))
 ```
 
-One way to measure the distance between two groups (clusters) is to take the difference. The observations will always be closer to their own group mean than to the combined mean, but in this case the difference is small:
+One way to measure the distance between two groups (clusters) is to take the difference of these. The observations will always be closer to their own group mean than to the combined mean, but in this case the difference is small:
 
 ```{r}
 10.8-9.33
@@ -227,3 +231,47 @@ This is much bigger, and combining these groups would not be a good idea.
 For cluster analysis, these ideas are behind Ward's method. Compare the distances of each point from the mean of the clusters they currently belong to, with the distances from the mean of those two clusters combined. If the difference between these is small, the two clusters could be combined; if not, the two clusters should not be combined if possible.
 
 How does this look on a picture? I did this in my lecture notes with some hairy for-loops, but I think I can do better.
+
+Let's first work out the means for each of `x` and `y` for my clusters:
+
+```{r}
+ddd %>% group_by(cluster) %>% 
+  summarize(mean_x=mean(x), mean_y=mean(y)) -> means
+means
+```
+
+Now I look up which cluster each observation was in and add its mean. (I surreptitiously used this idea above):
+
+```{r}
+ddd %>% left_join(means) -> group_means
+group_means
+```
+
+and then I think I can add the lines, coloured by cluster, thus:
+
+```{r}
+g+geom_segment(data=group_means, aes(x=x, y=y, xend=mean_x, yend=mean_y, colour=cluster))
+```
+
+The points are reasonably close to their group means.
+
+How does that compare to the distances from the overall mean? First we have to work that out:
+
+```{r}
+ddd %>% summarize(mean_x=mean(x), mean_y=mean(y)) -> means
+```
+
+Then we glue this onto to the original points:
+
+```{r}
+ddd %>% mutate(mean_x=means$mean_x, mean_y=means$mean_y) -> overall_means
+overall_means
+```
+
+and then repeat the previous idea to plot them:
+
+```{r}
+g+geom_segment(data=overall_means, aes(x=x, y=y, xend=mean_x, yend=mean_y), colour="darkgreen")
+```
+
+The points are a lot further from the overall mean than from the group means (the green lines overall are longer than the red and blue ones), suggesting that the clusters are, in the sense of Ward's method, a long way apart.
