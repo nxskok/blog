@@ -161,6 +161,11 @@ d2=tribble(
 d2
 ```
 
+```{r}
+ggplot(d2, aes(x=g, y=y, colour=g))+geom_point()
+```
+
+
 How do within-groups and between-groups compare this time?
 
 ```{r}

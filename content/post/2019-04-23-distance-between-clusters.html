@@ -185,6 +185,8 @@ d2</code></pre>
 ## 4    21 B    
 ## 5    22 B    
 ## 6    24 B</code></pre>
+<pre class="r"><code>ggplot(d2, aes(x=g, y=y, colour=g))+geom_point()</code></pre>
+<p><img src="/post/2019-04-23-distance-between-clusters_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <p>How do within-groups and between-groups compare this time?</p>
 <pre class="r"><code>d2.1=aov(y~g, data=d2)
 summary(d2.1)</code></pre>
@@ -293,7 +295,7 @@ means</code></pre>
 ## 10 B       35.7  31.3   30.0    31.9</code></pre>
 <p>and then I think I can add the lines, coloured by cluster, thus:</p>
 <pre class="r"><code>g+geom_segment(data=group_means, aes(x=x, y=y, xend=mean_x, yend=mean_y, colour=cluster))</code></pre>
-<p><img src="/post/2019-04-23-distance-between-clusters_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p><img src="/post/2019-04-23-distance-between-clusters_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
 <p>The points are reasonably close to their group means.</p>
 <p>How does that compare to the distances from the overall mean? First we have to work that out:</p>
 <pre class="r"><code>ddd %&gt;% summarize(mean_x=mean(x), mean_y=mean(y)) -&gt; means</code></pre>
@@ -315,7 +317,7 @@ overall_means</code></pre>
 ## 10 B       35.7  31.3    19.5   21.2</code></pre>
 <p>and then repeat the previous idea to plot them:</p>
 <pre class="r"><code>g+geom_segment(data=overall_means, aes(x=x, y=y, xend=mean_x, yend=mean_y), colour=&quot;darkgreen&quot;)</code></pre>
-<p><img src="/post/2019-04-23-distance-between-clusters_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p><img src="/post/2019-04-23-distance-between-clusters_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
 <p>The points are a lot further from the overall mean than from the group means (the green lines overall are longer than the red and blue ones), suggesting that the clusters are, in the sense of Ward’s method, a long way apart.</p>
 </div>
 </div>
