@@ -1,0 +1,101 @@
+---
+title: Changing a lot of things in a lot of places
+author: Ken
+date: '2019-05-12'
+slug: changing-a-lot-of-things-in-a-lot-of-places
+categories: []
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+
+
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.1.1          ✔ purrr   0.3.2     
+## ✔ tibble  2.1.1          ✔ dplyr   0.8.0.1   
+## ✔ tidyr   0.8.3.9000     ✔ stringr 1.4.0     
+## ✔ readr   1.3.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;tibble&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;readr&#39; was built under R version 3.5.2</code></pre>
+<pre><code>## Warning: package &#39;purrr&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;dplyr&#39; was built under R version 3.5.2</code></pre>
+<pre><code>## Warning: package &#39;stringr&#39; was built under R version 3.5.2</code></pre>
+<pre><code>## Warning: package &#39;forcats&#39; was built under R version 3.5.1</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<p>Oh. After my short unsuccessful trip to R 3.6, I went back to 3.5.0 and now all my packages tell me that they were built under some version I used to use.</p>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Let’s suppose you have a data frame like this:</p>
+<pre class="r"><code>d</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##   x1       x2    y     
+##   &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; 
+## 1 one      two   two   
+## 2 four     three four  
+## 3 seven    nine  eight 
+## 4 six      eight seven 
+## 5 fourteen nine  twelve</code></pre>
+<p>What you want to do is to change all the even numbers in columns <code>x1</code> and <code>x2</code>, but <em>not</em> <code>y</code>, to the number versions of themselves, so that, for example, <code>eight</code> becomes <code>8</code>.
+This would seem to be a job for <code>str_replace_all</code>, but how to manage the multitude of changes?</p>
+</div>
+<div id="making-a-lot-of-changes-with-str_replace_all" class="section level2">
+<h2>Making a lot of changes with <code>str_replace_all</code></h2>
+<p>I learned today that you can feed <code>str_replace_all</code> a <em>named vector</em>. Wossat, you say? Well, one of these:</p>
+<pre class="r"><code>quantile(1:7)</code></pre>
+<pre><code>##   0%  25%  50%  75% 100% 
+##  1.0  2.5  4.0  5.5  7.0</code></pre>
+<p>The numbers are here the five-number summary; the things next to them, that say which percentile they are, are the <code>names</code> attribute. You can make one of these yourself like this:</p>
+<pre class="r"><code>x &lt;- 1:3
+x</code></pre>
+<pre><code>## [1] 1 2 3</code></pre>
+<pre class="r"><code>names(x) &lt;- c(&quot;first&quot;, &quot;second&quot;, &quot;third&quot;)
+x</code></pre>
+<pre><code>##  first second  third 
+##      1      2      3</code></pre>
+<p>The value of this for us is that you can feed the boatload of potential changes into <code>str_replace_all</code> by feeding it a named vector of the changes it might make.</p>
+<p>In our example, we wanted to replace the even numbers by the numeric versions of themselves, so let’s make a little data frame with all of those:</p>
+<pre class="r"><code>changes &lt;- tribble(
+  ~from, ~to,
+  &quot;two&quot;, &quot;2&quot;,
+  &quot;four&quot;, &quot;4&quot;,
+  &quot;six&quot;, &quot;6&quot;,
+  &quot;eight&quot;, &quot;8&quot;,
+  &quot;ten&quot;, &quot;10&quot;,
+  &quot;twelve&quot;, &quot;12&quot;,
+  &quot;fourteen&quot;, &quot;14&quot;
+)</code></pre>
+<p>I think this is as high as we need to go. I like a <code>tribble</code> for this so that you can easily see what is going to replace what.</p>
+<p>For the named vector, the <em>values</em> are the new values (the ones I called <code>to</code> in <code>changes</code>), while the <em>names</em> are the old ones (<code>from</code>). So let’s construct that. There is one extra thing: I want to replace whole words only (and not end up with something like <code>4teen</code>, which sounds like one of those 90s boy bands), so what I’ll do is to put “word boundaries” around the <code>from</code> values:</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This means that the number names only match if they are surrounded by non-word characters, that is, spaces, or the beginning or end of the text.</span></p>
+<pre class="r"><code>my_changes &lt;- changes$to
+names(my_changes) &lt;- str_c(&quot;\\b&quot;, changes$from, &quot;\\b&quot;)
+my_changes</code></pre>
+<pre><code>##      \\btwo\\b     \\bfour\\b      \\bsix\\b    \\beight\\b      \\bten\\b 
+##            &quot;2&quot;            &quot;4&quot;            &quot;6&quot;            &quot;8&quot;           &quot;10&quot; 
+##   \\btwelve\\b \\bfourteen\\b 
+##           &quot;12&quot;           &quot;14&quot;</code></pre>
+<p>and that seems to reflect the changes we want to make. So let’s make it go, just on columns <code>x1</code> and <code>x2</code>:</p>
+<pre class="r"><code>d %&gt;% mutate_at(
+  vars(starts_with(&quot;x&quot;)),
+       ~ str_replace_all(., my_changes)
+  )</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##   x1    x2    y     
+##   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; 
+## 1 one   2     two   
+## 2 4     three four  
+## 3 seven nine  eight 
+## 4 6     8     seven 
+## 5 14    nine  twelve</code></pre>
+<p>“for each of the columns that starts with <code>x</code>, replace everything in it that’s in the recipe in <code>my_changes</code>.”</p>
+<p>It seems to have worked, and not a 90s boy band in sight.</p>
+</div>

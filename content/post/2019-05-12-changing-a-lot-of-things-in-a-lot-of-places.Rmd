@@ -1,0 +1,99 @@
+---
+title: Changing a lot of things in a lot of places
+author: Ken
+date: '2019-05-12'
+slug: changing-a-lot-of-things-in-a-lot-of-places
+categories: []
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+## Packages
+
+```{r}
+library(tidyverse)
+```
+
+Oh. After my short unsuccessful trip to R 3.6, I went back to 3.5.0 and now all my packages tell me that they were built under some version I used to use.
+
+## Introduction
+
+Let's suppose you have a data frame like this:
+
+```{r, echo=F}
+d <- tribble(
+  ~x1, ~x2, ~y,
+  "one", "two", "two",
+  "four", "three", "four",
+  "seven", "nine", "eight",
+  "six", "eight", "seven",
+  "fourteen", "nine", "twelve"
+)
+```
+
+```{r}
+d
+```
+
+What you want to do is to change all the even numbers in columns `x1` and `x2`, but *not* `y`, to the number versions of themselves, so that, for example, `eight` becomes `8`.
+This would seem to be a job for `str_replace_all`, but how to manage the multitude of changes?
+
+## Making a lot of changes with `str_replace_all`
+
+I learned today that you can feed `str_replace_all` a *named vector*. Wossat, you say? Well, one of these:
+
+```{r}
+quantile(1:7)
+```
+
+The numbers are here the five-number summary; the things next to them, that say which percentile they are, are the `names` attribute. You can make one of these yourself like this:
+
+```{r}
+x <- 1:3
+x
+names(x) <- c("first", "second", "third")
+x
+```
+
+The value of this for us is that you can feed the boatload of potential changes into `str_replace_all` by feeding it a named vector of the changes it might make.
+
+In our example, we wanted to replace the even numbers by the numeric versions of themselves, so let's make a little data frame with all of those:
+
+```{r}
+changes <- tribble(
+  ~from, ~to,
+  "two", "2",
+  "four", "4",
+  "six", "6",
+  "eight", "8",
+  "ten", "10",
+  "twelve", "12",
+  "fourteen", "14"
+)
+```
+
+I think this is as high as we need to go. I like a `tribble` for this so that you can easily see what is going to replace what.
+
+For the named vector, the *values* are the new values (the ones I called `to` in `changes`), while the *names* are the old ones (`from`). So let's construct that. There is one extra thing: I want to replace whole words only (and not end up with something like `4teen`, which sounds like one of those 90s boy bands), so what I'll do is to put "word boundaries" around the `from` values:
+
+`r tufte::margin_note("This means that the number names only match if they are surrounded by non-word characters, that is, spaces, or the beginning or end of the text.")`
+
+```{r}
+my_changes <- changes$to
+names(my_changes) <- str_c("\\b", changes$from, "\\b")
+my_changes
+```
+
+and that seems to reflect the changes we want to make. So let's make it go, just on columns `x1` and `x2`:
+
+```{r}
+d %>% mutate_at(
+  vars(starts_with("x")),
+       ~ str_replace_all(., my_changes)
+  )
+```
+
+"for each of the columns that starts with `x`, replace everything in it that's in the recipe in `my_changes`."
+
+It seems to have worked, and not a 90s boy band in sight.
