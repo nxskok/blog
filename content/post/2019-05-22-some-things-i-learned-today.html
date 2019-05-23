@@ -1,0 +1,53 @@
+---
+title: Some things I learned today
+author: Ken
+date: '2019-05-22'
+slug: some-things-i-learned-today
+categories: []
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+
+
+<div id="today-or-at-least-recently-i-learned" class="section level2">
+<h2>Today (or, at least, recently) I learned:</h2>
+</div>
+<div id="stan" class="section level2">
+<h2>Stan</h2>
+<p>You can open up a <code>.stan</code> file of Stan code in R Studio, and the syntax gets nicely highlighted for you. Also, there is a Check button, which checks that your file is syntactically correct before you try to compile it.</p>
+<p>In addition, I finally got my head around (fixed effects) ANOVA Bayesian-style, but that is a blog post for another time. (From a Bayesian point of view, random effects is a lot more natural, but my students won’t have seen that yet.)</p>
+</div>
+<div id="r-markdown-figures-in-latex" class="section level2">
+<h2>R Markdown figures in LaTeX</h2>
+<p>Yihui Xie is a genius (well, that much we already knew). I was generating a Beamer presentation from R Markdown,
+and the plots came out a bit fuzzy. I learned from The Man Himself <a href="https://stackoverflow.com/questions/17963962/plot-size-and-resolution-with-r-markdown-knitr-pandoc-beamer">in the first answer here</a> that this is because knitr turns plots into .png images by default, and LaTeX doesn’t play nicely with those, especially if you want to resize them (which I did, because text-plus-plot on a slide makes the plot run off the bottom). The solution is to get knitr to generate .pdf plots, which you can do by putting a line like this in your setup chunk:</p>
+<pre><code>knitr::opts_chunk$set(dev = &#39;pdf&#39;)</code></pre>
+<p>Now my plots all look as if they have just come out of the washing machine.</p>
+<p>I had previously thought that I would have to keep using LaTeX to keep using Beamer, but not so: the aforementioned genius has added Beamer support to <code>knitr</code>. What you do is to add something like this:</p>
+<pre><code>output: 
+  beamer_presentation:
+    latex_engine: lualatex
+    slide_level: 2
+    df_print: kable
+    theme: &quot;AnnArbor&quot;
+    colortheme: &quot;dove&quot;</code></pre>
+<p>to your YAML front matter, tweaking the options to your preference. (I don’t seem to have decided whether I am using <code>lualatex</code> or <code>xelatex</code>: see below. I don’t want to change anything because <em>it is working</em>.)</p>
+</div>
+<div id="build-all" class="section level2">
+<h2>Build All</h2>
+<p>My lecture notes that I am working on (actually for two courses at once, but that is another story) are R Markdown files that have other R Markdown files as child documents, and the whole thing then gets run through LaTeX to produce a Beamer presentation. Knitting the root document (usually) works, but I wanted a bit more control over it, so I wrote a Makefile to automate the process. The Makefile looks something like this:</p>
+<pre><code>all: slides.pdf
+    evince slides.pdf&amp;
+slides.md: slides.Rmd &lt;lots of other Rmd files&gt;
+    Rscript -e &#39;knitr::knit(&quot;slides.Rmd&quot;)&#39;
+slides.tex: slides.md 
+    /usr/lib/rstudio/bin/pandoc/pandoc +RTS -K512m -RTS slides_c32.md --to beamer --from markdown+autolink_bare_uris+ascii_identifiers+tex_math_single_backslash\
+            --output slides.tex --slide-level 2 --variable theme=AnnArbor --variable colortheme=dove --highlight-style tango\
+            --pdf-engine xelatex --self-contained 
+slides.pdf: slides.tex
+    xelatex slides.tex</code></pre>
+<p>The <code>pandoc</code> line was shamelessly cribbed from what appears when you click the Knit button.</p>
+<p>Anyway, the reason for telling you this is that if you have a Makefile with an <code>all</code> target in it, the Build pane top right will contain a clickable Build All, and that will run your Makefile and build the All target. Likewise, there is a clickable More that will make the <code>clean</code> target if you happen to have one. I discovered this by accident, having discovered that I had a Build All in one of my projects, and I clicked it to see what it did. After a bit of rootling around, I found out (a) that this is what it was for and (b) I did indeed have a Makefile knocking around, that previously I had only ever run from the command line.</p>
+</div>
