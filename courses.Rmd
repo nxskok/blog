@@ -1,0 +1,7 @@
+---
+title: "Courses I teach"
+---
+
+- [Applications of Statistical Methods](/STAC32/).  For students with a second non-mathematical statistics course such as UTSC's [STAB27](https://utsc.calendar.utoronto.ca/course/stab27h3). Part of the [Statistics Applied Minor](https://utsc.calendar.utoronto.ca/minor-program-applied-statistics-science) program. [Calendar entry](https://utsc.calendar.utoronto.ca/course/stac32h3).
+- [Introduction to Applied Statistics](/STAC33/).  For students with a second mathematical statistics course such as UTSC's [STAB57](https://utsc.calendar.utoronto.ca/course/stab57h3). [Calendar entry](https://utsc.calendar.utoronto.ca/course/stac33h3).
+- [Statistics for the Life and Social Sciences](/STAD29/).  Advanced statistical methods from a how-to point of view. Part of the [Statistics Applied Minor](https://utsc.calendar.utoronto.ca/minor-program-applied-statistics-science) program. [Calendar entry](https://utsc.calendar.utoronto.ca/course/stad29h3).
