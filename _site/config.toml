@@ -1,0 +1,44 @@
+baseurl = "https://nxskok.github.io/docs/"
+publishDir = "docs"
+relativeurls = true
+languageCode = "en-us"
+title = "R, it's OK I guess"
+theme = "tuftesque"
+googleAnalytics = ""
+disqusShortname = "rokiguess"
+ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
+
+[permalinks]
+    post = "/:year/:month/:day/:slug/"
+
+[[menu.main]]
+    name = "Ken Butler"
+    url = "/about/"
+[[menu.main]]
+    name = "GitHub"
+    url = "https://github.com/nxskok"
+[[menu.main]]
+    name = "Twitter"
+    url = "https://twitter.com/kenbutler12"
+
+[params]
+    description = "A website built through Hugo and blogdown."
+
+    # options for highlight.js (version, additional languages, and theme)
+    highlightjsVersion = "9.10.0"
+    highlightjsCDN = "//cdn.bootcss.com"
+    highlightjsLang = ["r", "yaml"]
+    highlightjsTheme = "github"
+
+    [params.logo]
+    url = "http://www.utsc.utoronto.ca/~butler/156-front.jpg"
+    width = 50
+    height = 50
+    alt = "Logo"
+    
+    [params.banner]
+    url = "http://www.utsc.utoronto.ca/~butler/156-side2.jpg"
+ 
+[taxonomies]
+  tag = "tags"
+  category = "categories"

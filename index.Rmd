@@ -1,0 +1,13 @@
+---
+title: "Ken Butler's website"
+---
+
+![picture of Megan and me](https://www.utsc.utoronto.ca/~butler/c32/ken-megan-2.jpg) 
+
+## What I do
+
+Welcome to Ken Butler's website. I teach applied statistics in the [Department of Computer and Mathematical Sciences](https://www.utsc.utoronto.ca/cms/) at [UTSC](https://www.utsc.utoronto.ca/home/). 
+
+I have also been known to take in a [Toronto Wolfpack](https://www.torontowolfpack.com/) game from time to time.
+
+Click on one of the tabs at the top to investigate further.

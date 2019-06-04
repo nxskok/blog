@@ -1,0 +1,13 @@
+name: "my-website"
+navbar:
+  title: "Ken Butler's website"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Problems and Solutions in Applied Statistics"
+      href: pasias/
+    - text: My courses
+      href: courses.html
+    - text: "Blog"
+      href: docs/
+      
