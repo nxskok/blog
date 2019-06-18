@@ -1,0 +1,309 @@
+---
+title: Making scatterplots against multiple explanatory variables
+author: ~
+date: '2017-05-16'
+slug: ''
+categories: []
+tags: [R]
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>An R post here.</p>
+<p>I wanted to share something about drawing scatterplots against many variables at once, using <code>gather</code>, <code>ggplot</code> and <code>facet_wrap</code> from the <code>tidyverse</code>.</p>
+<p>First we need to load the tidyverse:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+</div>
+<div id="gather" class="section level2">
+<h2>Gather</h2>
+<p>Let’s start with <code>gather</code>. The typical usage for this tool is to deal with data like the following:</p>
+<pre class="r"><code>pigs1=read_delim(&quot;pigs1.txt&quot;,&quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   pig = col_integer(),
+##   feed1 = col_double(),
+##   feed2 = col_double(),
+##   feed3 = col_double(),
+##   feed4 = col_double()
+## )</code></pre>
+<pre class="r"><code>pigs1</code></pre>
+<pre><code>## # A tibble: 5 x 5
+##     pig feed1 feed2 feed3 feed4
+##   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1  60.8  68.7  92.6  87.9
+## 2     2  57.0  67.7  92.1  84.2
+## 3     3  65.0  74.0  90.2  83.1
+## 4     4  58.6  66.3  96.5  85.7
+## 5     5  61.7  69.8  99.1  90.3</code></pre>
+<p>20 pigs were randomized to one of four feeds, labelled <code>feed1</code> through <code>feed4</code>. The variable measured was the weight of each pig, after a certain period on the feed. The standard analysis for this kind of data is a one-way analysis of variance, with <code>weight</code> as the response and <code>feed</code> as the explanatory variable (grouping factor). We’ll assume that the assumptions for that (approximately normal data with approximately equal variance) are met. The problem is that these data are in so-called “wide” format, with the weights split over several columns. This is what Hadley Wickham calls “untidy”, because the columns are <em>levels</em> of a factor rather than being any of our actual variables. We want “long” format, with a column containing all the weights, and a second column saying which feed that weight goes with. This is what <code>gather</code> creates:</p>
+<pre class="r"><code>pigs2=pigs1 %&gt;% gather(feed,weight,feed1:feed4)</code></pre>
+<p><code>gather</code> requires three inputs. The way I remember them is:</p>
+<ol style="list-style-type: decimal">
+<li>what makes the columns different (here, they are different feeds, so we should create a column <code>feed</code> to hold them)</li>
+<li>what makes the columns the same (here, they are all weights, so create column <code>weight</code>).</li>
+<li>which columns to gather up or “make long” (here, the four feed columns).</li>
+</ol>
+<p>If you use <code>gather</code> outside of a pipe, you need an extra first argument which is the name of the data frame to operate on (in a pipe, this is “whatever came out of the previous step”).</p>
+<p>The column <code>pig</code> was not included in the <code>gather</code>. This was the number of the pig within each feed group, so this gets repeated once for each feed.</p>
+<p>This is the output:</p>
+<pre class="r"><code>pigs2</code></pre>
+<pre><code>## # A tibble: 20 x 3
+##      pig  feed weight
+##    &lt;int&gt; &lt;chr&gt;  &lt;dbl&gt;
+##  1     1 feed1   60.8
+##  2     2 feed1   57.0
+##  3     3 feed1   65.0
+##  4     4 feed1   58.6
+##  5     5 feed1   61.7
+##  6     1 feed2   68.7
+##  7     2 feed2   67.7
+##  8     3 feed2   74.0
+##  9     4 feed2   66.3
+## 10     5 feed2   69.8
+## 11     1 feed3   92.6
+## 12     2 feed3   92.1
+## 13     3 feed3   90.2
+## 14     4 feed3   96.5
+## 15     5 feed3   99.1
+## 16     1 feed4   87.9
+## 17     2 feed4   84.2
+## 18     3 feed4   83.1
+## 19     4 feed4   85.7
+## 20     5 feed4   90.3</code></pre>
+<p>Now we have the right format for our ANOVA:</p>
+<pre class="r"><code>weight.1=aov(weight~feed,data=pigs2)
+summary(weight.1)</code></pre>
+<pre><code>##             Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+## feed         3   3521  1173.5   119.1 3.72e-11 ***
+## Residuals   16    158     9.8                     
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>This shows that not all the feeds have the same mean weight, so we can follow up with Tukey to see which feeds differ from which on mean weight:</p>
+<pre class="r"><code>TukeyHSD(weight.1)</code></pre>
+<pre><code>##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = weight ~ feed, data = pigs2)
+## 
+## $feed
+##              diff        lwr       upr     p adj
+## feed2-feed1  8.68   3.001038 14.358962 0.0024000
+## feed3-feed1 33.48  27.801038 39.158962 0.0000000
+## feed4-feed1 25.62  19.941038 31.298962 0.0000000
+## feed3-feed2 24.80  19.121038 30.478962 0.0000000
+## feed4-feed2 16.94  11.261038 22.618962 0.0000013
+## feed4-feed3 -7.86 -13.538962 -2.181038 0.0055599</code></pre>
+<p>and we see that they all do.</p>
+</div>
+<div id="facetting" class="section level2">
+<h2>Facetting</h2>
+<p>Facetting is one <code>ggplot</code> way of producing separate graphs for each of several groups. This is useful, for example, when you have two quantitative variables and also a categorical variable (factor). One way is to make <em>one</em> scatterplot with the levels of the factor identified by colour, but you might want completely separate scatterplots for each group, one next to the other.</p>
+<p>To illustrate, let’s use a dataset from the Australian Institute for Sport, which contains a number of measurements on 202 male and female athletes who play ten different sports:</p>
+<pre class="r"><code>athletes=read_tsv(&quot;ais.txt&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Sex = col_character(),
+##   Sport = col_character(),
+##   RCC = col_double(),
+##   WCC = col_double(),
+##   Hc = col_double(),
+##   Hg = col_double(),
+##   Ferr = col_integer(),
+##   BMI = col_double(),
+##   SSF = col_double(),
+##   `%Bfat` = col_double(),
+##   LBM = col_double(),
+##   Ht = col_double(),
+##   Wt = col_double()
+## )</code></pre>
+<pre class="r"><code>athletes</code></pre>
+<pre><code>## # A tibble: 202 x 13
+##       Sex   Sport   RCC   WCC    Hc    Hg  Ferr   BMI   SSF `%Bfat`
+##     &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+##  1 female Netball  4.56  13.3  42.2  13.6    20 19.16  49.0   11.29
+##  2 female Netball  4.15   6.0  38.0  12.7    59 21.15 110.2   25.26
+##  3 female Netball  4.16   7.6  37.5  12.3    22 21.40  89.0   19.39
+##  4 female Netball  4.32   6.4  37.7  12.3    30 21.03  98.3   19.63
+##  5 female Netball  4.06   5.8  38.7  12.8    78 21.77 122.1   23.11
+##  6 female Netball  4.12   6.1  36.6  11.8    21 21.38  90.4   16.86
+##  7 female Netball  4.17   5.0  37.4  12.7   109 21.47 106.9   21.32
+##  8 female Netball  3.80   6.6  36.5  12.4   102 24.45 156.6   26.57
+##  9 female Netball  3.96   5.5  36.3  12.4    71 22.63 101.1   17.93
+## 10 female Netball  4.44   9.7  41.4  14.1    64 22.80 126.4   24.97
+## # ... with 192 more rows, and 3 more variables: LBM &lt;dbl&gt;, Ht &lt;dbl&gt;,
+## #   Wt &lt;dbl&gt;</code></pre>
+<p>The gender of and sport played by each athlete are in the first two columns, and their height (in centimetres) and weight (in kilograms) are in the last two. A scatterplot of height vs. weight looks like this:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Ht,y=Wt))+geom_point()</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>Taller athletes are usually heavier, but there are some athletes of average height who are heavier than you would expect. Are there some sports where being “big” is an advantage?</p>
+<p>This, however, mixes up the genders <em>and</em> the sports, and we would expect athletes to differ in height and weight according to which sport they play (for example, basketball players are usually tall).</p>
+<p>We can plot the genders in different colours thus:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Ht,y=Wt,colour=Sex))+geom_point()</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>From this, we see that there is a positive association between height and weight for both males and females (stronger for females), and that most (but not all) of the tallest and heaviest athletes are male.</p>
+<p>There are 10 different sports, so identifying them by colour won’t help too much. I think it’s better to identify the sports by facets, thus:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Ht,y=Wt,colour=Sex))+geom_point()+
+  facet_wrap(~Sport)</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>That means, “in addition to the plot already asked for, do it separately for each sport”. This gives 10 different mini-plots, one for each sport. By default these share the same scales, so you can see, by where the points fall in each facet, how the athletes who play that sport compare to those who play other sports:</p>
+<ul>
+<li>the upward trend between height and weight holds good for most sports</li>
+<li>for each sport, males are generally bigger than females</li>
+<li>the gymnasts and netball players are all female, and the water-polo players are all male</li>
+<li>the gymnasts are really small</li>
+<li>the field-event athletes vary a lot in weight, even among athletes of similar height. This is probably because different field events require different physiques: for example, high-jumpers are tall and thin, but shot-putters are heavy for their height (and height doesn’t matter very much).</li>
+</ul>
+<p>In this case, it is informative to use the same scale for each plot, but if you want each mini-plot to fill its facet, you can use a different scale for each facet thus:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Ht,y=Wt,colour=Sex))+geom_point()+
+  facet_wrap(~Sport,scales=&quot;free&quot;)</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>This accentuates the relationship between height and weight within each sport, but makes it difficult to compare one sport with another (you have to look at the scales).</p>
+</div>
+<div id="plotting-against-each-of-several-explanatory-variables" class="section level2">
+<h2>Plotting against each of several explanatory variables</h2>
+<p>In multiple regression, we have a number of explanatory variables, and it is often helpful to make plots of the response variable against each one, or, after a regression model has been fit, to plot the residuals against each explanatory variable to check for problems.</p>
+<p>By way of example, 31 asphalt pavements were prepared under various conditions. Asphalt ought to hold up to vehicles travelling over it; the response variable was “rut depth”, the change in height of the asphalt per million vehicle passes (so a small rut depth is good). The other variables in the data set are potential explanatory variables:</p>
+<pre class="r"><code>asphalt=read_delim(&quot;asphalt.txt&quot;,&quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   pct.a.surf = col_double(),
+##   pct.a.base = col_double(),
+##   fines = col_double(),
+##   voids = col_double(),
+##   rut.depth = col_double(),
+##   viscosity = col_double(),
+##   run = col_integer()
+## )</code></pre>
+<pre class="r"><code>asphalt</code></pre>
+<pre><code>## # A tibble: 31 x 7
+##    pct.a.surf pct.a.base fines voids rut.depth viscosity   run
+##         &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt;
+##  1       4.68       4.87   8.4 4.916      6.75      2.80     1
+##  2       5.19       4.50   6.5 4.563     13.00      1.40     1
+##  3       4.82       4.73   7.9 5.321     14.75      1.40     1
+##  4       4.85       4.76   8.3 4.865     12.60      3.30     1
+##  5       4.86       4.95   8.4 3.776      8.25      1.70     1
+##  6       5.16       4.45   7.4 4.397     10.67      2.90     1
+##  7       4.82       5.05   6.8 4.867      7.28      3.70     1
+##  8       4.86       4.70   8.6 4.828     12.67      1.70     1
+##  9       4.78       4.84   6.7 4.865     12.58      0.92     1
+## 10       5.16       4.76   7.7 4.034     20.60      0.68     1
+## # ... with 21 more rows</code></pre>
+<p>How can we plot <code>rut.depth</code> against each of the other variables, one per facet? <code>ggplot</code> likes to have a data frame with one column of <span class="math inline">\(y\)</span>-values to plot, and <em>one</em> column of <span class="math inline">\(x\)</span>-values. How can we make this? By gathering up all the explanatory variables into <em>one</em> column, keeping track of which <span class="math inline">\(x\)</span>-variable is which:</p>
+<pre class="r"><code>asphalt %&gt;% gather(xname,x,c(pct.a.surf:voids,viscosity:run))</code></pre>
+<pre><code>## # A tibble: 186 x 3
+##    rut.depth      xname     x
+##        &lt;dbl&gt;      &lt;chr&gt; &lt;dbl&gt;
+##  1      6.75 pct.a.surf  4.68
+##  2     13.00 pct.a.surf  5.19
+##  3     14.75 pct.a.surf  4.82
+##  4     12.60 pct.a.surf  4.85
+##  5      8.25 pct.a.surf  4.86
+##  6     10.67 pct.a.surf  5.16
+##  7      7.28 pct.a.surf  4.82
+##  8     12.67 pct.a.surf  4.86
+##  9     12.58 pct.a.surf  4.78
+## 10     20.60 pct.a.surf  5.16
+## # ... with 176 more rows</code></pre>
+<p>You can check that the values shown in the <code>x</code> column are the first few values of <code>pct.a.surf</code>, and the values in the <code>rut.depth</code> column are correctly the corresponding ones for the same pavement.</p>
+<p>Now we can plot <code>rut.depth</code> against <code>x</code>, <em>facetting by</em> <code>xname</code>. Since the <span class="math inline">\(x\)</span>-variables measure different things, we should let each plot have its own scale:</p>
+<pre class="r"><code>asphalt %&gt;% gather(xname,x,c(pct.a.surf:voids,viscosity:run)) %&gt;% 
+  ggplot(aes(x=x,y=rut.depth))+geom_point()+
+    facet_wrap(~xname,scales=&quot;free&quot;)</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>There is evidence of non-linear relationships (especially with <code>viscosity</code>) and uneven spread (clearest with <code>run</code>), which suggests that some variable re-expression is in order. After a little experimentation, I found that using logs of rut depth and of viscosity straightened things out nicely. We could include these transformations in our pipe, but I find it easier to do the transformations first and save the result, saving myself some repetition later:</p>
+<pre class="r"><code>asphalt2=asphalt %&gt;% 
+  mutate(log.viscosity=log(viscosity),log.rut.depth=log(rut.depth))
+asphalt2</code></pre>
+<pre><code>## # A tibble: 31 x 9
+##    pct.a.surf pct.a.base fines voids rut.depth viscosity   run
+##         &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt;
+##  1       4.68       4.87   8.4 4.916      6.75      2.80     1
+##  2       5.19       4.50   6.5 4.563     13.00      1.40     1
+##  3       4.82       4.73   7.9 5.321     14.75      1.40     1
+##  4       4.85       4.76   8.3 4.865     12.60      3.30     1
+##  5       4.86       4.95   8.4 3.776      8.25      1.70     1
+##  6       5.16       4.45   7.4 4.397     10.67      2.90     1
+##  7       4.82       5.05   6.8 4.867      7.28      3.70     1
+##  8       4.86       4.70   8.6 4.828     12.67      1.70     1
+##  9       4.78       4.84   6.7 4.865     12.58      0.92     1
+## 10       5.16       4.76   7.7 4.034     20.60      0.68     1
+## # ... with 21 more rows, and 2 more variables: log.viscosity &lt;dbl&gt;,
+## #   log.rut.depth &lt;dbl&gt;</code></pre>
+<p>Now we have to be a bit careful about which variables we want to <code>gather</code> since the new variables got added at the end:</p>
+<pre class="r"><code>asphalt2 %&gt;% 
+  gather(xname,x,c(pct.a.surf:voids,run,log.viscosity)) %&gt;% 
+  ggplot(aes(x=x,y=log.rut.depth))+geom_point()+
+    facet_wrap(~xname,scales=&quot;free&quot;)</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>These look a lot straighter and evenly spread. So doing a multiple regression to predict log rut depth from the variables shown in this plot (including log viscosity) ought to be reasonable:</p>
+<pre class="r"><code>rut.1=lm(log.rut.depth~.-rut.depth-viscosity,data=asphalt2)</code></pre>
+<p>I did a bit of trickery to avoid typing out the names of all the explanatory variables: the <code>.</code> means “all the variables except for the response”, and then the minuses mean to take out the untransformed versions of the two variables we transformed.</p>
+<p>Here’s the summary:</p>
+<pre class="r"><code>summary(rut.1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = log.rut.depth ~ . - rut.depth - viscosity, data = asphalt2)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.53072 -0.18563 -0.00003  0.20017  0.55079 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)   -1.57299    2.43617  -0.646    0.525    
+## pct.a.surf     0.58358    0.23198   2.516    0.019 *  
+## pct.a.base    -0.10337    0.36891  -0.280    0.782    
+## fines          0.09775    0.09407   1.039    0.309    
+## voids          0.19885    0.12306   1.616    0.119    
+## run            0.34005    0.33889   1.003    0.326    
+## log.viscosity -0.55769    0.08543  -6.528 9.45e-07 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.3088 on 24 degrees of freedom
+## Multiple R-squared:  0.961,  Adjusted R-squared:  0.9512 
+## F-statistic: 98.47 on 6 and 24 DF,  p-value: 1.059e-15</code></pre>
+<p>There are some variables that could be taken out, but we ought to check whether the form of the regression is reasonable by looking at the residuals. The residuals against the fitted values is straightforward enough:</p>
+<pre class="r"><code>ggplot(rut.1,aes(x=.fitted,y=.resid))+geom_point()</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>There are no patterns on this plot: the points look randomly scattered, which is good. The two groups of points (one on the left and one on the right) are not a problem; there just <em>is</em> a bunch of small fitted values and a bunch of larger ones with a gap in between.</p>
+<p>We should also plot the residuals against each of the explanatory variables, to see whether we have the form of the relationship right for each one. The problem is that the residuals and fitted values are in one place (<code>rut.1</code>) and the explanatory variables are in another (<code>asphalt2</code>). A nice way to solve this is to use <code>augment</code> from package <code>broom</code> to create a dataset with both the original data <em>and</em> things calculated from the model:</p>
+<pre class="r"><code>library(broom)
+augment(rut.1,asphalt2) %&gt;% as_tibble()</code></pre>
+<pre><code>## # A tibble: 31 x 16
+##    pct.a.surf pct.a.base fines voids rut.depth viscosity   run
+##         &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt;
+##  1       4.68       4.87   8.4 4.916      6.75      2.80     1
+##  2       5.19       4.50   6.5 4.563     13.00      1.40     1
+##  3       4.82       4.73   7.9 5.321     14.75      1.40     1
+##  4       4.85       4.76   8.3 4.865     12.60      3.30     1
+##  5       4.86       4.95   8.4 3.776      8.25      1.70     1
+##  6       5.16       4.45   7.4 4.397     10.67      2.90     1
+##  7       4.82       5.05   6.8 4.867      7.28      3.70     1
+##  8       4.86       4.70   8.6 4.828     12.67      1.70     1
+##  9       4.78       4.84   6.7 4.865     12.58      0.92     1
+## 10       5.16       4.76   7.7 4.034     20.60      0.68     1
+## # ... with 21 more rows, and 9 more variables: log.viscosity &lt;dbl&gt;,
+## #   log.rut.depth &lt;dbl&gt;, .fitted &lt;dbl&gt;, .se.fit &lt;dbl&gt;, .resid &lt;dbl&gt;,
+## #   .hat &lt;dbl&gt;, .sigma &lt;dbl&gt;, .cooksd &lt;dbl&gt;, .std.resid &lt;dbl&gt;</code></pre>
+<p>Onto the original data have been added things like fitted values and residuals, calculated from model <code>rut.1</code>. The things calculated from the model have dots on the front of their names.</p>
+<p>Now we can do the gather trick again to plot the residuals against each explanatory variable:</p>
+<pre class="r"><code>augment(rut.1,asphalt2) %&gt;% 
+  gather(xname,x,c(pct.a.surf:voids,run,log.viscosity)) %&gt;% 
+  ggplot(aes(x=x,y=.resid))+geom_point()+
+    facet_wrap(~xname,scales=&quot;free&quot;)</code></pre>
+<p><img src="/post/multi-scatter_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>This is an almost exemplary collection of residual plots: there is almost no indication of any relationships between the residuals and the <span class="math inline">\(x\)</span> variables. The regression <code>rut.1</code> looks like a sensible place to work from, either to use as is for prediction, or as a starting point for model-building.</p>
+</div>

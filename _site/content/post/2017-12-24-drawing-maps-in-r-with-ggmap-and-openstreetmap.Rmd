@@ -1,0 +1,187 @@
+---
+title: Drawing maps in R with "ggmap" and "OpenStreetMap"
+author: Ken
+date: '2017-12-24' 
+slug: drawing-maps-in-r-with-ggmap-and-openstreetmap
+categories:
+  - maps
+tags:
+  - 'rstats'
+  - 'tidyverse'
+---
+
+## Introduction
+
+I have long been interested in drawing maps, and when I discovered how to do it in R, I have tried to add it to my statistical repertoire, including drawing things on maps. There are two packages that can be used to obtain maps and draw on them, `ggmap` which is based on Google Maps, and `OpenStreetMap` which is based on Open Street Maps (surprisingly enough). They have overlapping capabilities, which we will explore here.
+
+First, our packages:
+
+```{r}
+library(tidyverse)
+library(ggrepel)
+library(ggmap)
+library(OpenStreetMap)
+```
+
+## `ggmap`
+
+This package is perhaps easier to use, since it works along the lines of Google Maps, which many of us are familiar with. You specify a place to be at the centre of your map (in any of the ways Google Maps lets you do that), and also a zoom level. See [here](https://developers.google.com/maps/documentation/static-maps/intro) for more details. Typical zoom levels are 5 for a continent, 10 for a city, 15 for streets within a city. *The zoom must be an integer*. You might have to experiment to find the zoom level that works for you.
+
+I want to map the area of southwestern Ontario west from Toronto to the US border. I think Stratford, Ontario is about in the middle of that area:
+
+```{r}
+ontario=get_map("Stratford ON",zoom=8)
+ggmap(ontario)
+```
+
+The map *always comes out square*. My guess at the zoom came out about right. Note that the axis scales are degrees.
+
+The function `ggmap` plots the map as a `ggplot`, which lets you add things to it (as we see later).
+
+## `OpenStreetMap`
+
+Google Maps has a limit to the number of queries you are allowed to make of its static maps. It is perhaps better, therefore, to use an open service such as Open Street Maps. This is done using the package `OpenStreetMap`. The easiest way to get a map is to specify the latitude and longitude of its top left and bottom right points. In order to do *that*, there is a function `launchMapHelper` which interactively launches a Java map, which you can scroll (right-drag) and zoom (left-double-click) until you get the area you want. There is also a zoom controller at the top left. When you are happy, right-click at the top left corner of your map to get its lat and long (which appear at the bottom) and similarly at the bottom right, like this:
+
+![](/Screenshot_Ontario.png)
+
+Then use those top-left and bottom-right points to get an OSM map, thus:
+
+```{r}
+ontario2=openmap(c(44.37,-83.40),c(41.96,-78.38),type="osm")
+```
+
+There are two ways to plot it, as a base graph:
+
+```{r}
+plot(ontario2)
+```
+
+or as a `ggplot` graph:
+
+```{r}
+autoplot(ontario2)
+```
+
+I find that the `ggplot` display is less clear.
+
+The second of these shows that we have a different coordinate system now. According to 
+[this site](http://blog.fellstat.com/?cat=15), this is a "special Mercator projection",
+`r tufte::margin_note("Of which more later.")` and the way to put longitude and latitude on the axes is this:
+
+```{r}
+ontario3=openproj(ontario2)
+autoplot(ontario3)
+```
+
+But now the aspect ratio is messed up, since east-west is exaggerated. I think this is because one degree is the same on this map whether it is longitude or latitude. One latitude degree is always 60 nautical miles, but one degree of longitude is only 60 nautical miles at the equator, and at this latitude it is smaller by a factor of
+
+```{r}
+cos(43*pi/180)
+```
+
+I figured out what to do about this, which you'll see below.
+
+## Adding points to a map
+
+### Introduction
+
+What I find simplest is to convert the points I want displayed on the map to longitude and latitude, and then add them, `ggplot` style, as points, to a `ggplot` map. To do that, we first need to discuss this conversion.
+
+### Geocoding
+
+The conversion of location names to longitudes and latitudes is called "geocoding", and is handled by the function `geocode` in `ggmap`. This takes a vector of location names and returns a data frame containing their longitudes and latitudes. It is perhaps tidier instead to use `mutate_geocode` which takes a data frame and a column of locations to geocode, and then adds them to the input data frame. This is more in the `tidyverse` spirit, so I illustrate that here.
+
+[VIA Rail](http://www.viarail.ca/en/plan-your-trip/customize-your-train-schedule) runs two train services through this part of Ontario: from Toronto to Sarnia via Kitchener and London, and from Toronto to Windsor via Brantford and London. Let's add these routes to our maps. To do this, we need the lists of stations at which these trains stop, and then we need to geocode them. Here's the Toronto-Sarnia train:
+
+```{r, message=F, cache=T}
+stations=c("Toronto","Malton","Brampton","Georgetown","Guelph","Kitchener","Stratford","St Mary's","London","Strathroy","Wyoming","Sarnia")
+st=data.frame(stations)
+sarnia = st %>% mutate(lookup=str_c(stations," ON")) %>% 
+  mutate_geocode(lookup,source="dsk")
+sarnia
+```
+
+The process is that we first make a `data.frame` with one column, the names of the stations. (A `tibble` doesn't seem to work.) These names are duplicated elsewhere in the world, so to be sure we get the right ones, we create a column `lookup`  with "ON" added to the end of each name. Then we geocode *these*. When used in a pipeline, `mutate_geocode` takes a column to geocode. By default it uses Google to geocode, but by specifying this `source` you can use the [Data Science Toolkit](http://www.datasciencetoolkit.org/), which is open, instead. 
+
+The other route, to Windsor, goes the same way:`r tufte::margin_note("Well, it doesn't *literally* go the same way, but you see what I mean.")` 
+
+```{r, message=F, cache=T}
+stations=c("Toronto","Oakville","Aldershot","Brantford","Woodstock","Ingersoll","London","Glencoe","Chatham","Windsor")
+st=data.frame(stations)
+windsor = st %>% mutate(lookup=str_c(stations," ON")) %>% 
+  mutate_geocode(lookup,source="dsk")
+windsor
+```
+
+The smooth way to plot these is to make them into one data frame, identified by which service they are:
+
+```{r}
+via = bind_rows(Sarnia=sarnia,Windsor=windsor,.id="route")
+via
+```
+
+
+### Adding the points to the map
+
+Starting with the `ggmap` map: we first use `ggmap` to plot the map itself, and then we add points and lines to it in the usual way. The only problem is that we would normally specify the data frame and default aesthetics on the `ggplot` command, and there isn't one, so we have to specify them on the how-to-plot lines. Also, we seem to need to repeat them, since they appear not to get inherited. 
+`r tufte::margin_note("I think they only get inherited from a ggplot.")`
+
+```{r}
+ggmap(ontario) +
+  geom_point(data=via,aes(x=lon,y=lat,colour=route)) +
+  geom_line(data=via,aes(x=lon,y=lat,colour=route)) +
+  geom_text_repel(data=via,aes(x=lon,y=lat,label=stations,colour=route))
+```
+
+The warnings about missing points are because of Windsor, which is off the bottom left corner of the map. Toronto and London are named twice, once in red and once in blue, because they are on both routes.
+
+The `OpenStreetMap` map goes the same kind of way:
+
+```{r}
+autoplot(ontario3) + geom_point(data=via,aes(x=lon,y=lat,colour=route)) +
+  geom_line(data=via,aes(x=lon,y=lat,colour=route)) +
+  geom_text_repel(data=via,aes(x=lon,y=lat,label=stations,colour=route),size=2)
+```
+
+Once again, something to plot the map, and the usual `geom_point` etc to add points to the map.
+
+For labelling points on a `ggplot` I like `geom_text_repel` from package `ggrepel`. This labels points in such a way that they don't overplot each other. On the second (smaller) map, I made the label text smaller, by putting a `size` *outside* the `aes` (this is easy to forget).
+
+## Plotting points on an OpenStreetMap map with the proper aspect ratio
+
+I  mentioned above that the OpenStreetMap map with latitudes and longitudes is enlarged horizontally (because a latitude and longitude degree do not represent the same distance). I figure there are two approaches, of which we have seen the first:`r tufte::margin_note("This section added January 1, 2018.")`
+
+- plot the map with latitude and longitude coordinates and plot the points on that scale
+- plot the map with the original coordinates, and convert the points to that scale before plotting them.
+
+The second way preserves the aspect ratio of the map, but is a little fiddly otherwise. The function, in OpenStreetMap, is `projectMercator`. This takes a vector of latitudes and of longitudes, and returns a two-column `matrix` with columns called `x` and `y`. To add these to our plot, we have to re-constitute a data frame with the right things in it:
+
+```{r}
+mercator=projectMercator(via$lat,via$lon)
+mercator
+```
+
+If you compare this with the axis scales on `ontario2`, you'll see that these are the right kind of numbers. 
+
+
+Now we make a data frame with those points and the place names in it:`r tufte::margin_note("I can't help thinking that Via Mercator ought to be a street in Florence or somewhere.")`
+
+```{r}
+via_mercator = mercator %>% as.data.frame() %>% 
+  mutate(place=via$stations,
+         route=via$route)
+via_mercator
+```
+
+and then add *these* points to the map:
+
+```{r}
+autoplot(ontario2)+
+  geom_point(data=via_mercator,aes(x=x,y=y,colour=route))+
+  geom_line(data=via_mercator,aes(x=x,y=y,colour=route))+
+  geom_text_repel(data=via_mercator,aes(x=x,y=y,label=place,colour=route))+
+  scale_x_continuous(breaks=NULL)+
+  scale_y_continuous(breaks=NULL)
+```
+
+The axis scales are now more or less meaningless (unless you have experience with reading this scale), so I got rid of them (the last two lines of the code).

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Readr and summary</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/03/21/readr-and-summary/">Readr and summary</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Mar 21, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;7 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="packages" class="section level2">
+<h2>Packages</h2>
+<p>In this post I use these packages (the last one at the end):</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(skimr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;skimr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
+## 
+##     contains, ends_with, everything, matches, num_range, one_of,
+##     starts_with</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The <code>readr</code> file-reading functions read text as text without turning it into factors. This is a big plus for those of us who remember <code>read.table</code> and <code>stringsAsFactors=F</code>, but sometimes having categorical variables as text is <em>not</em> what we want. Here, we learn a batch-conversion method that will enable us to make text temporarily into factors again and make <code>summary</code> and <code>skimr::skim</code> more helpful.</p>
+<p>To illustrate, I have data on bridges in Pittsburgh, Pennsylvania. The data frame contains a lot of categorical variables, and some missing values written as <code>?</code>, which we’ll turn into proper missing values:</p>
+<pre class="r"><code>bridges=read_csv(&quot;http://www.utsc.utoronto.ca/~butler/d29/bridges.csv&quot;,na=&quot;?&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   id = col_character(),
+##   river = col_character(),
+##   location = col_double(),
+##   erected = col_character(),
+##   purpose = col_character(),
+##   length = col_character(),
+##   lanes = col_integer(),
+##   clear_g = col_character(),
+##   t_d = col_character(),
+##   material = col_character(),
+##   span = col_character(),
+##   rel_l = col_character(),
+##   type = col_character()
+## )</code></pre>
+<pre class="r"><code>bridges</code></pre>
+<pre><code>## # A tibble: 108 x 13
+##    id    river location erected purpose  length lanes clear_g t_d    
+##    &lt;chr&gt; &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;  &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;  
+##  1 E1    M         3.00 CRAFTS  HIGHWAY  &lt;NA&gt;       2 N       THROUGH
+##  2 E2    A        25.0  CRAFTS  HIGHWAY  MEDIUM     2 N       THROUGH
+##  3 E3    A        39.0  CRAFTS  AQUEDUCT &lt;NA&gt;       1 N       THROUGH
+##  4 E5    A        29.0  CRAFTS  HIGHWAY  MEDIUM     2 N       THROUGH
+##  5 E6    M        23.0  CRAFTS  HIGHWAY  &lt;NA&gt;       2 N       THROUGH
+##  6 E7    A        27.0  CRAFTS  HIGHWAY  SHORT      2 N       THROUGH
+##  7 E8    A        28.0  CRAFTS  AQUEDUCT MEDIUM     1 N       THROUGH
+##  8 E9    M         3.00 CRAFTS  HIGHWAY  MEDIUM     2 N       THROUGH
+##  9 E10   A        39.0  CRAFTS  AQUEDUCT &lt;NA&gt;       1 N       DECK   
+## 10 E11   A        29.0  CRAFTS  HIGHWAY  MEDIUM     2 N       THROUGH
+## # ... with 98 more rows, and 4 more variables: material &lt;chr&gt;, span &lt;chr&gt;,
+## #   rel_l &lt;chr&gt;, type &lt;chr&gt;</code></pre>
+<p>These are correctly read in as text.</p>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>The old workhorse function for summarizing a data frame is <code>summary</code>. I’m running it like this for consistency with what comes later.</p>
+<pre class="r"><code>bridges %&gt;% summary()</code></pre>
+<pre><code>##       id               river              location       erected         
+##  Length:108         Length:108         Min.   : 1.00   Length:108        
+##  Class :character   Class :character   1st Qu.:15.50   Class :character  
+##  Mode  :character   Mode  :character   Median :27.00   Mode  :character  
+##                                        Mean   :25.98                     
+##                                        3rd Qu.:37.50                     
+##                                        Max.   :52.00                     
+##                                        NA&#39;s   :1                         
+##    purpose             length              lanes        clear_g         
+##  Length:108         Length:108         Min.   :1.00   Length:108        
+##  Class :character   Class :character   1st Qu.:2.00   Class :character  
+##  Mode  :character   Mode  :character   Median :2.00   Mode  :character  
+##                                        Mean   :2.63                     
+##                                        3rd Qu.:4.00                     
+##                                        Max.   :6.00                     
+##                                        NA&#39;s   :16                       
+##      t_d              material             span          
+##  Length:108         Length:108         Length:108        
+##  Class :character   Class :character   Class :character  
+##  Mode  :character   Mode  :character   Mode  :character  
+##                                                          
+##                                                          
+##                                                          
+##                                                          
+##     rel_l               type          
+##  Length:108         Length:108        
+##  Class :character   Class :character  
+##  Mode  :character   Mode  :character  
+##                                       
+##                                       
+##                                       
+## </code></pre>
+<p>The problem is that <code>summary</code> expects text to have been turned into factors. All it does with text columns is to count how many values there are, when it would be nice to handle text columns the way it handles factors.</p>
+</div>
+<div id="temporarily-converting-text-to-factor" class="section level2">
+<h2>Temporarily converting text to factor</h2>
+<p>Wouldn’t it be nice if we could temporarily convert text columns into factors, for the purpose of passing them into <code>summary</code>, and then forget that we had ever done so? Well, we can. <code>dplyr</code> has <code>mutate_if</code>, which runs a function on all the columns that satisfy a condition, such as being text. Here, the function we want to run is <code>as.factor</code> to turn the text columns temporarily into factors:</p>
+<pre class="r"><code>bridges %&gt;% mutate_if(is.character,as.factor) %&gt;% summary()</code></pre>
+<pre><code>##        id      river     location         erected       purpose  
+##  E1     :  1   A:49   Min.   : 1.00   CRAFTS  :18   AQUEDUCT: 4  
+##  E10    :  1   M:41   1st Qu.:15.50   EMERGING:15   HIGHWAY :71  
+##  E100   :  1   O:15   Median :27.00   MATURE  :54   RR      :32  
+##  E101   :  1   Y: 3   Mean   :25.98   MODERN  :21   WALK    : 1  
+##  E102   :  1          3rd Qu.:37.50                              
+##  E103   :  1          Max.   :52.00                              
+##  (Other):102          NA&#39;s   :1                                  
+##     length       lanes      clear_g        t_d      material      span   
+##  LONG  :21   Min.   :1.00   G   :80   DECK   :15   IRON :11   LONG  :30  
+##  MEDIUM:48   1st Qu.:2.00   N   :26   THROUGH:87   STEEL:79   MEDIUM:53  
+##  SHORT :12   Median :2.00   NA&#39;s: 2   NA&#39;s   : 6   WOOD :16   SHORT : 9  
+##  NA&#39;s  :27   Mean   :2.63                          NA&#39;s : 2   NA&#39;s  :16  
+##              3rd Qu.:4.00                                                
+##              Max.   :6.00                                                
+##              NA&#39;s   :16                                                  
+##   rel_l          type   
+##  F   :58   SIMPLE-T:44  
+##  S   :30   WOOD    :16  
+##  S-F :15   ARCH    :13  
+##  NA&#39;s: 5   CANTILEV:11  
+##            SUSPEN  :11  
+##            (Other) :11  
+##            NA&#39;s    : 2</code></pre>
+<p>and now, for the categorical variables, we see counts of categories and of missing values.</p>
+</div>
+<div id="skimr" class="section level2">
+<h2>skimr</h2>
+<p><code>skimr</code> is a package that does slicker summaries of data frames and the variables in them. It does the same thing with text variables as <code>summary</code> does:</p>
+<pre class="r"><code>bridges %&gt;% skim()</code></pre>
+<pre><code>## Skim summary statistics
+##  n obs: 108 
+##  n variables: 13 
+## 
+## Variable type: character 
+##  variable missing complete   n min max empty n_unique
+##   clear_g       2      106 108   1   1     0        2
+##   erected       0      108 108   6   8     0        4
+##        id       0      108 108   2   5     0      108
+##    length      27       81 108   4   6     0        3
+##  material       2      106 108   4   5     0        3
+##   purpose       0      108 108   2   8     0        4
+##     rel_l       5      103 108   1   3     0        3
+##     river       0      108 108   1   1     0        4
+##      span      16       92 108   4   6     0        3
+##       t_d       6      102 108   4   7     0        2
+##      type       2      106 108   3   8     0        7
+## 
+## Variable type: integer 
+##  variable missing complete   n mean   sd p0 p25 median p75 p100     hist
+##     lanes      16       92 108 2.63 1.16  1   2      2   4    6 ▁▇▁▁▃▁▁▁
+## 
+## Variable type: numeric 
+##  variable missing complete   n  mean    sd p0  p25 median  p75 p100
+##  location       1      107 108 25.98 13.67  1 15.5     27 37.5   52
+##      hist
+##  ▆▃▅▆▇▇▅▃</code></pre>
+<p>except that at least this time we get counts of missing values and of the number of unique values. Note that numerical variables have an inline histogram for quick assessment of the distribution.</p>
+<p>The same trick as above will give us better summaries of the categorical variables:</p>
+<pre class="r"><code>bridges %&gt;% mutate_if(is.character,as.factor) %&gt;% skim()</code></pre>
+<pre><code>## Skim summary statistics
+##  n obs: 108 
+##  n variables: 13 
+## 
+## Variable type: factor 
+##  variable missing complete   n n_unique                         top_counts
+##   clear_g       2      106 108        2                G: 80, N: 26, NA: 2
+##   erected       0      108 108        4 MAT: 54, MOD: 21, CRA: 18, EME: 15
+##        id       0      108 108      108      E1: 1, E10: 1, E10: 1, E10: 1
+##    length      27       81 108        3  MED: 48, NA: 27, LON: 21, SHO: 12
+##  material       2      106 108        3   STE: 79, WOO: 16, IRO: 11, NA: 2
+##   purpose       0      108 108        4    HIG: 71, RR: 32, AQU: 4, WAL: 1
+##     rel_l       5      103 108        3       F: 58, S: 30, S-F: 15, NA: 5
+##     river       0      108 108        4          A: 49, M: 41, O: 15, Y: 3
+##      span      16       92 108        3   MED: 53, LON: 30, NA: 16, SHO: 9
+##       t_d       6      102 108        2            THR: 87, DEC: 15, NA: 6
+##      type       2      106 108        7 SIM: 44, WOO: 16, ARC: 13, CAN: 11
+##  ordered
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+##    FALSE
+## 
+## Variable type: integer 
+##  variable missing complete   n mean   sd p0 p25 median p75 p100     hist
+##     lanes      16       92 108 2.63 1.16  1   2      2   4    6 ▁▇▁▁▃▁▁▁
+## 
+## Variable type: numeric 
+##  variable missing complete   n  mean    sd p0  p25 median  p75 p100
+##  location       1      107 108 25.98 13.67  1 15.5     27 37.5   52
+##      hist
+##  ▆▃▅▆▇▇▅▃</code></pre>
+<p>This also shows us which categories (names abbreviated) are the most common. For example, in <code>material</code>, most of the bridges are made of steel, with only a few (presumably old) bridges being made of wood or iron.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

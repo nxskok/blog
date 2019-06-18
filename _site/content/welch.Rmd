@@ -1,0 +1,9 @@
+---
+title: Welch analysis of variance
+author: ~
+date: '2017-05-19'
+slug: ''
+categories: []
+tags: []
+---
+

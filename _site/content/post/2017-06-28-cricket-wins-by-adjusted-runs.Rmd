@@ -1,0 +1,151 @@
+---
+title: 'Cricket: wins by adjusted runs'
+author: Ken
+date: '2017-06-28'
+slug: cricket-wins-by-adjusted-runs
+categories:
+  - cricket
+tags: []
+---
+
+In cricket, there are two ways to win a one-day game: by runs, if you bat first and score more runs than the other guys, or by wickets, if you bat second and score more runs than the other guys: at the moment where the second team has more runs, the game ends, and the result is given as "won by 6 wickets with 12 balls remaining", or similar.
+
+Soccer has a tiebreaker "goal difference": when two teams have the same number of points, you subtract the goals conceded from the goals scored for each team, and the team with the bigger number is placed higher. Cricket doesn't have anything like that because wins by runs and wins by wickets are incommensurable, and so cricket has had to resort to ideas like the [net run rate](https://en.wikipedia.org/wiki/Net_run_rate), which is not completely transparent.
+
+In [this post](https://nxskok.github.io/blog/2017/06/01/carter-and-guthrie/) and [this one](https://nxskok.github.io/blog/2017/06/01/carter-and-guthrie-part-2-model-building/), I talked about a cricket modelling procedure due to Carter and Guthrie. This can be used to predict the number of runs that the team batting second would have scored in their remaining overs, had they batted them out, and therefore converts a win by wickets into a win by runs. By converting all results into a win by adjusted runs in this fashion, ties can be broken by the much simpler idea of run difference, which is much easier for spectators to understand.
+
+How to make this work? In my model-building, I created two data frames, one for 50-over matches and one for Twenty20. These contained the probability of scoring $r$ runs or fewer from $b$ balls with $w$ wickets left. Let's take a look at them:
+
+```{r}
+library(tidyverse)
+tb_odi=read_rds("~/odi.rds")
+tb_t20=read_rds("~/t20.rds")
+tb_odi %>% head(10)
+```
+
+The first three columns are numbers of runs, balls and wickets, and the last column is the probability of scoring that many runs or fewer. For example, with one ball and two wickets left, this is the cumulative distribution of the number of runs scored, in a 50-over game:
+
+```{r}
+tb_odi %>% filter(bb==1, ww==2) %>%  arrange(rr) %>% head(10)
+```
+
+In a Twenty20 game, the numbers are (slightly) different, but the idea is the same:
+
+```{r}
+tb_t20 %>% filter(bb==1, ww==2) %>%  arrange(rr) %>% head(10)
+```
+
+Even though only six runs can be scored from one ball, there is a tiny probability of getting eight runs in total, because there could be two no-balls or wides bowled first followed by a six, the no-balls or wides requiring another ball to be bowled. (In practice, a bowler defending an eight-run lead off the last ball would be extra-careful to bowl a fair ball, even at the expense of giving up a boundary, but that's not part of the Carter-Guthrie model.)
+
+Using these numbers (for a 50-over game), if the team batting second is three runs behind before the last ball (with two wickets left), they will lose if they score two runs or less, which happens with probability 0.865, they will tie if they score exactly three, with probability $0.876-0.865=0.011$, and they will win otherwise, with probability $1-0.865-0.011=0.124$. As I mentioned in an earlier post, the probability of the second team winning can be kept track of during the match, so that spectators can know where the second team stands. 
+
+In addition, if an otherwise uninterrupted match is terminated by rain during the second team's innings, the second team can be declared the winner if they have a probability greater than 0.5 of winning the match from the position they are at. In the (admittedly unlikely) event that rain terminates the match with one ball and two wickets left, with the second team needing four runs to win, the first team would be declared the winner because the probability of the second team winning is 0.124, less than 0.5.
+
+Another question that might be asked is "how many runs do you estimate the second team will score off their last ball"? One possibility is to calculate the mean number of runs, which would be done in the standard way from a probability distribution. I think it is better to use the *median* number of runs, because of the intimate connection with the probability of winning being greater or less than 0.5, which will be true if and only if the median number of runs is greater or less than the runs required. (Using the mean invites the logical difficulty that the probability of winning is less than 0.5, but the mean number of runs is greater than the runs required.) From a cumulative distribution such as the ones shown here, the median number of runs is the value of `rr` where the cumulative probability `F` first passes 0.5. In both of the cumulative distributions shown above, the median number of runs is 1.
+
+This suggests a way of estimating how many more runs a team that wins by wickets might have scored, had they batted out their overs: get the cumulative distribution for the number of balls and wickets remaining at the end, find its median, and add that number of runs onto the winning team's total. 
+
+Let's take some examples from the 2017 Champions Trophy, a 50-over competition. I restrict myself to matches uninterrupted by rain (and there was rather a lot of rain):
+
+England (308-2) beat Bangladesh (305-6) by 8 wickets with 16 balls remaining:
+
+```{r}
+tb_odi %>% filter(ww==8, bb==16) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
+```
+
+We estimate that England would have scored a median of 32 runs in the remaining 16 balls (a lot, since they had a lot of wickets left), and therefore the adjusted winning margin is $308+32-305=35$ runs.
+
+Sri Lanka (322-3) beat India (321-6) by 7 wickets with 8 balls remaining:
+
+```{r}
+tb_odi %>% filter(ww==7, bb==8) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
+```
+
+Median 15, adjusted winning margin is $322+15-321=16$ runs.
+
+And a rather more lopsided one:
+
+India (193-2) beat South Africa (191) by 8 wickets with 72 balls remaining:
+
+```{r}
+tb_odi %>% filter(ww==8, bb==72) %>% arrange(rr) %>% filter(between(F,0.4,0.6))
+```
+
+Median 121 runs, adjusted winning margin $193+121-191=123$ runs.
+
+This, evidently, could be made into a function. The major ingredient is a function to return the median number of runs from the number of wickets and balls left:
+
+```{r}
+median_runs=function(w,b) {
+  if (w==0) return(0)
+  if (b==0) return(0)
+  tb_odi %>% filter(ww==w, bb==b) %>% arrange(rr) %>% 
+    filter(F>0.5) %>% slice(1) %>% pull(rr)
+}
+```
+
+Does that work? Try again with our examples:
+
+```{r}
+median_runs(8,16)
+median_runs(7,8)
+median_runs(8,72)
+```
+
+Check. So now we can calculate the adjusted winning margin from the team scores directly:
+
+```{r}
+adj_margin=function(first_runs,second_runs,second_wickets,balls_left) {
+  m=median_runs(10-second_wickets,balls_left)
+  second_runs+m-first_runs
+}
+```
+
+and to test:
+
+```{r}
+adj_margin(305,308,2,16)
+adj_margin(321,322,3,8)
+adj_margin(191,193,2,72)
+```
+
+A bonus is that this function also works when the first team wins, since the second team is either out of balls or out of wickets. England (310) beat New Zealand (223 all out with 5 overs and 3 balls left) by 87 runs:
+
+```{r}
+adj_margin(310,223,10,5*6+3)
+```
+
+This allows calculation of adjusted winning margin for uninterrupted matches. A simple way of handling matches that were shortened by rain is to use the Duckworth-Lewis adjusted results. If the result given by D-L is a win by runs, that stands; if it is a win by wickets on attaining an adjusted target, we act as if the first team scored one less than the adjusted target. 
+
+To illustrate, from another competition, the Royal London Cup: Nottinghamshire scored 273 in 50 overs, and Worcestershire were set a revised target of 168 from 22 overs, which they reached, scoring 169/5 in 20 overs, winning with 12 balls to spare. We pretend that Nottinghamshire scored 167:
+
+```{r}
+adj_margin(167,169,5,12)
+```
+
+The adjusted winning margin is 20 runs.
+
+To illustrate that adjusted runs can be used to make a "run difference" that is an easier-to-understand version of net run rate, let's look at Group B of the 2017 Champions Trophy, where first and third places were decided by net run rate. See [here](http://www.espncricinfo.com/icc-champions-trophy-2017/engine/series/1022345.html) for match details:
+
+- South Africa - Sri Lanka: + 96 runs
+- India - Pakistan: + 124 runs
+- Pakistan - South Africa: + 19 runs (via D/L which we ignore)
+- India - Sri Lanka: -7 wickets with 8 balls left; -16 runs (calculated earlier)
+- South Africa - India: -8 wickets with 72 balls left; -123 runs (calculated earlier)
+- Sri Lanka - Pakistan: -3 wickets with 31 balls left; -24 runs (below)
+
+```{r}
+adj_margin(236,237,7,31)
+```
+
+The points table with run differences is as below. Note that the run differences add up to zero. India top the table owing to their two big wins and one narrow defeat. 
+
+| Team         | Won | Lost |  Run difference|
+|:-------------|:---:|:----:|---------------:|
+| India        | 2   | 1    | 124-16+123=231 |
+| Pakistan     | 2   | 1    | -124+19+24=-81 |
+| South Africa | 1   | 2    | 96-19-123=-46  |
+| Sri Lanka    | 1   | 2    | -96+16-24=-104 |
+
+
+The rank order is the same as for net run rate, in this case, but in my opinion it is easier to see why the run differences came out as they did.

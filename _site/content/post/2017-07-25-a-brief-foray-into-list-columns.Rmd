@@ -1,0 +1,222 @@
+---
+title: A brief foray into list-columns
+author: Ken
+date: '2017-07-25'
+slug: a-brief-foray-into-list-columns
+categories:
+  - R
+  - statistics
+tags:
+  - 'rstats'
+---
+
+## Introduction
+
+Let's suppose we are trying to find the *median* of a bunch of binomial distributions. 
+`r tufte::margin_note("This is a simplified version of an actual problem I had, but that one fails for some unconnected (and thus far unknown) reason, so I don't want to show you that.")`
+
+To be specific, let's suppose we have these values of $n$:
+
+```{r}
+n=c(10,15,20)
+```
+
+and these values of $p$:
+
+```{r}
+p=c(0.25,0.3,0.42)
+```
+
+We'll need the tidyverse, as usual:
+
+```{r}
+library(tidyverse)
+```
+
+This turned out to be rather less brief than I thought.
+
+## Finding the mean rather than the median
+
+If it were the mean we wanted, we could just use the fact that the mean is $np$ and do this:
+
+```{r}
+tibble(n=n,p=p) %>% 
+  mutate(mean=n*p)
+```
+
+and then we would be done.
+
+## Finding the median
+
+The median is more difficult, though, because it doesn't have a nice formula. The only way to get hold of it is to look at the whole probability distribution. The mathematical definition of the median of a random variable $X$ is a value $m$ such that $P(X \le m) \ge 0.5$ and $P(X \ge m) \ge 0.5$. The way this definition works suggests that looking at the cumulative distribution would be a good idea. We are actually going to simplify this definition and say that the median $m$ is the *smallest* m such that $P(X \le m)\ge 0.5$.`r tufte::margin_note("This definition is equivalent except in the pesky case where one of the cumulative probabilities is *exactly* 0.5, in which case two neighbouring values both have equally good claims to be the median.")`
+
+There are three steps that we need to think about:
+
+1. getting a data frame of values and cumulative probabilities for a particular $n$ and $p$
+1. getting the median from that data frame.
+1. putting these two together to get the medians from all of the values of $n$ and $p$.
+
+For the first  step, we need to use `pbinom`, but we'll need to embellish it a bit. Here's how it works, for a binomial with $n=4$ and $p=0.3$:
+
+```{r}
+pbinom(0:4,4,0.3)
+```
+
+These are the probabilities of 0, 1, 2, 3, 4 successes or less, so let's make a function that takes an input (scalar) $n$ and $p$ and produces said data frame:
+
+```{r}
+binom_table=function(n,p) {
+  x=0:n
+  tibble(x=x,prob=pbinom(x,n,p))
+}
+```
+and test it:
+
+```{r}
+dd=binom_table(4,0.3)
+dd
+```
+
+That looks all right.
+
+Now, what is the median of that?`r tufte::margin_note("You are old, said the youth, as I mentioned before, and have grown most uncommonly fat. Yet you turned a back-somersault in at the door. Pray what was the reason of that?")`
+The first of those probabilities to be 0.5 or bigger is 0.6517, which goes with $x=1$, so the median is 1.
+
+Thus we can get the median from a data frame like `dd` by doing a `filter` to pick out all the rows with `prob` at least 0.5, followed by a `slice(1)` to pick out the first row on which it happens, then a `pull` to extract the value of `x` going with that first probability at least 0.5:
+
+```{r}
+dist_median=function(d) {
+  d %>% filter(prob>=0.5) %>% slice(1) %>% pull(x)
+}
+```
+
+For our example that gives
+
+```{r}
+dist_median(dd)
+```
+
+Correct.
+
+## Putting it all together
+
+So now we can calculate a probability distribution from (scalar) values for $n$ and $p$, and we can calculate a median from that probability distribution. But we have three $n$'s:
+
+```{r}
+n
+```
+
+and three $p$'s, in parallel:
+
+```{r}
+p
+```
+
+Can we find the medians for all three distributions in one shot? "For each" in the `tidyverse` suggests one of the flavours of `map`: "for each $n$ and $p$ in parallel, run `binom_table` for that $n$ and $p$, and then gather up the results into one data frame". This is one way to do that:`r tufte::margin_note("It's map2 because it's for each of $n$ *and* $p$ in parallel, rather than something like all possible combinations of $n$ and $p$.")`
+
+```{r}
+map2(n,p,binom_table)
+```
+
+which produces a list, or we can glue all the results together into a data frame:
+
+```{r}
+map2(n,p,binom_table) %>% bind_rows(.id="which") %>% 
+  print(n=20)
+```
+
+This is not bad, but you might ask yourself what would happen if you put the `map2` into a `mutate`:`r tufte::margin_note("Expecting it to fail.")`
+
+```{r}
+tibble(n=n,p=p) %>% mutate(dist=map2(n,p,binom_table))
+```
+
+This came out with unexpected eloquence. The `dist` column is really a list, but the elements of `dist`, which are actually data frames, are displayed as entries in the column where you would expect to see numbers. This also maintains the connection of which probability distribution data frame goes with which $(n,p)$ pair. `dist` is known in the trade as a "list-column".
+
+So now we can try for something even more elegant. Can we work out the median for each one of those probability distributions? We have a function `dist_median` that will produce the median, as a number, from a distribution as a data frame, and now we want to run it for each of the distributions in the list-column. Since the median is a single number, we give `map_dbl` a shot:
+
+```{r}
+tibble(n=n,p=p) %>% 
+  mutate(dist=map2(n,p,binom_table)) %>% 
+  mutate(median=map_dbl(dist,dist_median))
+```
+
+and, lo and behold, it works! We can even calculate the means as well and compare them with the medians: 
+
+```{r}
+tibble(n=n,p=p) %>% mutate(dist=map2(n,p,binom_table)) %>% 
+  mutate(median=map_dbl(dist,dist_median)) %>%
+  mutate(mean=n*p)
+```
+
+For all three of these distributions, $p<0.5$, so they are all right-skewed, and therefore we'd expect the mean to be bigger than the median. And, here, so it proves.
+
+## Onward and outward
+
+If you actually want to see what's in those `dist` data frames, you do so by piping this into `unnest()`:
+
+```{r}
+tibble(n=n,p=p) %>% mutate(dist=map2(n,p,binom_table)) %>% 
+  mutate(median=map_dbl(dist,dist_median)) %>%
+  mutate(mean=n*p) %>% unnest %>% print(n=30)
+```
+
+Each of those data frames in `dist` has a column `x` and a column `prob`, which by "exploding" the list-column you now see. The other columns have their values carried along, repeated as necessary. The last few rows shown are the first few rows of the distribution for $n=20, p=0.42$. 
+
+The technique is actually very general, because  a list-column can be a list of anything, such as a list of models. Let's look at another example. I made up some data on two variables `x` and `y` for each of two groups `red` and `blue`, and we want to run a regression of `y` on `x` for each group. 
+
+Read in the data first:
+
+```{r}
+d=read_delim("twogroups.txt"," ")
+d
+```
+
+Now we need a function that will regress `y` on `x` for any data frame that has both those variables:
+
+```{r}
+regr=function(dd) {
+  lm(y~x,data=dd)
+}
+```
+
+There are two groups, so we need to "collapse" our data frame to contain only two rows, one for each subgroup that we are going to model. This is the opposite of `unnest`, which predictably goes by the name `nest`. The technique is to use `group_by` on whatever you want to keep, and *then* nest:
+
+```{r}
+d %>% group_by(group) %>% nest()
+```
+
+We have gained a new list-column `data` that contains the `x` and `y` values for each of the two groups. So now we can say, "for each of the mini-data-frames in `data`, regress `y` on `x`":
+
+```{r}
+d %>% group_by(group) %>% nest() %>% 
+  mutate(models=map(data,regr))
+```
+
+Next, we might want to extract something from each model, like the R-squared value. A handy way to do this is `glance` from `broom`, which produces a one-line summary for each model:`r tufte::margin_note("For each of the models, run glance on that model.")`
+
+```{r}
+library(broom)
+d %>% group_by(group) %>% nest() %>% 
+  mutate(models=map(data,regr)) %>% 
+  mutate(glance=map(models,glance))
+```
+
+This is not quite right, though, because all the information in `glance` is wrapped up in the column of that name. So we need unnest just that column:
+
+```{r}
+d %>% group_by(group) %>% nest() %>% 
+  mutate(models=map(data,regr)) %>% 
+  mutate(glance=map(models,glance)) %>% 
+  unnest(glance)
+```
+
+and now all the model statistics are there in separate columns:
+
+```{r}
+d %>% group_by(group) %>% nest() %>% 
+  mutate(models=map(data,regr)) %>% 
+  mutate(glance=map(models,glance)) %>% 
+  unnest(glance) %>% 
+  select(group,r.squared)
+```

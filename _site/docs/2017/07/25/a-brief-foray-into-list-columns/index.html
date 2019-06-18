@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - A brief foray into list-columns</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/07/25/a-brief-foray-into-list-columns/">A brief foray into list-columns</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jul 25, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;12 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Let’s suppose we are trying to find the <em>median</em> of a bunch of binomial distributions. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This is a simplified version of an actual problem I had, but that one fails for some unconnected (and thus far unknown) reason, so I don’t want to show you that.</span></p>
+<p>To be specific, let’s suppose we have these values of <span class="math inline">\(n\)</span>:</p>
+<pre class="r"><code>n=c(10,15,20)</code></pre>
+<p>and these values of <span class="math inline">\(p\)</span>:</p>
+<pre class="r"><code>p=c(0.25,0.3,0.42)</code></pre>
+<p>We’ll need the tidyverse, as usual:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<p>This turned out to be rather less brief than I thought.</p>
+</div>
+<div id="finding-the-mean-rather-than-the-median" class="section level2">
+<h2>Finding the mean rather than the median</h2>
+<p>If it were the mean we wanted, we could just use the fact that the mean is <span class="math inline">\(np\)</span> and do this:</p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% 
+  mutate(mean=n*p)</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##       n     p  mean
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1    10  0.25   2.5
+## 2    15  0.30   4.5
+## 3    20  0.42   8.4</code></pre>
+<p>and then we would be done.</p>
+</div>
+<div id="finding-the-median" class="section level2">
+<h2>Finding the median</h2>
+<p>The median is more difficult, though, because it doesn’t have a nice formula. The only way to get hold of it is to look at the whole probability distribution. The mathematical definition of the median of a random variable <span class="math inline">\(X\)</span> is a value <span class="math inline">\(m\)</span> such that <span class="math inline">\(P(X \le m) \ge 0.5\)</span> and <span class="math inline">\(P(X \ge m) \ge 0.5\)</span>. The way this definition works suggests that looking at the cumulative distribution would be a good idea. We are actually going to simplify this definition and say that the median <span class="math inline">\(m\)</span> is the <em>smallest</em> m such that <span class="math inline">\(P(X \le m)\ge 0.5\)</span>.<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This definition is equivalent except in the pesky case where one of the cumulative probabilities is <em>exactly</em> 0.5, in which case two neighbouring values both have equally good claims to be the median.</span></p>
+<p>There are three steps that we need to think about:</p>
+<ol style="list-style-type: decimal">
+<li>getting a data frame of values and cumulative probabilities for a particular <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span></li>
+<li>getting the median from that data frame.</li>
+<li>putting these two together to get the medians from all of the values of <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>.</li>
+</ol>
+<p>For the first step, we need to use <code>pbinom</code>, but we’ll need to embellish it a bit. Here’s how it works, for a binomial with <span class="math inline">\(n=4\)</span> and <span class="math inline">\(p=0.3\)</span>:</p>
+<pre class="r"><code>pbinom(0:4,4,0.3)</code></pre>
+<pre><code>## [1] 0.2401 0.6517 0.9163 0.9919 1.0000</code></pre>
+<p>These are the probabilities of 0, 1, 2, 3, 4 successes or less, so let’s make a function that takes an input (scalar) <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> and produces said data frame:</p>
+<pre class="r"><code>binom_table=function(n,p) {
+  x=0:n
+  tibble(x=x,prob=pbinom(x,n,p))
+}</code></pre>
+<p>and test it:</p>
+<pre class="r"><code>dd=binom_table(4,0.3)
+dd</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##       x   prob
+##   &lt;int&gt;  &lt;dbl&gt;
+## 1     0 0.2401
+## 2     1 0.6517
+## 3     2 0.9163
+## 4     3 0.9919
+## 5     4 1.0000</code></pre>
+<p>That looks all right.</p>
+<p>Now, what is the median of that?<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">You are old, said the youth, as I mentioned before, and have grown most uncommonly fat. Yet you turned a back-somersault in at the door. Pray what was the reason of that?</span> The first of those probabilities to be 0.5 or bigger is 0.6517, which goes with <span class="math inline">\(x=1\)</span>, so the median is 1.</p>
+<p>Thus we can get the median from a data frame like <code>dd</code> by doing a <code>filter</code> to pick out all the rows with <code>prob</code> at least 0.5, followed by a <code>slice(1)</code> to pick out the first row on which it happens, then a <code>pull</code> to extract the value of <code>x</code> going with that first probability at least 0.5:</p>
+<pre class="r"><code>dist_median=function(d) {
+  d %&gt;% filter(prob&gt;=0.5) %&gt;% slice(1) %&gt;% pull(x)
+}</code></pre>
+<p>For our example that gives</p>
+<pre class="r"><code>dist_median(dd)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<p>Correct.</p>
+</div>
+<div id="putting-it-all-together" class="section level2">
+<h2>Putting it all together</h2>
+<p>So now we can calculate a probability distribution from (scalar) values for <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>, and we can calculate a median from that probability distribution. But we have three <span class="math inline">\(n\)</span>’s:</p>
+<pre class="r"><code>n</code></pre>
+<pre><code>## [1] 10 15 20</code></pre>
+<p>and three <span class="math inline">\(p\)</span>’s, in parallel:</p>
+<pre class="r"><code>p</code></pre>
+<pre><code>## [1] 0.25 0.30 0.42</code></pre>
+<p>Can we find the medians for all three distributions in one shot? “For each” in the <code>tidyverse</code> suggests one of the flavours of <code>map</code>: “for each <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span> in parallel, run <code>binom_table</code> for that <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>, and then gather up the results into one data frame”. This is one way to do that:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">It’s map2 because it’s for each of <span class="math inline">\(n\)</span> <em>and</em> <span class="math inline">\(p\)</span> in parallel, rather than something like all possible combinations of <span class="math inline">\(n\)</span> and <span class="math inline">\(p\)</span>.</span></p>
+<pre class="r"><code>map2(n,p,binom_table)</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 11 x 2
+##        x       prob
+##    &lt;int&gt;      &lt;dbl&gt;
+##  1     0 0.05631351
+##  2     1 0.24402523
+##  3     2 0.52559280
+##  4     3 0.77587509
+##  5     4 0.92187309
+##  6     5 0.98027229
+##  7     6 0.99649429
+##  8     7 0.99958420
+##  9     8 0.99997044
+## 10     9 0.99999905
+## 11    10 1.00000000
+## 
+## [[2]]
+## # A tibble: 16 x 2
+##        x        prob
+##    &lt;int&gt;       &lt;dbl&gt;
+##  1     0 0.004747562
+##  2     1 0.035267600
+##  3     2 0.126827715
+##  4     3 0.296867928
+##  5     4 0.515491059
+##  6     5 0.721621440
+##  7     6 0.868857427
+##  8     7 0.949987460
+##  9     8 0.984757474
+## 10     9 0.996347479
+## 11    10 0.999327766
+## 12    11 0.999908341
+## 13    12 0.999991281
+## 14    13 0.999999483
+## 15    14 0.999999986
+## 16    15 1.000000000
+## 
+## [[3]]
+## # A tibble: 21 x 2
+##        x         prob
+##    &lt;int&gt;        &lt;dbl&gt;
+##  1     0 1.855923e-05
+##  2     1 2.873480e-04
+##  3     2 2.136430e-03
+##  4     3 1.017037e-02
+##  5     4 3.489551e-02
+##  6     5 9.218964e-02
+##  7     6 1.959118e-01
+##  8     7 3.461300e-01
+##  9     8 5.228955e-01
+## 10     9 6.935656e-01
+## # ... with 11 more rows</code></pre>
+<p>which produces a list, or we can glue all the results together into a data frame:</p>
+<pre class="r"><code>map2(n,p,binom_table) %&gt;% bind_rows(.id=&quot;which&quot;) %&gt;% 
+  print(n=20)</code></pre>
+<pre><code>## # A tibble: 48 x 3
+##    which     x        prob
+##    &lt;chr&gt; &lt;int&gt;       &lt;dbl&gt;
+##  1     1     0 0.056313515
+##  2     1     1 0.244025230
+##  3     1     2 0.525592804
+##  4     1     3 0.775875092
+##  5     1     4 0.921873093
+##  6     1     5 0.980272293
+##  7     1     6 0.996494293
+##  8     1     7 0.999584198
+##  9     1     8 0.999970436
+## 10     1     9 0.999999046
+## 11     1    10 1.000000000
+## 12     2     0 0.004747562
+## 13     2     1 0.035267600
+## 14     2     2 0.126827715
+## 15     2     3 0.296867928
+## 16     2     4 0.515491059
+## 17     2     5 0.721621440
+## 18     2     6 0.868857427
+## 19     2     7 0.949987460
+## 20     2     8 0.984757474
+## # ... with 28 more rows</code></pre>
+<p>This is not bad, but you might ask yourself what would happen if you put the <code>map2</code> into a <code>mutate</code>:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Expecting it to fail.</span></p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% mutate(dist=map2(n,p,binom_table))</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##       n     p              dist
+##   &lt;dbl&gt; &lt;dbl&gt;            &lt;list&gt;
+## 1    10  0.25 &lt;tibble [11 x 2]&gt;
+## 2    15  0.30 &lt;tibble [16 x 2]&gt;
+## 3    20  0.42 &lt;tibble [21 x 2]&gt;</code></pre>
+<p>This came out with unexpected eloquence. The <code>dist</code> column is really a list, but the elements of <code>dist</code>, which are actually data frames, are displayed as entries in the column where you would expect to see numbers. This also maintains the connection of which probability distribution data frame goes with which <span class="math inline">\((n,p)\)</span> pair. <code>dist</code> is known in the trade as a “list-column”.</p>
+<p>So now we can try for something even more elegant. Can we work out the median for each one of those probability distributions? We have a function <code>dist_median</code> that will produce the median, as a number, from a distribution as a data frame, and now we want to run it for each of the distributions in the list-column. Since the median is a single number, we give <code>map_dbl</code> a shot:</p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% 
+  mutate(dist=map2(n,p,binom_table)) %&gt;% 
+  mutate(median=map_dbl(dist,dist_median))</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##       n     p              dist median
+##   &lt;dbl&gt; &lt;dbl&gt;            &lt;list&gt;  &lt;dbl&gt;
+## 1    10  0.25 &lt;tibble [11 x 2]&gt;      2
+## 2    15  0.30 &lt;tibble [16 x 2]&gt;      4
+## 3    20  0.42 &lt;tibble [21 x 2]&gt;      8</code></pre>
+<p>and, lo and behold, it works! We can even calculate the means as well and compare them with the medians:</p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% mutate(dist=map2(n,p,binom_table)) %&gt;% 
+  mutate(median=map_dbl(dist,dist_median)) %&gt;%
+  mutate(mean=n*p)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##       n     p              dist median  mean
+##   &lt;dbl&gt; &lt;dbl&gt;            &lt;list&gt;  &lt;dbl&gt; &lt;dbl&gt;
+## 1    10  0.25 &lt;tibble [11 x 2]&gt;      2   2.5
+## 2    15  0.30 &lt;tibble [16 x 2]&gt;      4   4.5
+## 3    20  0.42 &lt;tibble [21 x 2]&gt;      8   8.4</code></pre>
+<p>For all three of these distributions, <span class="math inline">\(p&lt;0.5\)</span>, so they are all right-skewed, and therefore we’d expect the mean to be bigger than the median. And, here, so it proves.</p>
+</div>
+<div id="onward-and-outward" class="section level2">
+<h2>Onward and outward</h2>
+<p>If you actually want to see what’s in those <code>dist</code> data frames, you do so by piping this into <code>unnest()</code>:</p>
+<pre class="r"><code>tibble(n=n,p=p) %&gt;% mutate(dist=map2(n,p,binom_table)) %&gt;% 
+  mutate(median=map_dbl(dist,dist_median)) %&gt;%
+  mutate(mean=n*p) %&gt;% unnest %&gt;% print(n=30)</code></pre>
+<pre><code>## # A tibble: 48 x 6
+##        n     p median  mean     x         prob
+##    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;        &lt;dbl&gt;
+##  1    10  0.25      2   2.5     0 5.631351e-02
+##  2    10  0.25      2   2.5     1 2.440252e-01
+##  3    10  0.25      2   2.5     2 5.255928e-01
+##  4    10  0.25      2   2.5     3 7.758751e-01
+##  5    10  0.25      2   2.5     4 9.218731e-01
+##  6    10  0.25      2   2.5     5 9.802723e-01
+##  7    10  0.25      2   2.5     6 9.964943e-01
+##  8    10  0.25      2   2.5     7 9.995842e-01
+##  9    10  0.25      2   2.5     8 9.999704e-01
+## 10    10  0.25      2   2.5     9 9.999990e-01
+## 11    10  0.25      2   2.5    10 1.000000e+00
+## 12    15  0.30      4   4.5     0 4.747562e-03
+## 13    15  0.30      4   4.5     1 3.526760e-02
+## 14    15  0.30      4   4.5     2 1.268277e-01
+## 15    15  0.30      4   4.5     3 2.968679e-01
+## 16    15  0.30      4   4.5     4 5.154911e-01
+## 17    15  0.30      4   4.5     5 7.216214e-01
+## 18    15  0.30      4   4.5     6 8.688574e-01
+## 19    15  0.30      4   4.5     7 9.499875e-01
+## 20    15  0.30      4   4.5     8 9.847575e-01
+## 21    15  0.30      4   4.5     9 9.963475e-01
+## 22    15  0.30      4   4.5    10 9.993278e-01
+## 23    15  0.30      4   4.5    11 9.999083e-01
+## 24    15  0.30      4   4.5    12 9.999913e-01
+## 25    15  0.30      4   4.5    13 9.999995e-01
+## 26    15  0.30      4   4.5    14 1.000000e+00
+## 27    15  0.30      4   4.5    15 1.000000e+00
+## 28    20  0.42      8   8.4     0 1.855923e-05
+## 29    20  0.42      8   8.4     1 2.873480e-04
+## 30    20  0.42      8   8.4     2 2.136430e-03
+## # ... with 18 more rows</code></pre>
+<p>Each of those data frames in <code>dist</code> has a column <code>x</code> and a column <code>prob</code>, which by “exploding” the list-column you now see. The other columns have their values carried along, repeated as necessary. The last few rows shown are the first few rows of the distribution for <span class="math inline">\(n=20, p=0.42\)</span>.</p>
+<p>The technique is actually very general, because a list-column can be a list of anything, such as a list of models. Let’s look at another example. I made up some data on two variables <code>x</code> and <code>y</code> for each of two groups <code>red</code> and <code>blue</code>, and we want to run a regression of <code>y</code> on <code>x</code> for each group.</p>
+<p>Read in the data first:</p>
+<pre class="r"><code>d=read_delim(&quot;twogroups.txt&quot;,&quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   x = col_double(),
+##   y = col_double(),
+##   group = col_character()
+## )</code></pre>
+<pre class="r"><code>d</code></pre>
+<pre><code>## # A tibble: 10 x 3
+##        x     y group
+##    &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
+##  1  10.0  13.0   red
+##  2  11.0  14.0   red
+##  3  12.0  17.0   red
+##  4  13.0  17.0   red
+##  5  14.0  18.0   red
+##  6   9.0   8.0  blue
+##  7  10.5   7.0  blue
+##  8  11.5   8.5  blue
+##  9  12.5   9.5  blue
+## 10  15.0  13.0  blue</code></pre>
+<p>Now we need a function that will regress <code>y</code> on <code>x</code> for any data frame that has both those variables:</p>
+<pre class="r"><code>regr=function(dd) {
+  lm(y~x,data=dd)
+}</code></pre>
+<p>There are two groups, so we need to “collapse” our data frame to contain only two rows, one for each subgroup that we are going to model. This is the opposite of <code>unnest</code>, which predictably goes by the name <code>nest</code>. The technique is to use <code>group_by</code> on whatever you want to keep, and <em>then</em> nest:</p>
+<pre class="r"><code>d %&gt;% group_by(group) %&gt;% nest()</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   group             data
+##   &lt;chr&gt;           &lt;list&gt;
+## 1   red &lt;tibble [5 x 2]&gt;
+## 2  blue &lt;tibble [5 x 2]&gt;</code></pre>
+<p>We have gained a new list-column <code>data</code> that contains the <code>x</code> and <code>y</code> values for each of the two groups. So now we can say, “for each of the mini-data-frames in <code>data</code>, regress <code>y</code> on <code>x</code>”:</p>
+<pre class="r"><code>d %&gt;% group_by(group) %&gt;% nest() %&gt;% 
+  mutate(models=map(data,regr))</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   group             data   models
+##   &lt;chr&gt;           &lt;list&gt;   &lt;list&gt;
+## 1   red &lt;tibble [5 x 2]&gt; &lt;S3: lm&gt;
+## 2  blue &lt;tibble [5 x 2]&gt; &lt;S3: lm&gt;</code></pre>
+<p>Next, we might want to extract something from each model, like the R-squared value. A handy way to do this is <code>glance</code> from <code>broom</code>, which produces a one-line summary for each model:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">For each of the models, run glance on that model.</span></p>
+<pre class="r"><code>library(broom)
+d %&gt;% group_by(group) %&gt;% nest() %&gt;% 
+  mutate(models=map(data,regr)) %&gt;% 
+  mutate(glance=map(models,glance))</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   group             data   models                glance
+##   &lt;chr&gt;           &lt;list&gt;   &lt;list&gt;                &lt;list&gt;
+## 1   red &lt;tibble [5 x 2]&gt; &lt;S3: lm&gt; &lt;data.frame [1 x 11]&gt;
+## 2  blue &lt;tibble [5 x 2]&gt; &lt;S3: lm&gt; &lt;data.frame [1 x 11]&gt;</code></pre>
+<p>This is not quite right, though, because all the information in <code>glance</code> is wrapped up in the column of that name. So we need unnest just that column:</p>
+<pre class="r"><code>d %&gt;% group_by(group) %&gt;% nest() %&gt;% 
+  mutate(models=map(data,regr)) %&gt;% 
+  mutate(glance=map(models,glance)) %&gt;% 
+  unnest(glance)</code></pre>
+<pre><code>## # A tibble: 2 x 14
+##   group             data   models r.squared adj.r.squared     sigma
+##   &lt;chr&gt;           &lt;list&gt;   &lt;list&gt;     &lt;dbl&gt;         &lt;dbl&gt;     &lt;dbl&gt;
+## 1   red &lt;tibble [5 x 2]&gt; &lt;S3: lm&gt; 0.8989362     0.8652482 0.7958224
+## 2  blue &lt;tibble [5 x 2]&gt; &lt;S3: lm&gt; 0.8174102     0.7565469 1.1385901
+## # ... with 8 more variables: statistic &lt;dbl&gt;, p.value &lt;dbl&gt;, df &lt;int&gt;,
+## #   logLik &lt;dbl&gt;, AIC &lt;dbl&gt;, BIC &lt;dbl&gt;, deviance &lt;dbl&gt;, df.residual &lt;int&gt;</code></pre>
+<p>and now all the model statistics are there in separate columns:</p>
+<pre class="r"><code>d %&gt;% group_by(group) %&gt;% nest() %&gt;% 
+  mutate(models=map(data,regr)) %&gt;% 
+  mutate(glance=map(models,glance)) %&gt;% 
+  unnest(glance) %&gt;% 
+  select(group,r.squared)</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   group r.squared
+##   &lt;chr&gt;     &lt;dbl&gt;
+## 1   red 0.8989362
+## 2  blue 0.8174102</code></pre>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

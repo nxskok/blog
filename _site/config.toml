@@ -5,7 +5,6 @@ languageCode = "en-us"
 title = "R, it's OK I guess"
 theme = "tuftesque"
 googleAnalytics = ""
-disqusShortname = "rokiguess"
 ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
 
 [permalinks]

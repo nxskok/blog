@@ -1,0 +1,259 @@
+---
+title: Ken ventures into community ecology
+author: Ken
+date: '2018-05-17'
+slug: ken-ventures-into-community-ecology
+categories:
+  - statistics
+  - R
+tags:
+  - rstats 
+  - vegan
+---
+
+## Introduction
+
+Somebody mentioned ANOSIM to me, and I had this kind of vague recollection of it, meaning that I didn't really understand anything of it at all. This prompted me to explore further, which got me into the `vegan` package.
+This contains a number of functions for handling ecological community data. One of these is `anosim`, or "analysis of similarity", which is used for assessing the groupings of objects when we have only a dissimilarity matrix: are the objects within a group more similar than ones in different groups? We explore ANOSIM, with a side trip via cluster analysis, because I had to connect this up with what I already knew. 
+
+## packages
+
+I need these:
+
+```{r}
+library(vegan)
+library(ggrepel)
+library(tidyverse)
+```
+
+
+## The dune data
+
+The data set `dune` contains [cover class values](https://globalrangelands.org/inventorymonitoring/daubenmire) of 30 different species at 20 different sites. To start with, let's group the sites into similar ones, and ask whether those groups related to anything else.
+
+`r tufte::margin_note("I think this is a link to the right thing. Please correct me (in the comments) if not.")`
+
+Here's the data set:
+
+```{r}
+data(dune)
+dune %>% as_tibble()
+```
+
+The columns are the (abbreviated) species names, and the rows are sites.
+
+The approved way of making dissimilarities between the sites is the Bray-Curtis distance, which is the default for `vegdist`:
+
+```{r}
+dune.dist=vegdist(dune)
+dune.dist
+```
+
+## Cluster analysis
+
+My thinking about how to analyze these sites begins with a cluster analysis to group sites into similar ones. Since we have dissimilarities, a hierarchical method like Ward's is available:
+
+```{r}
+dune.1=hclust(dune.dist,method="ward.D")
+plot(dune.1)
+```
+
+The next question is to think about an appropriate number of clusters. This tends to involve a lot of hand-waving. I dunno, four?
+
+```{r}
+plot(dune.1)
+rect.hclust(dune.1,4)
+```
+
+Perhaps a better way to choose a number of clusters is to plot that thing `height` on the $y$-axis against the number of clusters, in a so-called *scree plot*.
+
+```{r}
+h=dune.1$height
+h
+```
+
+The larger the "height" is, the more dissimilar the sites within a cluster are. These go from 20 clusters down to 2:
+
+```{r}
+d=tibble(clusters=20:2,height=h)
+d
+```
+
+Now plot height against clusters. It's easiest to join the points by lines:
+
+```{r}
+ggplot(d,aes(x=clusters,y=height))+geom_point()+geom_line()
+```
+
+The idea is that we want a relatively small height, indicating that the sites within a cluster are similar, but we also want a relatively small number of clusters, for greater insight. (You could have 20 clusters, with each site in a cluster by itself, but there would not be much insight there!). Thus we want to be towards the bottom left of the picture. We look for an "elbow" sticking out towards that corner of the graph, where the height drops by a lot and then by a little, such as at 5 or 7 clusters. 
+
+The name comes from imagining this plot to be a side-on view of a mountain, where "scree" refers to [loose rock that has fallen to the bottom of the rock face](https://www.geograph.org.uk/photo/5322223). Here, we are thinking of scree as being the random rubbish at the bottom of the mountain, such as after 7 clusters. Here, we want the height to be reasonably small, so we take the number of clusters to be the first one on the scree. (This is different from using a scree plot for principal components, where we want the ordinate to be *large*, so we go back one from the elbow to get the last point definitely on the mountain.)
+
+I'm going with seven clusters, though I could as well have picked five. How does seven clusters look on the dendrogram?
+
+```{r}
+plot(dune.1)
+rect.hclust(dune.1,7)
+```
+
+
+
+Then we can eyeball the data for two sites in the same cluster, such as sites 11 and 18 in our third cluster:
+
+```{r}
+dune %>% slice(c(11,18)) %>% print(width=Inf)
+```
+
+We get the impression that these sites have very similar cover class values. A lot of the species are absent at both sites, and where they are present, they tend to have similar values. Contrast that with sites in different clusters, such as sites 16 and 17:
+
+```{r}
+dune %>% slice(c(16,17)) %>% print(width=Inf)
+```
+
+This time, a lot of species are present at one site but not at the other, marking the sites as dissimilar.
+
+
+Let's save the cluster memberships for later use:
+
+```{r}
+dune_cluster=cutree(dune.1,7)
+dune_cluster
+```
+
+
+## More about the sites
+
+The data set `dune.env` contains some other information about the sites:
+
+```{r}
+data("dune.env") 
+dune.env %>% as_tibble()
+```
+
+Details about this are in the [help for `dune`](http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/dune.html). The column of interest to us is `Management`. This describes the type of farming done at the site, with labels:
+
+- BF: biological farming
+- HF: hobby farming
+- NM: nature conservation management
+- SF: standard farming
+
+We might be concerned with any relationship between farming type and species cover profile. This is what ANOSIM can look at, but before that we'll think about using our cluster analysis to assess this issue.
+
+## Farming type and cluster analysis
+
+A way to look for a relationship here is to ask whether sites in the same cluster tend to have the same farming type. I can think of two ways to do that. One way is to make a crosstabulation of cluster and farming type:
+
+```{r}
+tab=table(farming=dune.env$Management,cluster=dune_cluster)
+tab
+```
+
+Clusters 6 and 7 seem to contain mostly the non-farmed sites. With these small frequencies, it's kind of absurd to do a test, but just for fun:
+
+```{r}
+chisq.test(tab)
+```
+
+We have way too many small frequencies to take this P-value seriously, though it *is* significant.
+
+A second way to use the cluster analysis is to re-draw the dendrogram, but instead of using the site numbers to identify the sites, label them by the kind of farming done there:
+
+```{r}
+plot(dune.1,labels=dune.env$Management)
+rect.hclust(dune.1,7)
+```
+
+There seems to be some grouping here: the clusters each only contain one or two of the farming types. This is really the same information as in the cross-tabulation, but presented in a different way. (The clusters are not ordered by cluster number across the page.)
+
+## Analysis of similarity
+
+I used the cluster analysis as a stepping-stone to figure out which sites were "similar" to each other. However, this is really losing information about similarity, because it boils down the actual numbers in the dissimilarity matrix into a yes/no: two sites are either in the same cluster or not. It seems better to use the actual dissimilarities in an analysis. This avoids arbitrary choices about the number of clusters to use; if I had used, say, three clusters instead of seven, the story would have been different.
+
+This is where Analysis of Similarity comes in. It is like analysis of variance, in that it tests whether pre-determined groups are similar to each other or different, but instead of using observations from each of the groups, it uses dissimilarities between observations within and between groups. The [`anosim`](http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/anosim.html) function takes a dissimilarity matrix and a column containing the grouping. It does a permutation test to obtain a P-value:
+
+```{r}
+dune.2=anosim(dune.dist,dune.env$Management)
+dune.2
+```
+
+This is significant, so we deduce that sites farmed in the same way have similar cover class profiles. This ought to be more powerful than the (not very believable) chi-squared test based on the cluster analysis.
+
+## Using `anosim` on the clusters
+
+`anosim` is supposed to be used on pre-determined groups, but the clusters in cluster analysis are formed by looking at the same data as the `anosim` will be run on, which is likely to be biased: the clusters are found to *make* them as different as possible from one another, and this does not address the question of how reproducible the clusters might be.
+
+However, there is nothing stopping us from running `anosim` using the clusters as if they were known groups, to see what happens:
+
+```{r}
+anosim(dune.dist,dune_cluster)
+```
+
+Very significant indeed. (We should probably do some kind of cross-validation here to get a P-value we can trust, but I leave that aside.)
+
+
+## Ordination, or multidimensional scaling
+
+Another thing community ecologists do is called "ordination". I call it "multidimensional scaling". Anyway, the idea is to use dissimilarities to draw a two-dimensional picture of the sites (here) so that similar ones are close together. This uses the dissimilarities that we calculated earlier. The base function `cmdscale` tries to place the individual sites in two dimensions so as to best reproduce the dissimilarities as distances on the graph. 
+
+```{r}
+dune.scale=cmdscale(dune.dist,eig=T)
+dune.scale$GOF
+```
+
+The goodness-of-fit measure is like R-squared. I don't know why there are two values, but I'm calling this acceptably high.
+
+`dune.scale` contains `points`, a matrix with $x$ and $y$ coordinates for plotting. I would make the plot using `ggplot` by first constructing a data frame with the coordinates and identifiers for the locations, thus:
+
+`r tufte::margin_note("\"Vegan\" also has functions for making and plotting ordinations, perhaps more in line with how community ecologists are used to seeing them. I couldn't get my head around how the species appeared on the plot from \"ordiplot\".")`
+
+`r tufte::margin_note("When you turn a matrix with nameless columns into a \"tibble\", the columns acquire names V1, V2, etc.")`
+
+`r tufte::margin_note("The sites are identified by number in the row names of \"dune\". This technique would also work if the sites had names stored in the row names of the data frame.")`
+
+```{r mds}
+as_tibble(dune.scale$points) %>%
+  rownames_to_column("site") %>% 
+  ggplot(aes(x=V1,y=V2,label=site))+
+    geom_point()+geom_text_repel()+coord_fixed()
+```
+
+`r tufte::margin_note("The \"coord_fixed\" is to make both axes have the same scale, so that distances are properly mapped.")`
+
+This is perhaps better than the cluster analysis because it doesn't *force* somewhat dissimilar sites to be in the same cluster; it lets the consumer of the graph decide the extent to which sites are similar or not. 
+
+There do seem to be some groups of similar sites. A tweak to our code lets us see how these correspond to our clusters from earlier:
+
+`r tufte::margin_note("Code notes: I (i) added the cluster identifiers to the data frame I created, as a factor, (ii) added them to the plot using colour, (iii) got rid of the legend, since I don't care about which cluster is which.")`
+
+`r tufte::margin_note("Yes, I forgot the \"as.factor\" the first time, so that all my points were in varying shades of blue.")`
+
+```{r mds_cluster}
+as_tibble(dune.scale$points) %>% 
+  rownames_to_column("site") %>% 
+  mutate(cluster=as.factor(dune_cluster)) %>% 
+  ggplot(aes(x=V1,y=V2,colour=cluster,label=site))+
+    geom_point()+geom_text_repel()+coord_fixed()+guides(colour=F)
+```
+
+Not bad at all. The clusters are mostly distinct, though site 2 ought to be in the same cluster as site 1, and site 8 ought to be in the cluster with sites 12 and 13. Having seven clusters, one of the suggestions from our scree plot, does seem to make sense.
+
+As a final flourish, we could add the farming methods to this plot instead of the clusters. This time, having the legend is helpful:
+
+```{r mds_farming}
+as_tibble(dune.scale$points) %>% 
+  rownames_to_column("site") %>% 
+  mutate(farming=dune.env$Management) %>% 
+  ggplot(aes(x=V1,y=V2,colour=farming,label=site))+
+    geom_point()+geom_text_repel()+coord_fixed()
+```
+
+There is definitely some grouping, but it is not as clear as for the clusters.
+
+
+## References
+
+[Documentation for `vegan`](https://cran.r-project.org/web/packages/vegan/vegan.pdf)
+
+[Ordination vignette in `vegan`](https://cran.r-project.org/web/packages/vegan/vignettes/intro-vegan.pdf)
+
+[Row names in the tidyverse](https://www.rdocumentation.org/packages/tibble/versions/1.4.2/topics/rownames)

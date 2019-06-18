@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Tidying weather data</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/11/23/tidying-weather-data/">Tidying weather data</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Nov 23, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;8 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Weather data often comes in an untidy format that is suitable for looking at, but not so suitable for doing any kind of analysis with. Let’s have a look at the kind of thing I mean. But before we do that, we need a package or two:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
+## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
+## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
+## ✔ readr   1.1.1     ✔ forcats 0.2.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(lubridate)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;lubridate&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:base&#39;:
+## 
+##     date</code></pre>
+<p>OK, our data, daily mean temperatures from some weather station going back to 1905:</p>
+<pre class="r"><code>weather=read_csv(&quot;BR 1905-2016.csv&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_double(),
+##   year = col_integer(),
+##   month = col_integer()
+## )</code></pre>
+<pre><code>## See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code>weather</code></pre>
+<pre><code>## # A tibble: 1,344 x 33
+##     year month      d1      d2      d3      d4      d5      d6      d7
+##    &lt;int&gt; &lt;int&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+##  1  1905     1   -17.6   -24.2   -20.1   -13.9   -16.8   -13.2   -22.9
+##  2  1905     2   -31.5   -32.6   -28.8   -26.7   -26.1   -19.6   -13.7
+##  3  1905     3    -1.3     0.6    -8.8    -6.9   -12.5    -8.7   -11.0
+##  4  1905     4     2.6     5.1     2.7    -0.3    -3.0     0.6     4.7
+##  5  1905     5     2.3     5.9     2.5     2.6     1.1     0.8     2.6
+##  6  1905     6    14.8    15.8    16.9    13.6    14.4    16.0    17.7
+##  7  1905     7 -9999.9 -9999.9    19.4    21.4    18.4    18.0    14.8
+##  8  1905     8    22.6    21.2    22.6    19.5    21.8    15.7    16.9
+##  9  1905     9    15.9    16.7    17.8    17.5    16.7    14.8    14.0
+## 10  1905    10 -9999.9 -9999.9 -9999.9 -9999.9 -9999.9 -9999.9 -9999.9
+## # ... with 1,334 more rows, and 24 more variables: d8 &lt;dbl&gt;, d9 &lt;dbl&gt;,
+## #   d10 &lt;dbl&gt;, d11 &lt;dbl&gt;, d12 &lt;dbl&gt;, d13 &lt;dbl&gt;, d14 &lt;dbl&gt;, d15 &lt;dbl&gt;,
+## #   d16 &lt;dbl&gt;, d17 &lt;dbl&gt;, d18 &lt;dbl&gt;, d19 &lt;dbl&gt;, d20 &lt;dbl&gt;, d21 &lt;dbl&gt;,
+## #   d22 &lt;dbl&gt;, d23 &lt;dbl&gt;, d24 &lt;dbl&gt;, d25 &lt;dbl&gt;, d26 &lt;dbl&gt;, d27 &lt;dbl&gt;,
+## #   d28 &lt;dbl&gt;, d29 &lt;dbl&gt;, d30 &lt;dbl&gt;, d31 &lt;dbl&gt;</code></pre>
+<p>This says, for example, that on January 2nd, 1905, the mean temperature was -24.2. (Look in the <code>d2</code> column of the first row.) This is convenient if you want to look at the data: for example, if you have this in a spreadsheet, you can look at the whole of 1905 in a rectangle with 12 rows and 31 columns. But it is not very convenient for any actual analysis, because the temperatures are scattered over 31 columns. For example, what if you wanted to check the temperatures for time trends?</p>
+</div>
+<div id="tidying-the-data" class="section level2">
+<h2>Tidying the data</h2>
+<p>What we want is to get all those temperatures into <em>one</em> column, labelled, say, <code>temperature</code>, with another column saying which day they were for (the 5th of the month is currently in column <code>d5</code>). This is one of the most frequent kinds of data rearrangement, and it’s a basic “verb” in the <code>tidyr</code> world, <code>gather</code>. The way I remember it is: what makes the columns different, what makes them the same, and which columns to gather.</p>
+<p>Here, what makes the columns different is that they’re different days, what makes them the same is that they’re all temperatures, and the columns to gather are <code>d1</code> through <code>d31</code>:</p>
+<pre class="r"><code>weather %&gt;% gather(day,temperature,d1:d31)</code></pre>
+<pre><code>## # A tibble: 41,664 x 4
+##     year month   day temperature
+##    &lt;int&gt; &lt;int&gt; &lt;chr&gt;       &lt;dbl&gt;
+##  1  1905     1    d1       -17.6
+##  2  1905     2    d1       -31.5
+##  3  1905     3    d1        -1.3
+##  4  1905     4    d1         2.6
+##  5  1905     5    d1         2.3
+##  6  1905     6    d1        14.8
+##  7  1905     7    d1     -9999.9
+##  8  1905     8    d1        22.6
+##  9  1905     9    d1        15.9
+## 10  1905    10    d1     -9999.9
+## # ... with 41,654 more rows</code></pre>
+<p>So now we have all the temperatures in one column. It would also be nice to turn the year, month and day into an actual date. This happens in three steps: first, we pull the number out of <code>day</code>, which can be done with <code>parse_number</code> (saving the result back into <code>day</code>); second, we glue the year, month and day together (which gives us a piece of text that looks like a date but isn’t one yet); third, we make an actual date out of it. I’ll show the process one step at a time:</p>
+<pre class="r"><code>weather %&gt;% gather(day,temperature,d1:d31) %&gt;% 
+  mutate(day=parse_number(day)) </code></pre>
+<pre><code>## # A tibble: 41,664 x 4
+##     year month   day temperature
+##    &lt;int&gt; &lt;int&gt; &lt;dbl&gt;       &lt;dbl&gt;
+##  1  1905     1     1       -17.6
+##  2  1905     2     1       -31.5
+##  3  1905     3     1        -1.3
+##  4  1905     4     1         2.6
+##  5  1905     5     1         2.3
+##  6  1905     6     1        14.8
+##  7  1905     7     1     -9999.9
+##  8  1905     8     1        22.6
+##  9  1905     9     1        15.9
+## 10  1905    10     1     -9999.9
+## # ... with 41,654 more rows</code></pre>
+<p>Next, step two:</p>
+<pre class="r"><code>weather %&gt;% gather(day,temperature,d1:d31) %&gt;% 
+  mutate(day=parse_number(day)) %&gt;% 
+  unite(text_date,year,month,day)</code></pre>
+<pre><code>## # A tibble: 41,664 x 2
+##    text_date temperature
+##  *     &lt;chr&gt;       &lt;dbl&gt;
+##  1  1905_1_1       -17.6
+##  2  1905_2_1       -31.5
+##  3  1905_3_1        -1.3
+##  4  1905_4_1         2.6
+##  5  1905_5_1         2.3
+##  6  1905_6_1        14.8
+##  7  1905_7_1     -9999.9
+##  8  1905_8_1        22.6
+##  9  1905_9_1        15.9
+## 10 1905_10_1     -9999.9
+## # ... with 41,654 more rows</code></pre>
+<p>This glues the year, month and now-numeric day together <em>and gets rid of the year, month and day</em> that we no longer need.</p>
+<p>Step three:</p>
+<pre class="r"><code>weather %&gt;% gather(day,temperature,d1:d31) %&gt;% 
+  mutate(day=parse_number(day)) %&gt;% 
+  unite(text_date,year,month,day) %&gt;% 
+  mutate(date=ymd(text_date)) -&gt; weather2
+weather2</code></pre>
+<pre><code>## # A tibble: 41,664 x 3
+##    text_date temperature       date
+##        &lt;chr&gt;       &lt;dbl&gt;     &lt;date&gt;
+##  1  1905_1_1       -17.6 1905-01-01
+##  2  1905_2_1       -31.5 1905-02-01
+##  3  1905_3_1        -1.3 1905-03-01
+##  4  1905_4_1         2.6 1905-04-01
+##  5  1905_5_1         2.3 1905-05-01
+##  6  1905_6_1        14.8 1905-06-01
+##  7  1905_7_1     -9999.9 1905-07-01
+##  8  1905_8_1        22.6 1905-08-01
+##  9  1905_9_1        15.9 1905-09-01
+## 10 1905_10_1     -9999.9 1905-10-01
+## # ... with 41,654 more rows</code></pre>
+<p>I thought <code>as.Date</code> would handle the last step, but it seems to require <code>ymd</code> from <code>lubridate</code>, which turns a piece of text containing a year, a month and a day in that order (in some representation) into an actual date.</p>
+<p>I am courting controversy here by using the right-arrow assignment syntax. This means “do all the stuff in the pipeline and save the final result in <code>weather2</code>”. I like this because it follows top to bottom, with the assignment being the very last thing we do. Some people say that the assignment is the most important thing, and we should start with it, to emphasize that we are saving the result, but I find it weird to jump back to the beginning to find out what happens to the final result of the pipeline. A matter of taste.</p>
+</div>
+<div id="further-tidying" class="section level2">
+<h2>Further tidying</h2>
+<p>Some other observations:</p>
+<ul>
+<li>We don’t need <code>text_date</code> any more, since it has done its job.</li>
+<li>Those temperatures -9999.9 are actually missing.</li>
+<li>The dates are out of order, with all the firsts of the month first, then the seconds, and so on. (This is because <code>gather</code> goes all the way down the first column first.)</li>
+</ul>
+<p>So let’s implement that:</p>
+<pre class="r"><code>weather2 %&gt;% select(-text_date) %&gt;% 
+  mutate(temperature=ifelse(temperature&lt;(-5000),NA,temperature)) %&gt;% 
+  arrange(date) -&gt; weather3
+weather3</code></pre>
+<pre><code>## # A tibble: 41,664 x 2
+##    temperature       date
+##          &lt;dbl&gt;     &lt;date&gt;
+##  1       -17.6 1905-01-01
+##  2       -24.2 1905-01-02
+##  3       -20.1 1905-01-03
+##  4       -13.9 1905-01-04
+##  5       -16.8 1905-01-05
+##  6       -13.2 1905-01-06
+##  7       -22.9 1905-01-07
+##  8       -21.2 1905-01-08
+##  9       -29.5 1905-01-09
+## 10       -29.5 1905-01-10
+## # ... with 41,654 more rows</code></pre>
+<p>How many missing and non-missing temperatures were there?</p>
+<pre class="r"><code>weather3 %&gt;% count(is.na(temperature))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   `is.na(temperature)`     n
+##                  &lt;lgl&gt; &lt;int&gt;
+## 1                FALSE 30884
+## 2                 TRUE 10780</code></pre>
+<p>About 10,000 missing ones.</p>
+</div>
+<div id="a-pretty-picture" class="section level2">
+<h2>A pretty picture</h2>
+<p>I can’t really do a blog post without at least one pretty picture. I talked about time trends earlier, so:</p>
+<pre class="r"><code>weather3 %&gt;% 
+  filter(date&gt;=&quot;1981-01-01&quot;) %&gt;% 
+  ggplot(aes(x=date,y=temperature))+geom_line()</code></pre>
+<pre><code>## Warning: Removed 153 rows containing missing values (geom_path).</code></pre>
+<p><img src="../../../../post/2017-11-23-tidying-weather-data_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>There’s an awful lot of seasonal variation, and too much missing data, but just maybe there are not as many really cold days as there used to be.</p>
+</div>
+<div id="what-i-actually-want" class="section level2">
+<h2>“What I actually want”</h2>
+<p>This came across my desk today, and the person who brought it to me had some additional things she wanted to do with the data, which I realized were all easy to do with <code>filter</code>:</p>
+<ul>
+<li>only get dates between 1981 and 2010 (inclusive)</li>
+<li>only get October through December</li>
+<li>get rid of the missings (since the tool she planned to use next didn’t take missing values).</li>
+</ul>
+<p>So, we got to work:</p>
+<pre class="r"><code>weather3 %&gt;% 
+  filter(between(year(date),1981,2010)) %&gt;% 
+  filter(month(date) &gt;=10) %&gt;% 
+  filter(!is.na(temperature)) -&gt; weather4
+weather4</code></pre>
+<pre><code>## # A tibble: 2,355 x 2
+##    temperature       date
+##          &lt;dbl&gt;     &lt;date&gt;
+##  1         5.5 1981-10-01
+##  2        10.0 1981-10-02
+##  3         9.5 1981-10-03
+##  4         8.3 1981-10-04
+##  5         7.8 1981-10-05
+##  6        10.0 1981-10-06
+##  7         9.8 1981-10-07
+##  8        10.5 1981-10-08
+##  9         8.8 1981-10-09
+## 10         9.3 1981-10-10
+## # ... with 2,345 more rows</code></pre>
+<p>and then she could go off and do Mann-Kendall correlation (Kendall correlation with time) and the Theil-Sen (nonparametric) slope.</p>
+<p>If only all consulting were that easy!</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

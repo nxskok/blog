@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Carter and Guthrie part 2: model-building</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/06/01/carter-and-guthrie-part-2-model-building/">Carter and Guthrie part 2: model-building</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jun 1, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;12 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/cricket">cricket</a>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="estimating-the-parameters" class="section level1">
+<h1>Estimating the parameters</h1>
+<p>Start, as ever, with the <code>tidyverse</code>, along with <code>MASS</code> for modelling later:</p>
+<pre class="r"><code>library(MASS)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
+## ✖ dplyr::select() masks MASS::select()</code></pre>
+<div id="the-model" class="section level2">
+<h2>The model</h2>
+<p>The Carter and Guthrie model is a simplified version of cricketing reality, thus:</p>
+<ul>
+<li>with a certain probability (which is fixed), a ball is an extra (wide or no ball), which counts one run and leads to an extra ball being bowled. (The assumption is that no additional runs are scored, for example runs scored off a no ball.)</li>
+<li>otherwise, with a certain probability, which depends on the number of balls and wickets left, a ball is a wicket. This reduces the number of balls and wickets left by 1 without changing the number of runs. (This assumes that no runs are made on a ball with a wicket, such as when a high near-six is caught near the boundary and the batsmen have already completed one or more runs.)</li>
+<li>otherwise, with certain probabilities, which depend on the number of balls and wickets left, a certain number of runs is scored.</li>
+</ul>
+<p>To estimate things, we need the data frame that we created in the last post:</p>
+<pre class="r"><code>load(&quot;d.RData&quot;)</code></pre>
+</div>
+<div id="probability-of-extra" class="section level2">
+<h2>Probability of extra</h2>
+<p>Estimating the “extra” probability is the easiest, since that doesn’t (by hypothesis) depend on anything else:</p>
+<pre class="r"><code>d %&gt;% summarize(pEx=sum(isExtra)/nrow(d)) %&gt;% select(pEx) %&gt;% as.numeric() -&gt; pExtra
+pExtra</code></pre>
+<pre><code>## [1] 0.02616932</code></pre>
+<p>This is about half the corresponding Carter and Guthrie value.</p>
+</div>
+<div id="probability-of-wicket" class="section level2">
+<h2>Probability of wicket</h2>
+<p>The probability of a wicket is modelled using a logistic model (Carter and Guthrie use a probit model); the log-odds of a wicket is modelled as a quadratic function of the number of balls and wickets left.</p>
+<p>Thus our first step is to calculate the number of balls and wickets left, and then to remove the rows with extras:</p>
+<pre class="r"><code>d %&gt;% mutate(ballsLeft=300-totalBalls,
+            wktsLeft=10-wktDown) %&gt;%
+  filter(!isExtra) -&gt; d1</code></pre>
+<p>and now we can model:</p>
+<pre class="r"><code>wModel=glm(isWkt~ballsLeft+wktsLeft+I(ballsLeft^2),data=d1,family=&quot;binomial&quot;) 
+summary(wModel)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = isWkt ~ ballsLeft + wktsLeft + I(ballsLeft^2), 
+##     family = &quot;binomial&quot;, data = d1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.7582  -0.2410  -0.1954  -0.1590   3.2174  
+## 
+## Coefficients:
+##                  Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)    -1.109e+00  3.091e-02  -35.87   &lt;2e-16 ***
+## ballsLeft      -9.177e-03  4.845e-04  -18.94   &lt;2e-16 ***
+## wktsLeft       -4.029e-01  6.681e-03  -60.30   &lt;2e-16 ***
+## I(ballsLeft^2)  4.825e-05  1.613e-06   29.91   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 76107  on 299896  degrees of freedom
+## Residual deviance: 70377  on 299893  degrees of freedom
+## AIC: 70385
+## 
+## Number of Fisher Scoring iterations: 7</code></pre>
+<p>Everything here is strongly significant, as would be expected with so much data. (These are the same explanatory variables as used by Carter and Guthrie.)</p>
+<p>We can make a table of predicted probability of a ball being a wicket as a function of the number of balls and wickets left:</p>
+<pre class="r"><code>new=expand.grid(wktsLeft=c(1,5,10),ballsLeft=c(1,100,200,300))
+p=predict(wModel,new,type=&quot;response&quot;)
+data.frame(new,p)</code></pre>
+<pre><code>##    wktsLeft ballsLeft           p
+## 1         1         1 0.179338444
+## 2         5         1 0.041787135
+## 3        10         1 0.005782970
+## 4         1       100 0.124889986
+## 5         5       100 0.027691119
+## 6        10       100 0.003784241
+## 7         1       200 0.195104269
+## 8         5       200 0.046140556
+## 9        10       200 0.006410539
+## 10        1       300 0.519366763
+## 11        5       300 0.177388823
+## 12       10       300 0.027957981</code></pre>
+<p>For a fixed number of balls left, the probability of a wicket is higher if there are fewer wickets left. The pattern for a fixed number of balls left is unclear, but then in practice if there are many balls left, there are unlikely to be few wickets left.</p>
+</div>
+<div id="modelling-the-number-of-runs" class="section level2">
+<h2>Modelling the number of runs</h2>
+<p>Carter and Guthrie consider the number of runs on any ball as an ordered categorical response, and model the probit of the probability of landing in each category as a quadratic function of the number of balls and wickets left. We use an ordered logistic model, using the <code>polr</code> function from library <code>MASS</code>. First, however, we need to remove the wicket balls from the data frame used to estimate the wickets process, and we need to turn the <code>totalRuns</code> on each ball into an ordered factor:</p>
+<pre class="r"><code>d1 %&gt;% mutate(rf=ordered(totalRuns)) %&gt;% 
+  filter(!isWkt) -&gt; d2</code></pre>
+<p>and then down to business:</p>
+<pre class="r"><code>rModel=polr(rf~ballsLeft+wktsLeft+I(ballsLeft^2),data=d2)</code></pre>
+<p>The summary of the model is not very illuminating, so again we show predictions. In the output below, the number of runs is turned into column names for a data frame by appending an X:</p>
+<pre class="r"><code>p=predict(rModel,new,type=&quot;probs&quot;)
+data.frame(new,round(p,3))</code></pre>
+<pre><code>##    wktsLeft ballsLeft    X0    X1    X2    X3    X4    X5    X6
+## 1         1         1 0.399 0.398 0.073 0.009 0.102 0.000 0.019
+## 2         5         1 0.242 0.411 0.109 0.015 0.183 0.001 0.039
+## 3        10         1 0.114 0.317 0.132 0.021 0.323 0.001 0.092
+## 4         1       100 0.680 0.246 0.029 0.004 0.035 0.000 0.006
+## 5         5       100 0.506 0.352 0.053 0.007 0.069 0.000 0.013
+## 6        10       100 0.291 0.417 0.097 0.013 0.151 0.000 0.031
+## 7         1       200 0.836 0.132 0.013 0.002 0.015 0.000 0.003
+## 8         5       200 0.711 0.225 0.025 0.003 0.031 0.000 0.005
+## 9        10       200 0.497 0.357 0.055 0.007 0.072 0.000 0.013
+## 10        1       300 0.901 0.081 0.007 0.001 0.008 0.000 0.001
+## 11        5       300 0.814 0.148 0.015 0.002 0.017 0.000 0.003
+## 12       10       300 0.638 0.274 0.034 0.004 0.042 0.000 0.007</code></pre>
+<p>For any fixed number of balls left, if there are fewer wickets left, there is a higher chance of a “dot ball” (no runs), and a lower chance of a boundary (4 or 6 runs, in the columns labelled <code>X4</code> and <code>X6</code>). Also, for a fixed number of wickets left, there is a higher chance of a dot ball when many balls are left and a higher chance of a boundary with few balls left. These accord with intuition.</p>
+</div>
+</div>
+<div id="constructing-the-recursion" class="section level1">
+<h1>Constructing the recursion</h1>
+<p>The next step is to use this estimated model to find the probability distribution of the number of runs for any number of balls and wickets left: that is, to look more than one ball into the future as the model above does. This is done recursively.</p>
+<p>Let <span class="math inline">\(F(r; b, w)\)</span> denote the probability of a team scoring <span class="math inline">\(r\)</span> runs or fewer with <span class="math inline">\(b\)</span> balls and <span class="math inline">\(w\)</span> wickets left. There are some boundary cases: if there are no balls or wickets left, then a team scores 0 (more) runs with probability 1. Thus <span class="math inline">\(F(r;0,w)=1, F(r;b,0)=1\)</span> for <span class="math inline">\(r \ge 0\)</span>, and (for completeness) <span class="math inline">\(F(r;b,w)=0\)</span> for <span class="math inline">\(r&lt;0\)</span>. These form the base cases for a recursion. To evaluate <span class="math inline">\(F(r;b,w)\)</span> in general, consider what might happen on the next ball: an extra, in which case the team needs <span class="math inline">\(r-1\)</span> runs from <span class="math inline">\(b\)</span> balls with <span class="math inline">\(w\)</span> wickets left; a wicket, in which case the team needs <span class="math inline">\(r\)</span> runs from <span class="math inline">\(b-1\)</span> balls with <span class="math inline">\(w-1\)</span> wickets left, or <span class="math inline">\(j\)</span> runs are scored, in which case the team needs <span class="math inline">\(r-j\)</span> runs from <span class="math inline">\(b-1\)</span> balls with <span class="math inline">\(w\)</span> wickets left. Details can be found on page 826 of Carter and Guthrie’s paper.</p>
+<p>As an example, suppose we wish to find <span class="math inline">\(F(4;3,2)\)</span>. We need the probability of an extra, a wicket and each number of runs at this point:</p>
+<pre class="r"><code>new=data.frame(ballsLeft=3,wktsLeft=2)
+pExtra</code></pre>
+<pre><code>## [1] 0.02616932</code></pre>
+<pre class="r"><code>predict(wModel,new,type=&quot;response&quot;)</code></pre>
+<pre><code>##         1 
+## 0.1254596</code></pre>
+<pre class="r"><code>predict(rModel,new,type=&quot;probs&quot;)</code></pre>
+<pre><code>##            0            1            2            3            4 
+## 0.3618481772 0.4080933004 0.0804909684 0.0106283094 0.1161361034 
+##            5            6 
+## 0.0003392157 0.0224639254</code></pre>
+<p>Thus, the probability of an extra is 0.026, the probability of a wicket given a non-extra is 0.126, and the probabilities of <span class="math inline">\(0, 1, 2, \ldots\)</span> runs, given that there was neither an extra nor a wicket, are <span class="math inline">\(0.363, 0.408, 0.080, \ldots\)</span>. In detail, therefore, the recursion says that
+<span class="math display">\[\begin{eqnarray*}
+F(4;3,2)&amp;=&amp;0.026 F(3;3,2)+ (1-0.026)(0.126) F(4;2,1)+\\
+&amp;&amp;(1-0.026)(1-0.126)\left[ 0.363 F(4;2,2) + 0.408F(3;2,2)+\right.\\
+&amp;&amp;0.080 F(2;2,2)+0.011 F(1;2,2)+0.116 F(0;2,2)+\\
+&amp;&amp;\left. 0.0003 F(-1;2,2)+0.022F(-2;2,2)\right] \\
+\end{eqnarray*}\]</span></p>
+<p>We note that <span class="math inline">\(F(-1;2,2)=F(-2;2,2)=0\)</span> (in words, the probability of getting 4 runs or less in 3 balls is 0 if 5 or 6 runs are scored off the first ball). The remaining <span class="math inline">\(F(r;b,w)\)</span> need to be calculated, and this is done using a similar recursion. Note that, for example, <span class="math inline">\(F(3;3,2)\)</span> will also need <span class="math inline">\(F(2;2,2)\)</span> (if one run is scored off the next ball), and thus a naive recursion would do a lot of unnecessary re-calculation. It is important, therefore, to create a look-up table of values already calculated, and to check it before starting on a calculation. In pseudocode, the procedure is therefore this:</p>
+<pre><code>bigF=function(r,b,w) {
+  # base cases
+  if (r&lt;0) return 0
+  if (b==0) return 1
+  if (w==0) return 1
+  # lookup table
+  if (r,b,w) in lookup table, return value
+  # else recurse
+  obtain probability of extra PE, wicket PW, and array P[j] each number of runs j this ball
+  sum=0
+  for (j in 0:6) {
+    sum=sum+P[j]*bigF(r-j,b-1,w)
+  }
+  ans=PE*bigF(r-1,b,w)+(1-PE)*PW*bigF(r,b-1,w-1)+(1-PE)*(1-PW)*sum
+  save ans in lookup table
+  return ans
+}
+</code></pre>
+<p>Let <span class="math inline">\(F\)</span> be the probability of scoring <span class="math inline">\(r\)</span> runs or less with <span class="math inline">\(b\)</span> balls and <span class="math inline">\(w\)</span> wickets remaining. There are two choices for the data structure for the lookup table. One is a three-dimensional array (dimensions runs, balls and wickets, with the value of the array being <span class="math inline">\(F\)</span>), and the other is a data frame, with columns for runs, balls, wickets and <span class="math inline">\(F\)</span>. I chose the latter, because of the simplicity of using <code>dplyr::filter</code> to see whether a row exists yet. (The notation <span class="math inline">\(F\)</span> is a reminder that this is a <em>cumulative</em> probability, that many runs or less.)</p>
+<p>We will keep the lookup table as a data frame called <code>lookupTable</code>, dimensions runs, balls and wickets left in that order, initialized as empty and kept in an environment called <code>env</code> (so that we can access and change it from within a function):</p>
+<pre class="r"><code>max.runs=400
+max.balls=300
+max.wickets=10
+env=new.env(parent=emptyenv())
+aa=data.frame(rr=integer(),bb=integer(),ww=integer(),F=double())
+env$lookupTable=aa
+str(env$lookupTable)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    0 obs. of  4 variables:
+##  $ rr: int 
+##  $ bb: int 
+##  $ ww: int 
+##  $ F : num</code></pre>
+<p>Then we implement the function outlined in pseudocode above:</p>
+<pre class="r"><code>bigF=function(r,b,w) {
+  # base cases
+  if (r&lt;0) return(0)
+  if (b==0) return(1)
+  if (w==0) return(1)
+  # return value if in lookup table
+  tab=get(&quot;lookupTable&quot;,envir=env)
+  tab %&gt;% filter(rr==r, bb==b, ww==w) -&gt; x
+  if (nrow(x)&gt;0) return(x[1,4])
+  # recursion
+  new=data.frame(ballsLeft=b,wktsLeft=w)
+  pW=predict(wModel,new,type=&quot;response&quot;)
+  p=predict(rModel,new,type=&quot;probs&quot;)
+  pE=as.numeric(pExtra) # global variable
+  sum=0
+  for (j in 0:6) {
+    sum=sum+p[j+1]*bigF(r-j,b-1,w)
+  }
+  ans=pE*bigF(r-1,b,w)+(1-pE)*pW*bigF(r,b-1,w-1)+(1-pE)*(1-pW)*sum
+  names(ans)=NULL
+  # lookup table might have changed since earlier, so get again before altering
+  tab=get(&quot;lookupTable&quot;,envir=env)
+  tab=rbind(tab,data.frame(rr=r,bb=b,ww=w,F=ans))
+  assign(&quot;lookupTable&quot;,value=tab,envir=env)
+  return(ans)
+}</code></pre>
+<p>Let’s test it with the example we used above, and at the same time, time it:</p>
+<pre class="r"><code>system.time(ans &lt;- bigF(4,3,2))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.217   0.000   0.216</code></pre>
+<pre class="r"><code>ans</code></pre>
+<pre><code>## [1] 0.721199</code></pre>
+<p>This result is reasonable, since with only three balls and two wickets left, it is most likely that four runs or fewer will be scored. I had to use the “alternative” arrow-like assignment operator here, because an equals sign inside <code>system.time</code> has a different meaning. We will assess the times in a moment.</p>
+<p>It would be interesting to see what the lookup table looks like (that is, which values have been calculated). This is a data frame, so can just be displayed, or we can sort by something. I wanted to see the cumulative distribution of runs given a number of balls and wickets remaining:</p>
+<pre class="r"><code>env$lookupTable %&gt;% arrange(bb,ww,rr)</code></pre>
+<pre><code>##    rr bb ww          F
+## 1   0  1  1 0.49321063
+## 2   1  1  1 0.82404148
+## 3   2  1  1 0.89087956
+## 4   3  1  1 0.90020778
+## 5   4  1  1 0.98174689
+## 6   0  1  2 0.42641663
+## 7   1  1  2 0.78550080
+## 8   2  1  2 0.86441506
+## 9   3  1  2 0.87568180
+## 10  4  1  2 0.97686396
+## 11  0  2  1 0.33198089
+## 12  1  2  1 0.60371717
+## 13  2  2  1 0.76588781
+## 14  3  2  1 0.81717688
+## 15  4  2  1 0.89376016
+## 16  0  2  2 0.19088917
+## 17  1  2  2 0.49451548
+## 18  2  2  2 0.68908943
+## 19  3  2  2 0.75489255
+## 20  4  2  2 0.85277871
+## 21  0  3  2 0.09938645
+## 22  1  3  2 0.29509984
+## 23  2  3  2 0.49860893
+## 24  3  3  2 0.62064608
+## 25  4  3  2 0.72119896</code></pre>
+<p>Because the lookup table has now been populated, running the same calculation again should be a lot quicker:</p>
+<pre class="r"><code>system.time(ans &lt;- bigF(4,3,2))</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.001   0.000   0.001</code></pre>
+<pre class="r"><code>ans</code></pre>
+<pre><code>## [1] 0.721199</code></pre>
+<p>And so it is.</p>
+</div>
+<div id="applications" class="section level1">
+<h1>Applications</h1>
+<p>The nature of this recursion, with 8 recursive calls to <code>bigF</code> inside one original call, means that we threaten to branch wildly and will need to keep a large number of <span class="math inline">\((r,b,w)\)</span> triples on the stack. This is obviated by calling <code>bigF</code> repeatedly with values of <span class="math inline">\(r,b,w\)</span> only a little bigger than those already in the lookup table, taking advantage of the calculations already done (which will be most of the ones we need). For example:</p>
+<pre class="r"><code>system.time(bigF(10,10,10))</code></pre>
+<pre><code>##    user  system elapsed 
+##   6.891   0.012   6.903</code></pre>
+<p>showing, for example, the cumulative distribution of runs with 8 balls and 9 wickets left (as calculated so far):</p>
+<pre class="r"><code>env$lookupTable %&gt;% filter(bb==8, ww==9) %&gt;% arrange(rr)</code></pre>
+<pre><code>##    rr bb ww            F
+## 1   0  8  9 2.551895e-07
+## 2   1  8  9 4.656748e-06
+## 3   2  8  9 4.021283e-05
+## 4   3  8  9 2.180352e-04
+## 5   4  8  9 8.361319e-04
+## 6   5  8  9 2.445443e-03
+## 7   6  8  9 5.816592e-03
+## 8   7  8  9 1.195466e-02
+## 9   8  8  9 2.226083e-02
+## 10  9  8  9 3.841906e-02
+## 11 10  8  9 6.183717e-02</code></pre>
+<p>and then</p>
+<pre class="r"><code>system.time(bigF(20,15,10))</code></pre>
+<pre><code>##    user  system elapsed 
+##  22.277   0.016  22.295</code></pre>
+<p>after which, one can extract the more complete cumulative distribution of runs with 8 balls and 9 wickets left, thus:</p>
+<pre class="r"><code>env$lookupTable %&gt;% filter(bb==8, ww==9) %&gt;% arrange(rr)</code></pre>
+<pre><code>##    rr bb ww            F
+## 1   0  8  9 2.551895e-07
+## 2   1  8  9 4.656748e-06
+## 3   2  8  9 4.021283e-05
+## 4   3  8  9 2.180352e-04
+## 5   4  8  9 8.361319e-04
+## 6   5  8  9 2.445443e-03
+## 7   6  8  9 5.816592e-03
+## 8   7  8  9 1.195466e-02
+## 9   8  8  9 2.226083e-02
+## 10  9  8  9 3.841906e-02
+## 11 10  8  9 6.183717e-02
+## 12 11  8  9 9.355500e-02
+## 13 12  8  9 1.346290e-01
+## 14 13  8  9 1.854712e-01
+## 15 14  8  9 2.450907e-01
+## 16 15  8  9 3.121335e-01
+## 17 16  8  9 3.851316e-01
+## 18 17  8  9 4.612746e-01
+## 19 18  8  9 5.375758e-01
+## 20 19  8  9 6.119761e-01
+## 21 20  8  9 6.818799e-01</code></pre>
+<p>From there, on it goes, in small steps.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

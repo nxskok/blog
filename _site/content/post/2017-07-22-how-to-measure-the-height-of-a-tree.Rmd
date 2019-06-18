@@ -1,0 +1,125 @@
+---
+title: How To Measure The Height of a Tree
+author: Ken
+date: '2017-07-22'
+slug: how-to-measure-the-height-of-a-tree
+categories:
+  - curiosity
+tags: []
+---
+
+
+
+## Introduction 
+
+In a previous post, I was trying to estimate the volume of wood in a tree from its diameter, and I noted that it would be an advantage to know the height of the tree: for example, we could pretend the tree was cone-shaped, or use a power-law-type relationship in which we estimate the best powers of diameter and height to use to estimate volume.
+
+Which made me wonder, how *do* you measure the height of a tree anyway? [This](https://gabrielhemery.com/2011/05/15/how-to-calculate-tree-height-using-a-smartphone/) made a lot of sense (and taught me how to use a clinometer app, of which more later). [This](https://en.wikipedia.org/wiki/Tree_height_measurement) contained more detail, including a second method that I want to talk about. In addition, I learned about using Tikz to draw a nice diagram.
+
+
+## A tree and a human, diagrammatically
+
+Here is an idealized tree (on the right) with an idealized human (on the left) trying to measure it.
+
+![](/tree.png)
+
+I made this in Tikz (in a $\LaTeX$ document).
+
+I came up with the letters E and F to represent the human's Eye and Foot, and that seemed to leave the letters A, B and C to denote the top of the tree, the tree trunk at eye level, and the base of the tree. $k$ denotes the distance from the ground to the human's eye level, presumed known, $d$ the distance from the human's feet to the base of the tree, and $h$ the height of the tree above eye level. Thus, the height of the tree is $h+k$. 
+
+This is my (clumsy) Tikz code. I can do a lot better with the angles, but the rest of it I'm more or less happy with:
+
+```
+\begin{tikzpicture}[scale=2]
+  \draw (0,0) -- (0,1);
+  \draw (3,0) -- (3,6);
+  \draw (0,0) -- (3,0);
+  \draw (0,1) -- (3,0);
+  \draw (0,1) -- (3,6);
+  \draw (0,1) -- (3,1);
+  % vertices
+  \node[left] at (0,1) {E};
+  \node[left] at (0,0) {F};
+  \node[right] at (3,6) {A};
+  \node[right] at (3,1) {B};
+  \node[right] at (3,0) {C};
+  % line lengths
+  \node[below] at (1.5,0) {$d$};
+  \node[above] at (1.5,1) {$d$};
+  \node[right] at (0,0.5) {$k$};
+  \node[left] at (3,0.5) {$k$};
+  \node[right] at (3,3.5) {$h$};
+  % angles
+  \node[above right] at (0.1,1) {$\theta$};
+  \node[below right] at (0.5,1.05) {$\phi$};
+\end{tikzpicture}
+```
+
+The right way to handle this is to include this (this is $\LaTeX$) in my R Markdown document and let Blogdown handle the processing of it. I couldn't get this to work, though, and I couldn't be bothered to find a clever way to get the diagram into a file, so I made a `.pdf` out of the LaTeX and screen-grabbed it to get rid of anything extraneous. Then I inserted it as an image.
+
+## Measuring
+
+Typically, the height $k$ will be known (the "standard" value appears to be 1.73 metres). The distance $d$ can be measured with a sufficiently long tape measure (or, if you know your stride length, it can be measured by pacing it out). 
+
+That leaves the measurement of the angles $\theta$ (and maybe $\phi$). There are various devices, going under the general name of "clinometer", which will do that. As is often the way, these were in the past expensive things that only professionals had, but now you can get a free smartphone app that will do the same job. Mine is called "Clinometer and bubble level" (for Android). If you lay the phone flat, it functions as a spirit level, while if you hold it at an angle it measures the angle of inclination. I learned [here](https://gabrielhemery.com/2011/05/15/how-to-calculate-tree-height-using-a-smartphone/) that you have to sight along the long side of your phone. My app has a "lock" button: press that first, then aim at the top of the tree, hold steady for long enough, and it will beep and lock the angle at which you were looking so that you can record it afterwards.
+
+More modern technology is [laser distance measurers](http://www.stanleytools.com/products/hand-tools/measuring-layout/laser-tape-measure). These ones are intended for use in construction. The idea is that you fire a laser at something solid (like a wall), and the measurer finds the time for the laser to get to the object and back to you. Based on the known speed of the laser, this gives the distance, accurately. This makes it much easier to measure the size of a room, and thus to estimate things like how much paint will be required to paint it. The same technology can be used to measure the distance from an observer to the top and the base of a tree, distances EA and EC on my diagram.
+
+## The tangent method
+
+The traditional way of estimating tree heights involves measuring the angle $\theta$ using a clinometer, measuring $d$ using a tape measure (or by pacing), and then doing some trigonometry. Since triangle ABE is right-angled, this means that $\tan \theta=h/d$. Thus we can find $h$ in terms of the known quantities as $h=d \tan \theta$. For example, if $d=10m$ and $\theta=51^o$, then  the height of the tree is, in metres (using the "customary" value for $k$):
+
+```{r}
+10*tan(51*pi/180)+1.73
+```
+
+Qualitatively, you are looking "more up than out" at the tree, so the tree is taller than your distance away from it. 
+
+There is an even simpler calculation if the angle is exactly 45 degrees, since then the tangent is 1, and the distance to the base of the tree is equal to its height above your eyes.
+
+When I was about 9 or 10 years old, my school was next to an old church with a tall tower. The school apparently owned a very analog clinometer (made out of plastic), and my teacher borrowed the long tape measure (normally used for measuring javelin throws), and the whole class went to measure the height of the tower. I think we did the 45-degree thing, because we were measuring a long way across the churchyard. And then we had to wind the tape back into its leather case using the metal turning handle. 
+
+A variation on the tangent method is to measure the angle $\phi$ using the clinometer as well. This will typically be a small angle. But since $\tan \phi= k/d$ and $k$ is known, this enables us to find $d$ without a tape measure as $d=k/ \tan \phi$. (Since $\phi$ is small, $\tan \phi$ is also small, and $\phi$ needs to be measured accurately to determine $d$ with any accuracy.)
+
+For example, I observed a streetlight on campus. The angle up to its top was $10.3^o$, and down to its base was $1.3^o$. How tall was the streetlight?
+
+First we determine $d$ as
+```{r}
+(d=1.73/tan(1.3*pi/180))
+```
+
+and then we use this value of $d$ to find $h$ and thus the height of the whole streetlight:
+
+```{r}
+d*tan(10.3*pi/180)+1.73
+```
+
+This seems reasonable.
+
+## The sine method
+
+If you can measure the distances EC and EA with  a laser distance measurer, and use your clinometer to measure angles $\theta$ and $\phi$,
+you don't need to worry about $d$ at all. You can even work out your own personal value of $k$. Let $c$ denote the distance EC and $a$ the distance EA. Then 
+$$\sin \phi = k/c,$$ so that $$k=c \sin\phi$$
+and likewise
+$$ \sin \theta=h/a$$ so that $$ h=a \sin\theta.$$
+This gives the height of the tree as $$a\sin\theta+ c\sin\phi.$$
+
+For example, the distance to the base of a tree is measured as 50.0m at a downward angle of $2^o$; the distance to the top of the tree is measured as 85.0m at an upward angle of $65^o$. Then the eye height is
+```{r}
+(k=50*sin(2*pi/180))
+```
+
+and the height above the eyes is
+
+```{r}
+(h=85*sin(65*pi/180))
+```
+
+giving a total tree height of
+
+```{r}
+k+h
+```
+
+No measuring required, even of your own height!

@@ -1,0 +1,151 @@
+---
+title: Summarizing several models using broom and purrr
+author: Ken
+date: '2017-07-20'
+slug: summarizing-several-models-using-broom-and-purrr
+categories:
+  - statistics
+tags:
+  - 'rstats'
+---
+
+## Introduction
+
+`broom` is supposed to be a powerful way to summarize several models at once, and so it is. The trouble is, the examples show how to fit the *same* model to different subsets of a data set. I had something different in mind: I had one data set, and three different models on that same data. Could I do something similar there? It wasn't clear to me how.
+
+## Illustrative data
+
+The data [here](http://www.utsc.utoronto.ca/~butler/c32/pinetrees.txt) came from [Albright's book](http://www.jblearning.com/catalog/9781449685348/). These are observations on the diameter and wood volume of ten pine trees, and the question is whether we can model the volume given the diameter. This is of practical importance, because the volume of wood in a tree represents the financial value of the tree but is hard to measure (until the tree is cut down), while the diameter is easy to measure with a tape measure and a calculation involving $\pi$. 
+
+Let's start by examining the data:
+
+```{r}
+library(tidyverse)
+library(broom)
+my_url="http://www.utsc.utoronto.ca/~butler/c32/pinetrees.txt"
+trees=read_delim(my_url," ")
+trees
+```
+
+What kind of relationship do we have?
+
+```{r}
+ggplot(trees,aes(x=diameter,y=volume))+geom_point()
+```
+
+Upward, strong and apparently linear. 
+
+## Models
+
+So our first model is a straight-line relationship:
+
+```{r}
+volume.1=lm(volume~diameter,data=trees)
+summary(volume.1)
+```
+
+This has a nice high R-squared and (it turns out) reasonably-behaved residuals.
+
+The problem we run into is that output: it is nice enough for looking at, but it's not very helpful for doing anything else with. This is where `broom` comes in: it has (for us) two handy functions `glance` and `tidy` that summarize models respectively in one line:
+
+```{r}
+glance(volume.1)
+```
+
+and in a data frame:
+
+```{r}
+tidy(volume.1)
+```
+
+The advantage to this is that extracting any of these values is easy using `dplyr` tools: we can see what the columns are called, and the `term` column contains the name of each explanatory variable.
+
+I couldn't see any good reason why the relationship had to be linear, except that a linear model appeared to fit well. Could I be a bit more scientific? Well, I could pretend that a tree was shaped like a cone, in which case its volume in terms of its diameter would be
+
+$$ V = {\pi d^2 h \over 12} $$
+
+The problem now is that we don't know the height of these trees.
+If we pretend that the height is constant (which I think is a very shaky assumption), the volume is proportional to the diameter *squared*. I don't want to get into the quicksand of models without intercepts, so I'll do that this way:
+
+```{r}
+volume.2=lm(volume~I(diameter^2),data=trees)
+summary(volume.2)
+```
+
+This also has a nice high R-squared and well-behaved residuals.
+
+If you object to my fitting a squared term without including a linear term, well, I can do that too:
+
+```{r}
+volume.2a=update(volume.2,.~.+diameter)
+summary(volume.2a)
+```
+
+This is rather confusing: the high R-squared is accompanied by two non-significant explanatory variables. I think this is because diameter and diameter-squared are highly correlated:
+
+```{r}
+with(trees,cor(diameter,I(diameter^2)))
+```
+
+so what I should do is to centre the diameter values before including them in the regression:
+
+```{r}
+trees %>% mutate(diam_c=diameter-mean(diameter)) %>%
+  lm(volume~diam_c+I(diam_c^2),data=.) %>% summary()
+```
+
+This says that adding (centred) diameter-squared has no value over diameter itself, but the linear term is strongly significant. The suggestion here, therefore, is that my assumption of constant tree height was the thing that went wrong.
+
+So, what to do? In [this paper](https://pdfs.semanticscholar.org/5497/3d02d63428e3dfed6645acfdba874ad80822.pdf), it suggests a power law relationship between volume and diameter, with constant parameters for a particular type of tree:
+
+$$ V = \alpha_1 d^{\alpha_2} $$
+This is evidently non-linear, but we can take logs of both sides:
+
+$$ \ln V = \ln \alpha_1 + \alpha_2 \ln d$$
+and now we have a linear relationship between the logs of volume and diameter, which a regression will allow us to estimate:
+
+```{r}
+volume.3=lm(log(volume)~log(diameter),data=trees)
+summary(volume.3)
+```
+
+By making this transformation, we have moved from constant variance of errors in estimating $V$ to constant variance in estimating $\ln V$, which has the effect of being constant variance in *percentage* errors in estimating $V$. I think this is reasonable: you might be able to estimate a volume to within 10% rather than to within a fixed number of cubic inches, regardless of the size of the tree.
+
+The estimated power is just over 3.
+
+## Summarizing multiple models
+
+So now we have three models. How can we use `broom` methods to put the model summaries side by side? The pseudo-code idea is "for each model, run `glance` on it, and then glue the one-row data frames together". This in turn suggests `map` from `purrr` followed by `bind_rows`. But how are we going to create the iteration over the fitted models? I thought, "well, `map` likes to work on lists, so maybe I can put the models into a list first":
+
+```{r}
+model_list=list(volume.1,volume.2,volume.3)
+map(model_list,glance) %>% bind_rows()
+```
+
+and it works! For example, you can run your eyes down the first column to compare R-squared values. I'm not sure how valuable it is to have all the intercepts and slopes side by side in this case, but you can do that in the same way:
+
+```{r}
+map(model_list,tidy) %>% bind_rows()
+```
+
+This would probably benefit from a column naming the model to which each row refers.
+
+## Addendum (2017-07-21)
+
+Aurélien, in the comments (below), suggested using `map_df` instead of `map`. The advantage of this is that it returns a data frame directly, without the need for `bind_rows`. I always forget that this is out there alongside `map_dbl`, `map_chr` and the others. I'm also going to take the other suggestion, which is, instead of making a simple list out of the models, make a *named* list, thus:
+
+```{r}
+model_list=list(linear=volume.1, square=volume.2, power=volume.3)
+map_df(model_list,glance,.id="Model")
+```
+
+Oh yes, *so* much better. The key is the extra argument `.id` in `map_df` that does exactly what I was wondering about: identifying the models. Using the named list means that I don't have to remember which model `volume.1` was: I can give it a mnemonic label and *that* is what will appear in the output. 
+
+I imagine the same idea works for `tidy`:
+
+```{r}
+map_df(model_list,tidy,.id="Model")
+```
+
+It does, and the advantage here is that `tidy` can produce a variable number of rows for each model, but the `Model` column properly labels them, however many there are.
+

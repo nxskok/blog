@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - About this blog</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/04/30/about-this-blog/">About this blog</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Apr 30, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;2 min read
+  
+  
+  
+    </span>
+    
+    
+    </section>
+
+
+<section><p>I discovered that one can host a blog on Github, on which I already have an account, via a thing called Github Pages. As if that weren’t enough, posting content to this blog is done via R Studio. I created a new project called <code>blog</code> that is linked to a Github repository, and installed the <code>blogdown</code> package (by the amazingly prolific <a href="https://yihui.name/">Yihui Xie</a>), and then I create a new post such as this one by, at the console, typing</p>
+<pre class="r"><code>library(blogdown)
+new_post(title=&quot;This blog&quot;,file=&quot;This-blog.Rmd&quot;)</code></pre>
+<p>and then a new R Markdown window pops up, into which I can type any R Markdown (that is, marked-up text plus optional R code). When I’m happy with what I have, I save it, go back to the console, and type</p>
+<pre class="r"><code>serve_site()</code></pre>
+<p>which previews my new post, at least as long as it’s in the right folder (still not sure about that).</p>
+<p>When it looks all right, I “commit” my changes to Github in the usual way, and then the whole blog appears on Github Pages. It’s, almost, magic.</p>
+<p>Plus I can generate some random data and draw a histogram of it:</p>
+<pre class="r"><code>d=data.frame(z=rnorm(1000))
+head(d)</code></pre>
+<pre><code>##            z
+## 1 -0.6264538
+## 2  0.1836433
+## 3 -0.8356286
+## 4  1.5952808
+## 5  0.3295078
+## 6 -0.8204684</code></pre>
+<pre class="r"><code>d %&gt;% ggplot(aes(x=z))+geom_histogram(bins=10)</code></pre>
+<p><img src="../../../../post/about-this-blog_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Pretty bell-curved, I say (as it should be, of course).</p>
+<p>Most of the work there was in getting the <code>tidyverse</code> startup messages to disappear, but that’s another story.</p>
+</section>
+<section>
+  
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

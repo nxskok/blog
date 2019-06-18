@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Scraping Manhattan with rvest</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/09/18/scraping-a-bar-chart-with-rvest/">Scraping Manhattan with rvest</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Sep 18, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;10 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In cricket, a Manhattan chart records how many runs a team score in each over (and how many wickets fall). An example is <a href="http://www.espncricinfo.com/series/10719/statistics/1031665/England-vs-West-Indies-Only-T20I-west-indies-in-england-t20i-match">here</a> (scroll down to find it). Is it possible to extract the numbers of runs and wickets for each team from this graph?</p>
+<p>The answer turns out to be “yes”, because this graph is an SVG graphic, and the data used to create it is embedded in the HTML code, so it is “simply” a matter of pulling it out. I downloaded a copy of the file first and saved it in <code>stats.html</code>. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This appears to be necessary because the document may not have finished loading when we start to scrape it.</span></p>
+<p>It’s called a Manhattan chart because it resembles the Manhattan skyline. One of the other charts here is called “the worm”.</p>
+</div>
+<div id="getting-the-html" class="section level2">
+<h2>Getting the HTML</h2>
+<p>That goes like this:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<pre class="r"><code>library(rvest)</code></pre>
+<pre><code>## Loading required package: xml2</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     pluck</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     guess_encoding</code></pre>
+<pre class="r"><code>library(pracma)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;pracma&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     cross</code></pre>
+<pre class="r"><code>html=read_html(&quot;stats.html&quot;)
+html</code></pre>
+<pre><code>## {xml_document}
+## &lt;html class=&quot;js no-touch history video localstorage desktop-ua  scrollbars-15 desktop&quot; style=&quot;&quot;&gt;
+## [1] &lt;head&gt;\n&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset= ...
+## [2] &lt;body class=&quot;gamepackage desktop  prod  scoreboard-fixed page-render ...</code></pre>
+<p>The <code>head</code> and the <code>body</code> of the HTML are stored in the variable I called <code>html</code>.</p>
+</div>
+<div id="pulling-it-apart" class="section level2">
+<h2>Pulling it apart</h2>
+<p>The bars of the bar chart are coded for as <code>&lt;rect&gt;</code> in the HTML. I discovered this (in Chrome) by right-clicking on the graph and selecting Inspect (control-shift-I for those who prefer the keyboard), and then delving into the HTML <code>svg</code> object.</p>
+<p>Let’s start by finding out how many <code>rect</code> objects we have:</p>
+<pre class="r"><code>html %&gt;% html_nodes(&#39;rect&#39;) </code></pre>
+<pre><code>## {xml_nodeset (46)}
+##  [1] &lt;rect height=&quot;114&quot; width=&quot;16.455445544554458&quot; x=&quot;8.227722772277229&quot; ...
+##  [2] &lt;rect height=&quot;228&quot; width=&quot;16.455445544554458&quot; x=&quot;49.366336633663366 ...
+##  [3] &lt;rect height=&quot;270.75&quot; width=&quot;16.455445544554458&quot; x=&quot;90.504950495049 ...
+##  [4] &lt;rect height=&quot;99.75&quot; width=&quot;16.455445544554458&quot; x=&quot;131.643564356435 ...
+##  [5] &lt;rect height=&quot;71.25&quot; width=&quot;16.455445544554458&quot; x=&quot;172.782178217821 ...
+##  [6] &lt;rect height=&quot;128.25&quot; width=&quot;16.455445544554458&quot; x=&quot;213.92079207920 ...
+##  [7] &lt;rect height=&quot;57&quot; width=&quot;16.455445544554458&quot; x=&quot;255.05940594059405&quot; ...
+##  [8] &lt;rect height=&quot;14.25&quot; width=&quot;16.455445544554458&quot; x=&quot;296.198019801980 ...
+##  [9] &lt;rect height=&quot;114&quot; width=&quot;16.455445544554458&quot; x=&quot;337.33663366336634 ...
+## [10] &lt;rect height=&quot;85.5&quot; width=&quot;16.455445544554458&quot; x=&quot;378.4752475247525 ...
+## [11] &lt;rect height=&quot;156.75&quot; width=&quot;16.455445544554458&quot; x=&quot;419.61386138613 ...
+## [12] &lt;rect height=&quot;99.75&quot; width=&quot;16.455445544554458&quot; x=&quot;460.752475247524 ...
+## [13] &lt;rect height=&quot;99.75&quot; width=&quot;16.455445544554458&quot; x=&quot;501.891089108910 ...
+## [14] &lt;rect height=&quot;142.5&quot; width=&quot;16.455445544554458&quot; x=&quot;543.029702970297 ...
+## [15] &lt;rect height=&quot;85.5&quot; width=&quot;16.455445544554458&quot; x=&quot;584.1683168316832 ...
+## [16] &lt;rect height=&quot;42.75&quot; width=&quot;16.455445544554458&quot; x=&quot;625.306930693069 ...
+## [17] &lt;rect height=&quot;71.25&quot; width=&quot;16.455445544554458&quot; x=&quot;666.445544554455 ...
+## [18] &lt;rect height=&quot;185.25&quot; width=&quot;16.455445544554458&quot; x=&quot;707.58415841584 ...
+## [19] &lt;rect height=&quot;85.5&quot; width=&quot;16.455445544554458&quot; x=&quot;748.7227722772278 ...
+## [20] &lt;rect height=&quot;57&quot; width=&quot;16.455445544554458&quot; x=&quot;789.861386138614&quot; y ...
+## ...</code></pre>
+<p>There are 46. This is more than I was expecting given that this was a 20-over match (and so there should be at most 40 bars on the Manhattan chart). Are any of these different in terms of the names of the attributes they have? We can find out:</p>
+<pre class="r"><code>html %&gt;% html_nodes(&quot;rect&quot;) %&gt;% 
+  html_attrs() %&gt;% map(names)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[2]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[3]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[4]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[5]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[6]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[7]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[8]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[9]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[10]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[11]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[12]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[13]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[14]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[15]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[16]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[17]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[18]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[19]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[20]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[21]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[22]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[23]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[24]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[25]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[26]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[27]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[28]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[29]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[30]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[31]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[32]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[33]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[34]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[35]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[36]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[37]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[38]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[39]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[40]]
+## [1] &quot;height&quot; &quot;width&quot;  &quot;x&quot;      &quot;y&quot;     
+## 
+## [[41]]
+## [1] &quot;x&quot;      &quot;y&quot;      &quot;height&quot; &quot;width&quot;  &quot;fill&quot;  
+## 
+## [[42]]
+## [1] &quot;x&quot;      &quot;y&quot;      &quot;height&quot; &quot;width&quot;  &quot;fill&quot;  
+## 
+## [[43]]
+## [1] &quot;x&quot;      &quot;y&quot;      &quot;height&quot; &quot;width&quot;  &quot;fill&quot;  
+## 
+## [[44]]
+## [1] &quot;x&quot;      &quot;y&quot;      &quot;height&quot; &quot;width&quot;  &quot;fill&quot;  
+## 
+## [[45]]
+## [1] &quot;x&quot;      &quot;y&quot;      &quot;height&quot; &quot;width&quot;  &quot;fill&quot;  
+## 
+## [[46]]
+## [1] &quot;x&quot;      &quot;y&quot;      &quot;height&quot; &quot;width&quot;  &quot;fill&quot;</code></pre>
+<p>The last six are different in that they have a <code>fill</code> attribute. I think these are the legends on the Manhattan, run rate and worm graphs.<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Another way of doing this is to search for the g-containers for each subgraph, which in retrospect might have been better.</span></p>
+<p>This gets in the way rather, because if all the <code>rect</code>s had the same collection of names, we could more easily build a data frame out of the values. So we have to go around the houses: first find which <code>rect</code>s have a <code>fill</code> attribute, select all the others, and then make a data frame of those:</p>
+<pre class="r"><code>html %&gt;% html_nodes(&quot;rect&quot;) %&gt;% 
+  html_attr(&quot;fill&quot;) -&gt; has_fill
+has_fill</code></pre>
+<pre><code>##  [1] NA        NA        NA        NA        NA        NA        NA       
+##  [8] NA        NA        NA        NA        NA        NA        NA       
+## [15] NA        NA        NA        NA        NA        NA        NA       
+## [22] NA        NA        NA        NA        NA        NA        NA       
+## [29] NA        NA        NA        NA        NA        NA        NA       
+## [36] NA        NA        NA        NA        NA        &quot;#ef3a49&quot; &quot;#40b5e5&quot;
+## [43] &quot;#ef3a49&quot; &quot;#40b5e5&quot; &quot;#ef3a49&quot; &quot;#40b5e5&quot;</code></pre>
+<pre class="r"><code>want=is.na(has_fill)
+want</code></pre>
+<pre><code>##  [1]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [12]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [23]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
+## [34]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE
+## [45] FALSE FALSE</code></pre>
+<pre class="r"><code>html %&gt;% html_nodes(&quot;rect&quot;) %&gt;% 
+  html_attrs() %&gt;% 
+  .[want] -&gt; wanted_rect
+do.call(rbind,wanted_rect) %&gt;% as.tibble() %&gt;% 
+  modify_if(is.character,as.numeric) -&gt; d
+d</code></pre>
+<pre><code>## # A tibble: 40 x 4
+##    height    width          x      y
+##     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;
+##  1 114.00 16.45545   8.227723 201.00
+##  2 228.00 16.45545  49.366337  87.00
+##  3 270.75 16.45545  90.504950  44.25
+##  4  99.75 16.45545 131.643564 215.25
+##  5  71.25 16.45545 172.782178 243.75
+##  6 128.25 16.45545 213.920792 186.75
+##  7  57.00 16.45545 255.059406 258.00
+##  8  14.25 16.45545 296.198020 300.75
+##  9 114.00 16.45545 337.336634 201.00
+## 10  85.50 16.45545 378.475248 229.50
+## # ... with 30 more rows</code></pre>
+<p>Made it! I was expecting <code>bind_rows</code> to work, but it threw me a strange error, so I went this way. The <code>do.call</code> returned a matrix (since it used the base <code>rbind</code>), so I turned that into a <code>tibble</code>; all its columns were text, so I turned any of them that were text (all of them) into numbers. Before that, the <code>.[want]</code> extracts only elements from the list output from the previous step for which <code>want</code> is true: that is, the <code>rect</code> elements that have no <code>fill</code> attribute, for which <code>has_fill</code> is <code>NA</code>.</p>
+</div>
+<div id="translating-the-bars" class="section level2">
+<h2>Translating the bars</h2>
+<p>What I want to retrieve is the number of runs scored by each team in each over. This is proportional to the height of each bar, but I don’t know the constant of proportionality. What I <em>do</em> know, however, is that the number of runs scored in each over is an integer, so that the bar heights should all be multiples of some common value. What value?</p>
+<p>I had the idea of turning all the bar heights into integers (eg. by multiplying them all by 1000), then finding the greatest common divisor (which should be the height that corresponds to scoring 1 run in an over), and then dividing by that. The package <code>pracma</code> has a <code>gcd</code> function that will do that. But I need to find the GCD of some largish collection of numbers, not just two, which is what <code>gcd</code> handles:</p>
+<pre class="r"><code>gcd(12,20)</code></pre>
+<pre><code>## [1] 4</code></pre>
+<p>but I can’t do</p>
+<pre class="r"><code>gcd(12,20,34)</code></pre>
+<pre><code>## $g
+## [1] 4
+## 
+## $c
+## [1] 2
+## 
+## $d
+## [1] -1</code></pre>
+<p>and have it give me the right thing. Enter <code>reduce</code> from <code>purrr</code>:</p>
+<pre class="r"><code>reduce(c(12,20,34),gcd)</code></pre>
+<pre><code>## [1] 2</code></pre>
+<p>This works out the GCD of 12 and 20, getting 4, and then works out the GCD of 4 and 34, getting 2. So, now we can find the <code>height</code> in our bar chart that goes with 1 run:</p>
+<pre class="r"><code>k=1000
+h1=reduce(d$height*k,gcd)
+h1/k</code></pre>
+<pre><code>## [1] 14.25</code></pre>
+<p>14.25, and then create a new column that is the number of runs:</p>
+<pre class="r"><code>d %&gt;% mutate(runs=height*k/h1) -&gt; d
+d</code></pre>
+<pre><code>## # A tibble: 40 x 5
+##    height    width          x      y  runs
+##     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+##  1 114.00 16.45545   8.227723 201.00     8
+##  2 228.00 16.45545  49.366337  87.00    16
+##  3 270.75 16.45545  90.504950  44.25    19
+##  4  99.75 16.45545 131.643564 215.25     7
+##  5  71.25 16.45545 172.782178 243.75     5
+##  6 128.25 16.45545 213.920792 186.75     9
+##  7  57.00 16.45545 255.059406 258.00     4
+##  8  14.25 16.45545 296.198020 300.75     1
+##  9 114.00 16.45545 337.336634 201.00     8
+## 10  85.50 16.45545 378.475248 229.50     6
+## # ... with 30 more rows</code></pre>
+<p>I should probably round to be safe, but I wanted to convince myself that these had indeed come out as integers.</p>
+<p>As you can see from the original Manhattan graph, these are the number of runs from the first 10 red bars, corresponding to England.</p>
+</div>
+<div id="still-to-do" class="section level2">
+<h2>Still to do</h2>
+<p>Our data frame <code>d</code> now has the number of runs for each over for <em>both</em> teams. The switch-over from one team to another is when the x-coordinate decreases:</p>
+<pre class="r"><code>d %&gt;% slice(15:25)</code></pre>
+<pre><code>## # A tibble: 11 x 5
+##    height    width          x      y  runs
+##     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+##  1  85.50 16.45545 584.168317 229.50     6
+##  2  42.75 16.45545 625.306931 272.25     3
+##  3  71.25 16.45545 666.445545 243.75     5
+##  4 185.25 16.45545 707.584158 129.75    13
+##  5  85.50 16.45545 748.722772 229.50     6
+##  6  57.00 16.45545 789.861386 258.00     4
+##  7  99.75 16.45545   8.227723 215.25     7
+##  8  57.00 16.45545  49.366337 258.00     4
+##  9 185.25 16.45545  90.504950 129.75    13
+## 10 213.75 16.45545 131.643564 101.25    15
+## 11 228.00 16.45545 172.782178  87.00    16</code></pre>
+<p>These are the last 6 overs for England and the first 5 for West Indies.</p>
+<p>Also on the Manhattan chart are those little circles above the bars, which represent wickets falling. Their x-coordinates are the same as for the bars for runs for the corresponding over and team. That would mean extracting their x-coordinates, looking them up in the data frame <code>d</code> we just created (via a <code>join</code>) and counting them.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

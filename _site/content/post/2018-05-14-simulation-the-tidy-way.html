@@ -1,0 +1,180 @@
+---
+title: Simulation, the tidy way
+author: Ken
+date: '2018-05-14'
+slug: simulation-the-tidy-way
+categories:
+  - R
+  - statistics
+tags:
+  - rstats 
+  - tidyverse
+---
+
+
+
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<p>I’m using this, and also doing some random number generation, which I’d like to be reproducible:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>set.seed(457299)</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I have been used to using the base R <code>replicate</code> for doing simulations, but today I wondered whether there was a Tidyverse equivalent. I discovered there was, and it’s called <code>rerun</code>. How does it work, and can I reproduce the simulation functionality using <code>rerun</code>?</p>
+</div>
+<div id="replicate" class="section level2">
+<h2>Replicate</h2>
+<p><code>replicate</code> does the second input as many times as the first input.
+This one takes 100 random standard normals, computes the mean, and repeats this 10 times.</p>
+<pre class="r"><code>replicate(10,mean(rnorm(100)))</code></pre>
+<pre><code>##  [1] -0.02321398 -0.10763691 -0.13426106  0.06036594  0.08555731
+##  [6]  0.05796492  0.04646084 -0.06750808 -0.04888533  0.07231331</code></pre>
+<p>The sample mean of a sample of 100 <span class="math inline">\(N(0,1)\)</span> values has mean 0 and SD <span class="math inline">\(1/\sqrt{100}=0.1\)</span>, so 95% of values like these should be between <span class="math inline">\(\pm 0.2\)</span>. That seems to match these values.</p>
+</div>
+<div id="the-tidy-way-with-map" class="section level2">
+<h2>The tidy way with <code>map</code></h2>
+<p>I would do this the tidy way by creating a column with the replication numbers, then using <code>map</code> to generate the random samples, following up with another <code>map</code> to compute their means:</p>
+<pre class="r"><code>tibble(rep=1:10) %&gt;% 
+  mutate(samples=map(rep,~rnorm(100))) %&gt;% 
+  mutate(means=map_dbl(samples,~mean(.)))</code></pre>
+<pre><code>## # A tibble: 10 x 3
+##      rep samples       means
+##    &lt;int&gt; &lt;list&gt;        &lt;dbl&gt;
+##  1     1 &lt;dbl [100]&gt;  0.184 
+##  2     2 &lt;dbl [100]&gt; -0.0238
+##  3     3 &lt;dbl [100]&gt; -0.0163
+##  4     4 &lt;dbl [100]&gt; -0.0798
+##  5     5 &lt;dbl [100]&gt;  0.0842
+##  6     6 &lt;dbl [100]&gt;  0.0624
+##  7     7 &lt;dbl [100]&gt;  0.0179
+##  8     8 &lt;dbl [100]&gt; -0.0873
+##  9     9 &lt;dbl [100]&gt; -0.125 
+## 10    10 &lt;dbl [100]&gt; -0.0728</code></pre>
+<p>The column called <code>samples</code> is a list-column: each entry is a vector of 100 values. The list-column is created using <code>map</code>, and is then used as input to the calculation of the single-number (each time) mean using a second <code>map</code>, this time a <code>map_dbl</code>.</p>
+<p>The answers are different from but comparable with the ones from <code>replicate</code>.</p>
+<p>The column <code>rep</code> is only to label different replications of the same thing, so the first <code>map</code> does <em>not</em> have a dot in it (“for each <code>rep</code>, generate 100 random standard normals for which nothing depends on the value of <code>rep</code>”). The <code>map_dbl</code> in the next line, however, is the usual “for each thing in <code>samples</code>, do something with <em>it</em>”, and so the dot is used to mean “the particular random sample we are looking at right now, whose mean we want”.</p>
+</div>
+<div id="rerun" class="section level2">
+<h2><code>rerun</code></h2>
+<p>Defining the column <code>rep</code>, as we did above, is in fact almost completely pointless. The only use of that column is to say that we want 10 repeats of the random sampling process, and that information could be just as easily conveyed by the number 10. This is how <code>rerun</code> works:</p>
+<pre class="r"><code>rerun(10,rnorm(100)) %&gt;% 
+  map_dbl(~mean(.))</code></pre>
+<pre><code>##  [1] -0.01464278  0.07959040  0.12642268  0.11989901  0.05910164
+##  [6]  0.06355798 -0.13927125  0.02277575 -0.14046121  0.14216426</code></pre>
+<p>The output of this <code>rerun</code> is a <code>list</code> containing 10 random samples of size 100 each, and then the <code>map_dbl</code> calculates the mean of each of these (each list element, in general) returning a vector of 10 sample means.</p>
+</div>
+<div id="power-of-t-test" class="section level2">
+<h2>Power of <span class="math inline">\(t\)</span>-test</h2>
+<p>To simulate the power of a hypothesis test, the process is to simulate a lot of samples from the true (alternative) distribution, and test the null hypothesis (which is incorrect) for each one. The number of times you correctly reject is your estimate of the power of your test. The idea is that you want your test to have a reasonably good chance that it will reject the null, or to design your study so that it will.</p>
+<p>By way of example, how likely are we to reject a null hypothesis that the population mean is 10, if the population mean is actually 8 (and the population standard deviation is 4), using a sample size of <span class="math inline">\(n=15\)</span>, assuming normally-distributed data and doing a two-sided test? With 1000 simulated samples, it goes like this:</p>
+<pre class="r"><code>rerun(1000,rnorm(15,8,4)) %&gt;% 
+  map_dbl(~t.test(.,mu=10)$p.value) -&gt; 
+pvals
+table(pvals&lt;=0.05)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   574   426</code></pre>
+<p>The power is estimated to be a disappointing 0.427.</p>
+<p>This is one of those cases where we can calculate the answer exactly and compare:</p>
+<pre class="r"><code>power.t.test(n=15,delta=8-10,sd=4,type=&quot;one.sample&quot;,alternative=&quot;two.sided&quot;)</code></pre>
+<pre><code>## 
+##      One-sample t test power calculation 
+## 
+##               n = 15
+##           delta = 2
+##              sd = 4
+##       sig.level = 0.05
+##           power = 0.4378466
+##     alternative = two.sided</code></pre>
+<p>Our simulation is pretty close to the truth.</p>
+<p>If the actual data distribution is not normal, though, we <em>have</em> to resort to simulation. Supposing that the true distribution is gamma with <span class="math inline">\(a=(8/4)^2=4\)</span>, <span class="math inline">\(b=8/4^2=0.5\)</span>, it will have the same mean and SD of 8 and 4. This is definitely skewed, though:</p>
+<pre class="r"><code>x=rgamma(1000,4,0.5)
+ggplot(tibble(x),aes(x=x)) + geom_histogram(bins=15)</code></pre>
+<p><img src="/post/2018-05-14-simulation-the-tidy-way_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>What will that do to the power? Let’s find out:</p>
+<pre class="r"><code>rerun(1000,rgamma(15,4,0.5)) %&gt;% 
+  map_dbl(~t.test(.,mu=10)$p.value) -&gt; 
+pvals
+table(pvals&lt;=0.05)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   511   489</code></pre>
+<p>The power has gone up a bit (it was 0.438 before). You may speculate as to why that is.</p>
+<p>One possibility is that the <span class="math inline">\(t\)</span>-test is the wrong test, with a skewed distribution. That would show up in the size of the test being wrong, but we can easily investigate that as well by simulation: test using the actual mean of 8, and see if we erroneously reject 5% of the time:</p>
+<pre class="r"><code>rerun(1000,rgamma(15,4,0.5)) %&gt;% 
+  map_dbl(~t.test(.,mu=8)$p.value) -&gt; 
+pvals
+table(pvals&lt;=0.05)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   954    46</code></pre>
+<p>That’s pretty close to 5%. That suggests that even a sample of size 15 is big enough to make the Central Limit Theorem work with this amount of skewness, and tells us that there is some other reason why the power is bigger when the true distribution is gamma.</p>
+</div>
+<div id="confidence-interval-for-the-power-and-type-i-error-probability" class="section level2">
+<h2>Confidence interval for the power (and type I error probability)</h2>
+<p>Because these simulations are based on simulation, another run could produce different results. The nature of these simulations, though, is that each simulation run is independent and each random sample either leads to rejection or not with some fixed probability <span class="math inline">\(p\)</span> (the “true power” or “true type I error probability”). We can use the usual mechanism based on the binomial distribution to get a confidence interval for this unknown probability. This is implemented in <code>prop.test</code>, which, despite its name, also gets a confidence interval for the unknown probability. It normally has up to three arguments: the observed number of rejections, the number of simulations and a null probability (that defaults to 0.5). For this, I think it’s clearer to not give a null probability and look only at the confidence interval.</p>
+<p>Here’s the one we did for the type I error probability:</p>
+<pre class="r"><code>prop.test(46,1000)</code></pre>
+<pre><code>## 
+##  1-sample proportions test with continuity correction
+## 
+## data:  46 out of 1000, null probability 0.5
+## X-squared = 822.65, df = 1, p-value &lt; 2.2e-16
+## alternative hypothesis: true p is not equal to 0.5
+## 95 percent confidence interval:
+##  0.03423080 0.06137627
+## sample estimates:
+##     p 
+## 0.046</code></pre>
+<p>This says that the type I error probability is somewhere between 0.034 and 0.061, which definitely includes 0.05.</p>
+<p>And, in the power one (for the gamma data) we got 489 rejections out of 1000:</p>
+<pre class="r"><code>prop.test(489,1000)</code></pre>
+<pre><code>## 
+##  1-sample proportions test with continuity correction
+## 
+## data:  489 out of 1000, null probability 0.5
+## X-squared = 0.441, df = 1, p-value = 0.5066
+## alternative hypothesis: true p is not equal to 0.5
+## 95 percent confidence interval:
+##  0.4576218 0.5204638
+## sample estimates:
+##     p 
+## 0.489</code></pre>
+<p>0.458 to 0.520.</p>
+<p>You might find these intervals a bit long; at the cost of waiting a bit longer for the results, you can run the simulations for longer, say 10,000 instead of 1000:</p>
+<pre class="r"><code>rerun(10000,rgamma(15,4,0.5)) %&gt;% 
+  map_dbl(~t.test(.,mu=10)$p.value) -&gt; 
+pvals
+table(pvals&lt;=0.05)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##  5135  4865</code></pre>
+<p>The answer is almost the same, but the confidence interval should be shorter:</p>
+<pre class="r"><code>prop.test(4865,10000)</code></pre>
+<pre><code>## 
+##  1-sample proportions test with continuity correction
+## 
+## data:  4865 out of 10000, null probability 0.5
+## X-squared = 7.2361, df = 1, p-value = 0.007145
+## alternative hypothesis: true p is not equal to 0.5
+## 95 percent confidence interval:
+##  0.4766609 0.4963496
+## sample estimates:
+##      p 
+## 0.4865</code></pre>
+<p>and so it is: 0.477 to 0.496.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://purrr.tidyverse.org/reference/rerun.html">The “rerun” help page</a></p>
+<p><a href="https://math.stackexchange.com/questions/1810257/gamma-functions-mean-and-standard-deviation-through-shape-and-rate">Getting the gamma parameters from mean and SD</a>, because I was too lazy to work it out myself.</p>
+</div>

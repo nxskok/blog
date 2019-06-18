@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Tufte-esque</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/07/14/tufte-esque/">Tufte-esque</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jul 14, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;1 min read
+  
+  
+  
+    </span>
+    
+    
+    </section>
+
+
+<section><p>Playing with a new look, thanks to <a href="http://livefreeordichotomize.com/2017/07/13/introducing-the-tuftesque-blogdown-theme/">this</a>.</p>
+<p>One of the main reasons I’m trying this is <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">the possibility of making side comments on the side</span> (look right).</p>
+<p>Ho ho ho.</p>
+<p>This <span class="newthought">is a new thought</span> apparently.</p>
+<p>The banner on the front page and the logo at the top of each page (on which you click to get back to the front page) are <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Evidently.</span> trains, specifically British Class 156 diesel multiple-unit trains, from which I have seen a lot of Britain.</p>
+<p>Let me just generate a random pointless scatterplot: <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">First generating some pointless data, and before <em>that</em> waiting through the tidyverse’s startup messages.</span></p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<pre class="r"><code>d=tibble(xx=rnorm(100),yy=rnorm(100))
+d</code></pre>
+<pre><code>## # A tibble: 100 x 2
+##            xx         yy
+##         &lt;dbl&gt;      &lt;dbl&gt;
+##  1  1.8849194  0.8231682
+##  2 -1.0401519 -0.5459571
+##  3  0.9888525  0.1543074
+##  4 -0.3748076 -0.7994106
+##  5 -0.6710345  0.7407841
+##  6 -0.1273932  1.8880684
+##  7 -0.5542958 -0.1663893
+##  8  0.9231793 -1.2946249
+##  9 -1.1749279 -0.9040896
+## 10 -0.6210940 -1.6849725
+## # ... with 90 more rows</code></pre>
+<pre class="r"><code>g=ggplot(d,aes(x=xx,y=yy))+geom_point()
+g</code></pre>
+<p><img src="../../../../post/2017-07-14-tufte-esque_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">That’s a pretty pointless scatterplot.</span></p>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

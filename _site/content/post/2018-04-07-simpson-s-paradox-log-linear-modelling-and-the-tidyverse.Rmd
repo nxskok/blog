@@ -1,0 +1,217 @@
+---
+title: Simpson's paradox, log-linear modelling, and the tidyverse
+author: Ken
+date: '2018-04-07'
+slug: simpson-s-paradox-log-linear-modelling-and-the-tidyverse
+categories:
+  - R
+  - statistics
+tags:
+  - R
+  - tidyverse
+---
+
+## Introduction
+
+I have some data on punctuality of arrivals at five different airports for two different airlines, thus:
+
+```
+                Alaska Airlines        America West
+airport       ontime     delayed    ontime    delayed
+LosAngeles       497          62       694        117
+Phoenix          221          12      4840        415
+SanDiego         212          20       383         65
+SanFrancisco     503         102       320        129
+Seattle         1841         305       201         61
+```
+
+There are three variables: airport, airline and whatever the name is of the variable containing `ontime` and `delayed` (I'll call it `status`). This is a common format for contingency tables with three categorical variables; there are two rows of headings. This is hard to deal with (I haven't worked out how), so I did some editing (on a *copy* of my data file) and got to this:
+
+```
+airport      aa_ontime aa_delayed aw_ontime aw_delayed
+LosAngeles       497          62       694        117
+Phoenix          221          12      4840        415
+SanDiego         212          20       383         65
+SanFrancisco     503         102       320        129
+Seattle         1841         305       201         61
+```
+
+This is easier since there is only one row of headings, with the airline and status together.
+
+## Reading in and organizing the data
+
+Packages first:
+
+```{r}
+library(tidyverse)
+```
+
+
+The data in the above format are at the URL below:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/airlines.txt"
+airlines0=read_table(my_url)
+airlines0
+```
+
+This is not tidy. The airline is sort-of encoded in the columns, and the status is nowhere to be seen. My first thought is that the columns, apart from the first, are all frequencies, so my instinct is to `gather` first:
+
+```{r}
+airlines0 %>% gather(airline_status,frequency,-airport)
+```
+
+"What makes the columns different", my mental model for the first argument to `gather`, is actually an airline-status combination. `r tufte::margin_note("My mental model for the second argument is what makes the columns the same, which is here that they are all frequencies.")` So  now we need to split these up; `separate` does exactly this, and even more helpfully, splits at an underscore by default, which is exactly what we happen to have:
+
+```{r}
+airlines = airlines0 %>% gather(airline_status,frequency,-airport) %>% 
+  separate(airline_status,into=c("airline","status"))
+airlines
+```
+
+and now we have something tidy that we can work with.
+
+## Simpson's paradox
+
+To illustrate that Simpson's paradox applies to these data, let's compare the proportion of flights delayed for each airline altogether with the proportions of flights delayed for each airline at each airport.
+
+Starting with the total flights delayed and on time for each airline: we need to add up what's contained in the `frequency` column, not just count the number of rows:
+
+
+```{r}
+airlines %>% count(airline,status,wt=frequency)
+```
+
+To work out proportions, we need to divide by status totals for each airline, which means grouping by airline first:
+
+```{r}
+airlines %>% group_by(airline) %>% 
+  count(airline, status, wt=frequency) %>% 
+  mutate(proportion=n/sum(n))
+```
+
+This shows what we need to show, but a cuter display is obtained by grabbing only the proportions delayed and putting each `airline` in its own column:
+
+```{r}
+airlines %>% group_by(airline) %>% 
+  count(airline, status, wt=frequency) %>% 
+  mutate(proportion=n/sum(n)) %>% 
+  filter(status=="delayed") %>% 
+  select(-n) %>% 
+  spread(airline,proportion)
+```
+
+In my head, that last line is "spread airline, carrying along proportion".
+
+This shows that Alaska Airlines is delayed 13.3% of the time and America West only 10.9%, so America West is more punctual.
+
+Let's do this by airport for each airline now. This is actually almost a direct copy of the above, with `airport` inserted into the `group_by` and into the `count`:
+
+```{r}
+airlines %>% group_by(airport,airline) %>% 
+  count(airport,airline,status,wt=frequency) %>% 
+  mutate(proportion=n/sum(n)) %>% 
+  filter(status=="delayed") %>% 
+  select(-n) %>% 
+  spread(airline,proportion)
+```
+
+We said above that America West had fewer flights delayed overall. Now look at this table: America West has more flights delayed *at every single airport*!
+
+You might be wondering how this can be possible. This apparent impossibility is **Simpson's Paradox**. 
+
+## Using log-linear modelling to explain the paradox
+
+A paradox is an apparent impossibility that does nevertheless have an explanation. This one yields nicely to log-linear modelling, which is a way of modelling associations between categorical variables.
+
+A log-linear model is a generalized linear model with the table frequencies modelled as having a Poisson distribution whose mean depends on the combination of categories a frequency belongs to; the actual relationship is that the log of the mean is linearly related to indicator variables representing the categories (hence the name). 
+
+The idea of log-linear modelling is that you start by modelling the frequency in terms of all possible interactions, and then you see which of the interactions you can remove (because they are not significant). When everything remaining is significant, you stop, and the resulting model tells you what combinations of things are associated. You then look at those tables to understand what kind of associations there are.
+
+So let's start with our data:
+
+```{r}
+airlines.1=glm(frequency~airport*airline*status,data=airlines,family="poisson")
+```
+
+Looking at the output from this is not very illuminating. The most helpful thing is to see what can be dropped, using `drop1`:
+
+```{r}
+drop1(airlines.1,test="Chisq")
+```
+
+The only thing up for grabs is the three-way interaction, which is not significant, and so can be removed:
+
+```{r}
+airlines.2=update(airlines.1,.~.-airport:airline:status)
+drop1(airlines.2,test="Chisq")
+```
+
+There are now three two-way interactions, any of which could be removed if they were not significant. But they all *are* significant, so they all have to stay, and we have to stop the model-building process.
+
+The way to read a log-linear model is that the surviving interactions tell you what significant *associations* there are between your categorical variables. Here, there are associations between airline and status, airport and status and between airport and airline. So we have three two-way tables to look at, in order to understand what is going on.
+
+## Looking at the reduced tables
+
+These three two-way tables hold the key to why Simpson's Paradox happened here. Let's start with airline and status. `status` is a response variable, so we want proportions of status values for each airline. That means grouping by `airline` first:
+
+```{r}
+airlines %>% group_by(airline) %>% 
+  count(airline, status, wt=frequency) %>% 
+  mutate(proportion=n/sum(n))
+```
+
+These are the same overall proportions of delayed flights that we saw before.
+
+Now we move on to airport by status. Again, `status` acts like a response, so we'll `group_by` the other one:
+
+```{r}
+airlines %>% group_by(airport) %>% 
+  count(airport, status, wt=frequency) %>% 
+  mutate(proportion=n/sum(n))
+```
+
+The airports differ substantially in proportions of flights delayed: only 8% of flights into Phoenix, but 22% of flights into San Francisco and 15% of flights into Seattle. (You might suppose that the weather has something to do with this.)
+
+Last, airport by airline.
+I'll group by airport again to make it look like the last table:
+
+```{r}
+airlines %>% group_by(airport) %>% 
+  count(airport, airline, wt=frequency) %>% 
+  mutate(proportion=n/sum(n))
+```
+
+The proportions are of all the flights into each airport. Thus 41% of the flights (in this dataset) into LA are Alaska Airlines flights.
+
+The most interesting things here are the most uneven numbers. 96% of the flights into Phoenix are America West flights, and 89% of the flights into Seattle are Alaska Airlines. 
+
+To resolve the paradox, we combine the conclusions from the last two two-way tables. Most of the flights into Phoenix are America West, and in Phoenix it is easy to arrive on time. Most of the flights into Seattle are Alaska Airlines, and in Seattle it is difficult to arrive on time. This means that the overall on-time arrival percentages contain a hidden bias: Alaska Airlines's percent is increased by the airports it flies into (where it is hard to be on time), and America West's percent is decreased by the airports *it* flies into.
+
+That means that the overall percentages, obtained by averaging over very different airports, are misleading, and the correct comparison is to look at each airport individually, where Alaska Airlines came out better. There is no impossibility; the overall percentages should simply be ignored.
+
+## Something to ponder
+
+Is it better to look at the observed frequencies, or what would be called the expected frequencies in a chi-squared test (which would be predictions here), or model coefficients? I'm thinking the last of those, because the airline by status table above didn't actually *resolve* the Simpson's paradox.
+
+Let's take a look at the coefficients:
+
+```{r}
+summary(airlines.2)
+```
+
+The last of those coefficients tells us that America West is actually *less* likely to be on time, all else equal, according to the model. The reason that America West was on time more often in our data set is that all else was *not* equal; America West flew more often into an airport (Phoenix) where punctuality was good.
+
+There appear to be missing coefficients because each categorical variable has a "baseline" level whose coefficient is inferred from the others: Los Angeles for the airports,  Alaska Airlines, and "delayed" for `status`. If we had all the coefficients, they'd add up to zero over each variable.
+
+Remembering that we are predicting a log-mean, positive coefficients mean "more likely" and negative coefficients "less likely" than the baseline. Thus the strongly positive coefficient on `airportPhoenix:airlineaw` means that  a flight into Phoenix is more likely to be America West (than Alaska Airlines), and the negative coefficient on `airportSanFrancisco:statusontime` means that a flight into San Francisco is less likely to be on time (than flights into airports with positive coefficients).
+ 
+## Conclusion
+
+Log-linear modelling enables us to understand the pattern of association among several categorical variables, by removing higher-order interactions to leave us with a simpler model supported by the data. This model shows us which of the categorical variables are associated, and by looking at the appropriate ones of the cross-tabulations, we can understand the associations that occur. This includes explanations of Simpson's paradox.
+
+## References 
+
+- A [detailed introduction to log-linear modelling](https://onlinecourses.science.psu.edu/stat504/node/122)
+
+- `xtabs` and `prop.table` are another way of making frequency tables [in here](https://www.statmethods.net/stats/frequencies.html)

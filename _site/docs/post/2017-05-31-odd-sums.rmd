@@ -1,0 +1,37 @@
+---
+title: Odd sums
+author: Ken
+date: '2017-05-31'
+slug: odd-sums
+categories:
+  - math
+tags:
+  - R
+---
+
+While waiting for my coffee at work this morning, I was leafing through a recreational mathematics journal. It said, "the numbers 1--9 are arranged at random in a 3 \times 3 matrix. What is the probability that the row sums and column sums are all odd?"
+
+Well, I thought, that ought to be easy enough to simulate. Randomly shuffle the numbers 1--9 using `sample`, and then insert them into a matrix with three columns. Calculate the row and column sums using `apply`, glue them together into one long vector, and test whether all of the values have remainder 1 when divided by 2 (a fancy way of saying "odd"). That led to this function:
+
+```{r}
+isodd=function(isprint=F) {
+  x=sample(1:9)
+  m=matrix(x,ncol=3)
+  if (isprint) print(m)
+  rowsums=apply(m,1,sum)
+  colsums=apply(m,2,sum)
+  v=(c(rowsums,colsums) %% 2)
+  all(v==1)
+}
+```
+
+I also put in an argument `isprint` that, if true, displays the randomly-generated matrix of shuffled values (for use when checking). So, let's see how it works, setting the random number seed for reproducibility:
+
+```{r}
+set.seed(1)
+isodd(T)
+isodd(T)
+isodd(T)
+isodd(T)
+```
+

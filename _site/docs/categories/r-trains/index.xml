@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>R Trains on Ken&#39;s Blog</title>
+    <link>/categories/r-trains/</link>
+    <description>Recent content in R Trains on Ken&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 30 Dec 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/r-trains/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Drawing a network with &#34;ggraph&#34; and &#34;tidygraph&#34;</title>
+      <link>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</link>
+      <pubDate>Sat, 30 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/30/drawing-a-network-with-ggraph-and-tidygraph/</guid>
+      <description>Introduction Thomas Lin Pedersen is the author of a lot of packages, including two that deal with graphs (in the sense of networks), tidygraph for storing and handling graphs, and ggraph for drawing them, ggplot-style. I have a feeling I will be spending a lot of time with tidygraph, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.</description>
+    </item>
+    
+  </channel>
+</rss>

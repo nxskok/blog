@@ -1,0 +1,126 @@
+---
+title: Tidying weather data
+author: Ken
+date: '2017-11-23'
+slug: tidying-weather-data
+categories: [R]
+tags: []
+---
+
+## Introduction 
+
+Weather data often comes in an untidy format that is suitable for looking at, but not so suitable for doing any kind of analysis with. Let's have a look at the kind of thing I mean. But before we do that, we need a package or two:
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+OK, our data, daily mean temperatures from some weather station going back to 1905:
+
+```{r}
+weather=read_csv("BR 1905-2016.csv")
+weather
+```
+
+This says, for example, that on January 2nd, 1905, the mean temperature was -24.2. (Look in the `d2` column of the first row.) This is convenient if you want to look at the data: for example, if you have this in a spreadsheet, you can look at the whole of 1905 in a rectangle with 12 rows and 31 columns. But it is not very convenient for any actual analysis, because the temperatures are scattered over 31 columns. For example, what if you wanted to check the temperatures for time trends?
+
+## Tidying the data
+
+What we want is to get all those temperatures into *one* column, labelled, say, `temperature`, with another column saying which day they were for (the 5th of the month is currently in column `d5`). This is one of the most frequent kinds of data rearrangement, and it's a basic "verb" in the `tidyr` world, `gather`. The way I remember it is: what makes the columns different, what makes them the same, and which columns to gather.
+
+Here, what makes the columns different is that they're different days, what makes them the same is that they're all temperatures, and the columns to gather are `d1` through `d31`:
+
+```{r}
+weather %>% gather(day,temperature,d1:d31)
+```
+
+So now we have all the temperatures in one column. It would also be nice to turn the year, month and day into an actual date. This happens in three steps: first, we pull the number out of `day`, which can be done with `parse_number` (saving the result back into `day`); second, we glue the year, month and day together (which gives us a piece of text that looks like a date but isn't one yet); third, we make an actual date out of it. I'll show the process one step at a time:
+
+```{r}
+weather %>% gather(day,temperature,d1:d31) %>% 
+  mutate(day=parse_number(day)) 
+```
+
+Next, step two:
+
+```{r}
+weather %>% gather(day,temperature,d1:d31) %>% 
+  mutate(day=parse_number(day)) %>% 
+  unite(text_date,year,month,day)
+```
+
+This glues the year, month and now-numeric day together *and gets rid of the year, month and day* that we no longer need.
+
+Step three:
+
+```{r}
+weather %>% gather(day,temperature,d1:d31) %>% 
+  mutate(day=parse_number(day)) %>% 
+  unite(text_date,year,month,day) %>% 
+  mutate(date=ymd(text_date)) -> weather2
+weather2
+```
+
+I thought `as.Date` would handle the last step, but it seems to require `ymd` from `lubridate`, which turns a piece of text containing a year, a month and a day in that order (in some representation) into an actual date. 
+
+I am courting controversy here by using the right-arrow assignment syntax. This means "do all the stuff in the pipeline and save the final result in `weather2`". I like this because it follows top to bottom, with the assignment being the very last thing we do. Some people say that the assignment is the most important thing, and we should start with it, to emphasize that we are saving the result, but I find it weird to jump back to the beginning to find out what happens to the final result of the pipeline. A matter of taste.
+
+## Further tidying
+
+Some other observations:
+
+- We don't need `text_date` any more, since it has done its job.
+- Those temperatures -9999.9 are actually missing.
+- The dates are out of order, with all the firsts of the month first, then the seconds, and so on. (This is because `gather` goes all the way down the first column first.)
+
+So let's implement that:
+
+```{r}
+weather2 %>% select(-text_date) %>% 
+  mutate(temperature=ifelse(temperature<(-5000),NA,temperature)) %>% 
+  arrange(date) -> weather3
+weather3
+```
+
+How many missing and non-missing temperatures were there?
+
+```{r}
+weather3 %>% count(is.na(temperature))
+```
+
+About 10,000 missing ones.
+
+## A pretty picture
+
+I can't really do a blog post without at least one pretty picture. I talked about time trends earlier, so:
+
+```{r}
+weather3 %>% 
+  filter(date>="1981-01-01") %>% 
+  ggplot(aes(x=date,y=temperature))+geom_line()
+```
+
+There's an awful lot of seasonal variation, and too much missing data, but just maybe there are not as many really cold days as there used to be.
+
+## "What I actually want"
+
+This came across my desk today, and the person who brought it to me had some additional things she wanted to do with the data, which I realized were all easy to do with `filter`:
+
+- only get dates between 1981 and 2010 (inclusive)
+- only get October through December
+- get rid of the missings (since the tool she planned to use next didn't take missing values).
+
+So, we got to work:
+
+```{r}
+weather3 %>% 
+  filter(between(year(date),1981,2010)) %>% 
+  filter(month(date) >=10) %>% 
+  filter(!is.na(temperature)) -> weather4
+weather4
+```
+
+and then she could go off and do Mann-Kendall correlation (Kendall correlation with time) and the Theil-Sen (nonparametric) slope.
+
+If only all consulting were that easy!

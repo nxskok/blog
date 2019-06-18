@@ -1,0 +1,404 @@
+---
+title: Rating rugby league with Stan
+author: Ken
+date: '2018-05-01'
+slug: rating-rugby-league-with-stan
+categories:
+  - Bayesian
+  - R
+tags:
+  - R
+  - rstan
+  - tidyverse
+---
+
+## What's in here
+
+This is a rather long and complicated post. Here are some of the things you'll find here:
+
+- about rugby league
+- extracting data from text
+- making dates with `lubridate` and using `fill` to copy them to empty rows
+- `tidyr::extract`
+- making a Bayesian model with Stan
+- `rstan`
+- using `left_join` to look up values in another table
+- `fct_reorder` and ordering boxplots by median
+
+
+## Introduction
+
+[Rugby league](https://en.wikipedia.org/wiki/Rugby_league) is one of the "football" family of sports, in which players gain ground by carrying and passing and kicking the ball (like rugby union, North American football and somewhat like Australian and Gaelic football). The aim of the game is to touch the ball down behind the opponents' goal line (a "try", four points) after which a kick is taken at goal (a "conversion", two points). These typically make up most of the scoring, but teams can also score a penalty goal for two points or a drop goal for one, usually near the end of a close game. See [here](https://en.wikipedia.org/wiki/Rugby_league_gameplay) for more.
+
+Rugby league began in the late 1800s after a dispute about whether players should be paid (as compensation for taking time off work to play). It has thus been a professional game from the start, unlike rugby union which was until relatively recently an amateur game. Rugby league differs from rugby union in two important respects:
+
+- thirteen players a side instead of fifteen
+- after a tackle, play stops long enough for the tackled player to get up and for the defence to retreat, and play restarts with the tackled player rolling the ball back to the "dummy half" behind him. This is in principle similar to American football, but the restart of play happens immediately, and so play is effectively continuous.
+
+Most of Rugby League's clubs are from northern England and the Sydney area of Australia. The sport is also important in the Pacific islands. 
+
+## Data
+
+I visited [this page](https://www.loverugbyleague.com/results/) and copy-pasted this season's results in the English and Australian top leagues into a spreadsheet, like this:
+
+![](/ss.png)
+
+There is only a single column of text, so I might just as well have pasted it into a text file (or used something like `rvest` to scrape the page). In any case, it comes to R as a single column of text that will need some processing. We begin by loading some packages:
+
+```{r}
+library(rstan)
+library(tidyverse)
+library(readxl)
+library(lubridate)
+```
+
+These are, respectively, for Bayesian modelling (later), the usual data tidying stuff, reading in Excel files, and handling dates and times (which we will be doing shortly).
+
+Humble beginnings:
+
+
+```{r}
+rl=read_excel("/home/ken/Documents/rugby-league.xlsx",col_names = "res",sheet=2)
+rl
+```
+
+I realized that I could have avoided using the spreadsheet entirely, by using [this idea](https://twitter.com/SuzanBaert/status/991755292550549506) from Suzan Baert.
+
+The layout of things:
+
+- the name of the home team
+- a space, then the score of the home team
+- a space, a dash, then a space
+- the score of the away team, then a space
+- the name of the away team, then a space
+- a designator for the league in which the match was played:
+  - SL (top level in England)
+  - CH (second level in England)
+  - L1 (third level in England)
+  - CC (a national knockout tournament)
+  - NRL (Australian national league)
+  
+Many of the team names have spaces in them, and so simply splitting at spaces will entail more processing. 
+
+Before that, though, note that we have two kinds of lines here: one containing a date (and no results), which is the date for all the matches between it and the next date. Lines containing dates are easy to identify since they have *no* space-dash-space in them anywhere. So let's begin by identifying whether each line is a "result" or not (a date). `str_detect` from `stringr` returns `TRUE` if the second thing is contained anywhere within each item of the first thing, which in this case will yield `TRUE` if the line refers to a game result and not a date:
+
+```{r}
+rl %>% mutate(isres=str_detect(res," - "))
+```
+
+Next we define a column `date` to be the date (if that's what the line is, otherwise empty) and a column `result` to be the result, or empty, ditto. I got rid of the original `res` at the end of this process so you can see what there is more easily:
+
+```{r}
+rl %>% mutate(isres=str_detect(res," - ")) %>% 
+  mutate(date=ifelse(isres,"",res),
+         result=ifelse(isres,res,"")) %>% 
+  select(-res)
+```
+
+Those dates are text, but I can make them into real dates using `lubridate`. They are all year 2018, so if I glue the year onto the end, they are in day-month-year order,  and then `dmy` will parse them:
+
+```{r}
+rl %>% mutate(isres=str_detect(res," - ")) %>% 
+  mutate(date=ifelse(isres,"",res),
+         result=ifelse(isres,res,"")) %>% 
+  select(-res) %>% 
+  mutate(date=dmy(str_c(date," 2018")))
+```
+
+The "dates" that are empty cannot be parsed as dates, so they are turned into missing values. (These are all the lines that "failed to parse".)
+
+The reason for making the dates into real dates was so that they could be used as the dates for the game results. What we want to do is to replace all those `NA` values by the previous non-missing value, all the way down. This is a task that comes up often enough that `tidyr` has a function to do exactly that, called `fill`. By default it fills down from the previous non-missing value, which is what we want. (It can also be made to fill upwards from the *next* non-missing value.):
+
+```{r}
+rl %>% mutate(isres=str_detect(res," - ")) %>% 
+  mutate(date=ifelse(isres,"",res),
+         result=ifelse(isres,res,"")) %>% 
+  select(-res) %>% 
+  mutate(date=dmy(str_c(date," 2018"))) %>% 
+  fill(date)
+```
+
+Now, the lines containing just dates have served their purpose (the ones for which `isres` is `FALSE`), and once we gotten rid of those lines, we can get rid of the column `isres` too:
+
+```{r}
+rl %>% mutate(isres=str_detect(res," - ")) %>% 
+  mutate(date=ifelse(isres,"",res),
+         result=ifelse(isres,res,"")) %>% 
+  select(-res) %>% 
+  mutate(date=dmy(str_c(date," 2018"))) %>% 
+  fill(date) %>% 
+  filter(isres) %>% 
+  select(-isres) ->
+rl2
+rl2
+```
+
+I am using the right-arrow to assign the result to `rl2`, which I put, unindented, on the next line, to remind myself that I am creating this new data frame.
+
+Now we have to deal with that `result` column.
+I learned Perl, which is a great language for handling text like this. The idea there is that you use a "regular expression" with "capture groups" to identify and extract the things you want. A similar `tidyverse` functionality lives in `extract` from `tidyr`. I'm doing to do this in three steps. The first step is to separate `result` into the bit before the space-dash-space. In fact, I can use `separate` for this bit:
+
+`r tufte::margin_note("I realized in time that \"sep\" below does not have to be a single character.")`
+
+```{r}
+rl2 %>% 
+  separate(result,into=c("first","second"),sep=" - ")
+```
+
+Now we can't use `separate` any more, because sometimes space separates the thing we want, and sometimes it separates words in a team name. This is where `extract` comes in, as we tackle part 2.
+
+`first` contains some text (the home team's name), then a space, then one or more digits, then the end of the string. The following extracts those pieces (I explain my regular expression below):
+
+`r tufte::margin_note("Both \"tidyr\" and \"rstan\" have a function called \"extract\". By coincidence we will be using both of them in this post, so I thought it better to be clear about which one I was using.")`
+
+```{r}
+rl2 %>% 
+  separate(result,into=c("first","second"),sep=" - ") %>% 
+  tidyr::extract(first,c("t1","s1"),"(.*)\\s(\\d+)$") 
+```
+
+`r tufte::margin_note("A lot more about string matching and regular expressions is in Chapter 14 of R for Data Science. Link at the end in References, since I am not sure about putting a link in a marginal note.")`
+
+The inputs to `extract` are: some text that we want to pull something out of, new columns to store the results in, and a regular expression that provides a recipe for what to pull out. My regular expression contains:
+
+- `.` matches any single character
+- `*` matches zero of more of the preceding, so `.*` means to match zero or more of any characters
+- `()` around part of a regular expression makes a "capture group": `(.*)` gets saved in `t1` (the home team's name)
+- `\\s` matches exactly one whitespace character (space or tab)
+- `\\d` matches exactly one numeric digit 0 through 9
+- `+` matches one or more of the preceding, so `\\d+` matches one or more digits
+- `(\\d+)` matches one or more digits and captures the result, so that `s1` contains the home team's score
+- `$` matches the end of the text, so that the digits have to be right at the end. (This would help if a team was called something like "Bassenthwaite Wanderers RLFC (1897)", with numbers *in* it.)
+
+If you were wondering how `.*` knew to match everything except the numbers at the end: well, regular expressions are by default "greedy" in that they match as much as possible such that the whole regular expression will still match something. In this case, `.*` can match everything up to (but not including) the space before the score, and "space then some digits then the end" will match the score, so it still works. 
+
+Part three is to do the same thing to `second`. This is a teeny bit more complicated, but the same idea: the beginning of the string, some digits (the away team's score), a space, some text (the away team's name), a space, some more text that does not contain spaces (league designator), end of the string. So the regular expression shown below will catch it:
+
+```{r}
+rl2 %>% 
+  separate(result,into=c("first","second"),sep=" - ") %>% 
+  tidyr::extract(first,c("t1","s1"),"(.*)\\s(\\d+)$") %>% 
+  tidyr::extract(second,c("s2","t2","lg"),"^(\\d+)\\s(.*)\\s([^ ]+)$") %>% 
+  mutate(diff=as.numeric(s1)-as.numeric(s2)) ->
+games
+games
+```
+
+The `[^ ]` is called a "character class". This one means "anything that does not match space", so the third capture group, the one saved into `lg`, is "one or more non-spaces". Finally, I create a column called `diff` that is the difference between the home and away team's scores, bearing in mind that `s1` and `s2` are both text. (A positive `diff` means that the home team won.)
+
+I save this into a data frame called `games`. This is what we will use for modelling later.
+
+## A Bayesian model for rugby league
+
+It might be possible to model the actual point-scoring process: maybe a Poisson model for tries (with mean depending on the team strength), conversions successfully kicked with a certain probability (that might vary by team; see also [here](https://en.wikipedia.org/wiki/Try#Conversion)). But then there are penalty goals and drop goals, which are typically kicked near the end of a game, *if* they are close enough to goal to stand a reasonable chance of success, and *if* the extra two points or one point are enough to substantially improve a team's chance of winning the game. (A team leading by six points might kick a drop goal to lead by seven and force the other side to score twice instead of being able to level the score with a converted try.)
+
+`r tufte::margin_note("In rugby league, the conversion is kicked from level with where the ball was touched down. Thus, if the try was scored between the posts, the conversion is from right in front of the posts, but if the try was scored near the sideline, the conversion has to be kicked from the sideline. The kicker can move back as far as he likes, and tries to make an easier angle without making the kick too long. Thus conversions are not all of equal difficulty.")`
+
+So I gave up on that idea and went with something a lot simpler. I decided to model the score difference as having a normal distribution with mean that depended on the relative strengths of the teams (the difference between their "ratings"), and a standard deviation that was fixed for all games (to be estimated). I could have also used something like a $t$ distribution with degrees of freedom to be estimated, which might better account for freak results, but this seemed to be a good place to start.
+
+As in [my other blog post about Stan](http://ritsokiguess.site/docs/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/), I write out the (likelihood part of the) model first, and then piece together the rest of the Stan code. I assert that each team has a rating `rat`, and I let `sigma_diff` be the (unknown) SD of score differences. I can compute the rating differences game by game. I seem to get the best results in Stan if I calculate things step by step, so my likelihood part looks like this:
+
+```
+model {
+  // likelihood
+  for (i in 1:ng) {
+    o1=t1[i];
+    o2=t2[i];
+    ratdiff[i]=rat[o1]-rat[o2];
+  } 
+  diff ~ normal(ratdiff, sigma_diff);
+}
+```
+
+I realized coding this that the teams would have to have *numbers* rather than names, because Stan arrays have integer subscripts. Thus `t1[i]` is the home team in game `i` (an integer), and `rat[o1]` is the rating of team number `o1`. The sampling step at the bottom works just fine on vectors, so that can be outside the loop.
+
+`r tufte::margin_note("This is a general way of modelling with categorical variables in Stan: turn the categories into numbers and have an effect for each (numbered) category.")`
+
+`ng` is the number of games. Elsewhere I need `nt` to be the number of teams.
+
+Now I have to tidy up after myself. `t1` and `t2` are data, and `diff` will be data also. `o1`, `o2` and `ratdiff` are calculated here, so they will have to be declared. `rat` and `sigma_diff` are parameters, so they will need to be given prior distributions and declared in a `parameters` section. A normal prior for `rat` seems reasonable, with an SD that will be part of the data; also it seems easiest to have a chi-squared prior for `sigma_diff` with a df (mean) that will also be part of the data.
+
+All of which leads me to this (model as a piece of text):
+
+```{r}
+model='
+data {
+  int<lower=2> nt;
+  int<lower=2> ng;
+  real<lower=0> sigma_prior;
+  real<lower=0> sigma_diff_mean;
+  int<lower=1> t1[ng];
+  int<lower=1> t2[ng];
+  real diff[ng];
+}
+
+parameters {
+  real<lower=0> sigma_diff;
+  real rat[nt];
+}
+
+model {
+  int o1;
+  int o2;
+  real ratdiff[ng];
+  // prior
+  rat ~ normal(0, sigma_prior);
+  sigma_diff ~ chi_square(sigma_diff_mean);
+  // likelihood
+  for (i in 1:ng) {
+    o1=t1[i];
+    o2=t2[i];
+    ratdiff[i]=rat[o1]-rat[o2];
+  } 
+  diff ~ normal(ratdiff, sigma_diff);
+}
+'
+```
+
+For model-checking I would add a `generated quantities` section to simulate predictive distributions (which I would then compare with the data). But that's for later.
+
+Compile that (to C++), ignoring the warnings:
+
+```{r, warnings=F, cache=T}
+model_compiled=stan_model(model_code=model)
+```
+
+## Organizing the data for Stan
+
+My team is the Toronto Wolfpack, who are playing in the Championship (2nd level) this year. Yes, this is a team based in Canada, playing in the English league system.
+So let's rate the teams in this league (designated `CH` in my data):
+
+```{r}
+games %>% filter(lg=="CH") ->
+games_ch
+games_ch
+```
+
+I said above that we need to convert the teams to number labels. So let's make a conversion table. First I need to get all the teams into one vector:
+
+```{r}
+teams_vec=with(games_ch,c(t1,t2))
+```
+
+and then I grab the distinct ones, put them into a data frame, and supply some ID numbers (the row numbers of the data frame will do):
+
+```{r}
+tibble(team=teams_vec) %>% distinct() %>% 
+  mutate(team_id=row_number()) ->
+teams
+teams
+```
+
+Those with a keen eye on the geography will recognise a number of locations in northern England, and a few outliers: London, Toulouse, Toronto. 
+
+We'll use this as a conversion table to convert the team names to numbers, run Stan, and then use this table to convert the results back afterwards. The major ingredient to do that is `left_join`. This looks up a column of one data frame in another data frame. Let's do that with the home teams, which are `t1` in `games_ch`. The `by` is needed below since the column names are not the same: what is `t1` in `games_ch` needs to be looked up in `team` in `teams`:
+
+```{r}
+games_ch %>% left_join(teams,by=c("t1"="team"))
+```
+
+We've gained an extra column `team_id`, which is the numerical ID of the home team. So we repeat the process with the away teams:
+
+```{r}
+games_ch %>% 
+  left_join(teams,by=c("t1"="team")) %>% 
+  left_join(teams,by=c("t2"="team")) -> 
+d
+d
+```
+
+This time, we have a `team_id.x` and a `team_id.y` which are the numerical IDs of the home and away teams respectively. This contains all we need for input to Stan.
+
+## Running Stan
+
+Looking back at the `data`section of our Stan code tells us what we need to supply. There are two prior SDs. One is `sigma_prior`, the prior SD of the team ratings. I'll pick 10 for this, suggesting that the top and bottom teams are about 40--60 points apart (2--3 times sigma up and down). The other is `sigma_diff_mean`. This is the *mean* of the prior distribution of SD of score difference within a game. I'll use 20 (points) for this. The numbers of teams and games are the numbers of rows of data frames we already made. So now make a `list`:
+
+```{r}
+ch_stan_data=list(
+  nt=nrow(teams),
+  ng=nrow(games_ch),
+  sigma_prior=10,
+  sigma_diff_mean=20,
+  t1=d$team_id.x,
+  t2=d$team_id.y,
+  diff=d$diff
+)
+```
+
+and then sample away (which doesn't take long):
+
+```{r}
+set.seed(457299)
+r1=sampling(model_compiled,data=ch_stan_data)
+r1
+```
+
+This seems to have worked, as evidenced by the `Rhat` values of 1 and the `n_eff` values of 4000 (there were $4\times 1000$ non-warm-up samples). The `rat[1]`, `rat[2]` etc refer to the team ID numbers, but it would be nice to have a table of posterior rating means for each team with the team *names* in it. First, though, we have to extract the posterior distributions from `r1`, using the `extract` from `rstan` (and not the `extract` from `tidyr`!):
+
+```{r}
+r2=rstan::extract(r1)
+posterior_means=apply(r2$rat,2,mean)
+posterior_means
+```
+
+`r2$rat` is a $4000\times 12$ matrix (one row per Stan sample, 1 column per team). Since I only want the posterior means from it for the moment, I fired up some base R to get the column means directly. These are in the order of the team numbers, so now we make a data frame with the team numbers in it, and look them up in `teams`:
+
+```{r}
+tibble(post_mean=posterior_means) %>% 
+  mutate(team_id=row_number()) %>% 
+  left_join(teams) %>% 
+  arrange(desc(post_mean))
+```
+
+This time the `join` is simpler because the column we want to look up has the same name `team_id` in both data frames, and our final result has acquired a column `team` that matches up with `team_id`.
+
+The ordering of teams here is not the same as in the league table (as of this writing):
+
+![](/ch_table.svg)
+
+The most visible difference is that the Toronto Wolfpack are rated 5th but top of the table. My guess is that my ratings place a greater emphasis on points scored and a lesser emphasis on wins (since wins do not appear explicitly in my ratings). The Wolfpack have conceded the fewest points in the league, but have scored a lot fewer points than the teams around them. This would show up as the Wolfpack doing better than expected (by the ratings) against the teams at the top and worse against the teams at the bottom.
+
+A nice visual is to display the rating posterior distributions as boxplots, one for each team, in order of median:
+
+```{r}
+r2$rat %>% as_tibble() %>% 
+  gather(team_number,rat,everything()) %>% 
+  mutate(team_id=parse_number(team_number)) %>% 
+  left_join(teams) %>% 
+  mutate(team_ordered=fct_reorder(team,rat,median)) %>% 
+  ggplot(aes(x=team_ordered,y=rat))+geom_boxplot()+
+    coord_flip() -> 
+g
+```
+
+There is a lot to explain here, so let me take a shot:
+
+- grab the matrix of posterior distributions and turn it into a data frame. (This acquires column names `V1`, `V2` etc.)
+- recognise that `ggplot` likes to have the `x` and `y` for a plot in one column each, so create "long format": a column containing all the posterior-distribution rating values, and a second column saying which team those rating values belong to.
+- pull just the numbers out of `V1`, `V2` etc.
+- look those team numbers up (adding a column `team` with the team names)
+- out of those (text) team names, create an ordered factor, where the levels are ordered by the *median* of the variable `rat` (this also does the calculation)
+- make side-by-side (vertical) boxplots of rating using the ordered team names as groups
+- turn the boxplots around so they're horizontal (leaving space for the team names on the left).
+
+Here's the graph:
+
+```{r}
+g
+```
+
+The top five teams and the bottom three teams seem to be distinct from the teams in the middle.
+ 
+## References
+
+[Wikipedia article on rugby league](https://en.wikipedia.org/wiki/Rugby_league)
+
+[Wikipedia article on rugby league game play](https://en.wikipedia.org/wiki/Rugby_league_gameplay)
+
+[Tidyverse help page on "extract"](http://tidyr.tidyverse.org/reference/extract.html)
+
+[Base "reorder"](https://groups.google.com/forum/#!topic/ggplot2/8N0ofttOdcw)
+
+[Tidyverse help page on "fct_reorder"](https://www.rdocumentation.org/packages/forcats/versions/0.3.0/topics/fct_reorder)
+
+[R for Data Science](http://r4ds.had.co.nz/): chapter 14 for strings and regular expressions, chapter 15 for factors (where I got `fct_reorder` from)

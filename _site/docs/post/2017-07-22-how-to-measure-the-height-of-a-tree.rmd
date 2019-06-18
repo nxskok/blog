@@ -1,0 +1,49 @@
+---
+title: How To Measure The Height of a Tree
+author: Ken
+date: '2017-07-22'
+slug: how-to-measure-the-height-of-a-tree
+categories:
+  - curiosity
+tags: []
+header-includes: 
+  - \usepackage{tikz}
+  - \usepackage{pgfplots}
+---
+
+## Introduction
+
+In a previous post, I was trying to estimate the volume of wood in a tree from its diameter, and I noted that it would be an advantage to know the height of the tree: for example, we could pretend the tree was cone-shaped, or use a power-law-type relationship in which we estimate the best powers of diameter and height to use to estimate volume.
+
+Which made me wonder, how *do* you measure the height of a tree anyway? [This](https://gabrielhemery.com/2011/05/15/how-to-calculate-tree-height-using-a-smartphone/) made a lot of sense (and taught me how to use a clinometer app, of which more later). [This](https://en.wikipedia.org/wiki/Tree_height_measurement) contained more detail, including a second method that I want to talk about. In addition, I learned about Tikz: how to use it to draw a nice diagram, and how to get said diagram to work with R Markdown and show up in this post.
+
+## A tree and a human, diagrammatically
+
+Here is an idealized tree (on the right) with an idealized human (on the left) trying to measure it.
+
+\begin{tikzpicture}[scale=2]
+  \draw (0,0) -- (0,1);
+  \draw (3,0) -- (3,6);
+  \draw (0,0) -- (3,0);
+  \draw (0,1) -- (3,0);
+  \draw (0,1) -- (3,6);
+  \draw (0,1) -- (3,1);
+  % vertices
+  \node[left] at (0,1) {E};
+  \node[left] at (0,0) {F};
+  \node[right] at (3,6) {A};
+  \node[right] at (3,1) {B};
+  \node[right] at (3,0) {C};
+  % line lengths
+  \node[below] at (1.5,0) {$d$};
+  \node[above] at (1.5,1) {$d$};
+  \node[right] at (0,0.5) {$k$};
+  \node[left] at (3,0.5) {$k$};
+  \node[right] at (3,3.5) {$h$};
+  % angles
+  \node[above right] at (0.1,1) {$\theta$};
+  \node[below right] at (0.5,1.05) {$\phi$};
+\end{tikzpicture}
+
+
+

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Getting data from a frequency table, the tidyverse way</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/06/01/getting-data-from-a-frequency-table-the-tidyverse-way/">Getting data from a frequency table, the tidyverse way</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jun 1, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;10 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="the-usual-package" class="section level2">
+<h2>The usual package</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">References at the end.</span></p>
+<p>I was searching for some data for an assignment for my students, and I found an exercise in Watkins, Schaeffer and Cobb that seemed to fit my needs. However, the data values were in a frequency table, and I wanted an actual list of values, so that my students could make a histogram and calculate some summary statistics using R. Also, for reasons that we will come to later, I wanted to randomly shuffle the values, which turns out to have a ludicrously easy solution in the Tidyverse.</p>
+</div>
+<div id="the-data-set-as-it-reached-me" class="section level2">
+<h2>The data set, as it reached me</h2>
+<p>These are speeds (in miles per hour) of 1000 cars measured on a particular stretch of road (in free-flowing traffic).</p>
+<p>Here’s the frequency table:</p>
+<pre class="r"><code>counts=tribble(
+  ~speed_int, ~count,
+  25, 2, 
+  26, 31,
+  27, 92,
+  28, 149,
+  29, 178,
+  30, 156,
+  31, 157,
+  32, 99,
+  33, 74,
+  34, 31,
+  35, 16,
+  36, 13,
+  37, 1, 
+  38, 1
+)
+counts</code></pre>
+<pre><code>## # A tibble: 14 x 2
+##    speed_int  count
+##        &lt;dbl&gt;  &lt;dbl&gt;
+##  1      25.0   2.00
+##  2      26.0  31.0 
+##  3      27.0  92.0 
+##  4      28.0 149   
+##  5      29.0 178   
+##  6      30.0 156   
+##  7      31.0 157   
+##  8      32.0  99.0 
+##  9      33.0  74.0 
+## 10      34.0  31.0 
+## 11      35.0  16.0 
+## 12      36.0  13.0 
+## 13      37.0   1.00
+## 14      38.0   1.00</code></pre>
+<p>The speeds are in <code>speed_int</code> and the <code>count</code> column contains frequencies.</p>
+<p>What I want is a list of speeds, each speed appearing in the data set the corresponding <code>count</code> number of times.
+That is, the frequencies add up to 1000, so I want 1000 values.</p>
+</div>
+<div id="repeating-the-values-the-right-number-of-times" class="section level2">
+<h2>Repeating the values the right number of times</h2>
+<p>Base R’s <code>rep</code> function provides the simplest way to get what I want:</p>
+<pre class="r"><code>with(counts,rep(speed_int,count))</code></pre>
+<pre><code>##    [1] 25 25 26 26 26 26 26 26 26 26 26 26 26 26 26 26 26 26 26 26 26 26 26
+##   [24] 26 26 26 26 26 26 26 26 26 26 27 27 27 27 27 27 27 27 27 27 27 27 27
+##   [47] 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27
+##   [70] 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27
+##   [93] 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27 27
+##  [116] 27 27 27 27 27 27 27 27 27 27 28 28 28 28 28 28 28 28 28 28 28 28 28
+##  [139] 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28
+##  [162] 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28
+##  [185] 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28
+##  [208] 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28
+##  [231] 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28
+##  [254] 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 29 29
+##  [277] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29
+##  [300] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29
+##  [323] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29
+##  [346] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29
+##  [369] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29
+##  [392] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29
+##  [415] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29
+##  [438] 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 30 30 30 30 30 30 30 30
+##  [461] 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30
+##  [484] 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30
+##  [507] 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30
+##  [530] 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30
+##  [553] 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30
+##  [576] 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30
+##  [599] 30 30 30 30 30 30 30 30 30 30 31 31 31 31 31 31 31 31 31 31 31 31 31
+##  [622] 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31
+##  [645] 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31
+##  [668] 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31
+##  [691] 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31
+##  [714] 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31
+##  [737] 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31 31
+##  [760] 31 31 31 31 31 31 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32
+##  [783] 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32
+##  [806] 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32
+##  [829] 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32
+##  [852] 32 32 32 32 32 32 32 32 32 32 32 32 32 33 33 33 33 33 33 33 33 33 33
+##  [875] 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33
+##  [898] 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33
+##  [921] 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 34 34 34 34 34
+##  [944] 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34 34
+##  [967] 34 34 34 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 35 36 36 36 36
+##  [990] 36 36 36 36 36 36 36 36 36 37 38</code></pre>
+<p>How do I do the same thing the tidyverse way? The obvious idea doesn’t work:</p>
+<pre class="r"><code>counts %&gt;% mutate(speed=rep(speed_int,count))</code></pre>
+<p>This is because the new <code>speed</code> column has to have the same length as the old <code>speed_int</code> column, and it’s now longer.
+So I thought a list-column might do the job: replicate each <code>speed_int</code> by the count in the corresponding row,
+and save each vector answer in a list-column, thus:</p>
+<pre class="r"><code>counts %&gt;% mutate(speed=map2(speed_int,count,~rep(.x,.y)))</code></pre>
+<pre><code>## # A tibble: 14 x 3
+##    speed_int  count speed      
+##        &lt;dbl&gt;  &lt;dbl&gt; &lt;list&gt;     
+##  1      25.0   2.00 &lt;dbl [2]&gt;  
+##  2      26.0  31.0  &lt;dbl [31]&gt; 
+##  3      27.0  92.0  &lt;dbl [92]&gt; 
+##  4      28.0 149    &lt;dbl [149]&gt;
+##  5      29.0 178    &lt;dbl [178]&gt;
+##  6      30.0 156    &lt;dbl [156]&gt;
+##  7      31.0 157    &lt;dbl [157]&gt;
+##  8      32.0  99.0  &lt;dbl [99]&gt; 
+##  9      33.0  74.0  &lt;dbl [74]&gt; 
+## 10      34.0  31.0  &lt;dbl [31]&gt; 
+## 11      35.0  16.0  &lt;dbl [16]&gt; 
+## 12      36.0  13.0  &lt;dbl [13]&gt; 
+## 13      37.0   1.00 &lt;dbl [1]&gt;  
+## 14      38.0   1.00 &lt;dbl [1]&gt;</code></pre>
+<p>I don’t really need the <code>~</code> form here, but I think it reads nicely: “for each <code>speed_int</code> and <code>count</code> (in parallel),
+repeat the first thing as many times as the second thing”. Each entry in <code>speed</code> is a vector as long as the entry in <code>count</code>.</p>
+</div>
+<div id="making-a-data-frame-of-speeds" class="section level2">
+<h2>Making a data frame of speeds</h2>
+<p>Now, I need to get the actual speeds out of there. This is a job for <code>unnest</code>:</p>
+<pre class="r"><code>counts %&gt;% mutate(speed=map2(speed_int,count,~rep(.x,.y))) %&gt;% 
+  unnest()</code></pre>
+<pre><code>## # A tibble: 1,000 x 3
+##    speed_int count speed
+##        &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1      25.0  2.00  25.0
+##  2      25.0  2.00  25.0
+##  3      26.0 31.0   26.0
+##  4      26.0 31.0   26.0
+##  5      26.0 31.0   26.0
+##  6      26.0 31.0   26.0
+##  7      26.0 31.0   26.0
+##  8      26.0 31.0   26.0
+##  9      26.0 31.0   26.0
+## 10      26.0 31.0   26.0
+## # ... with 990 more rows</code></pre>
+<p>25 appears twice, then 26 31 times, and so on.</p>
+<p>Now it occurs to me that the values in <code>speed_int</code> have been repeated the right number of times,
+so I didn’t need to work so hard: <em>anything</em> that produced a vector of the right length would have done.
+But anyway.</p>
+</div>
+<div id="shuffling-the-rows" class="section level2">
+<h2>Shuffling the rows</h2>
+<p>I wanted to present my students with a file containing a bunch of speeds in apparently random order
+(as if they were the speeds of 1000 cars in the order they passed the speed gun). I remembered <code>sample_frac</code>,
+which randomly selects a fraction of the rows of a data frame, but didn’t realize (until I looked at the Stack Overflow post
+referenced below) that sampling a fraction 1 of the rows will sample them all, but in a shuffled order, in the same
+way that <code>sample</code> when not supplied a sample size will randomly sample all of its input (that is, shuffle it).
+Thus I can do this:</p>
+<pre class="r"><code>counts %&gt;% mutate(speed=map2(speed_int,count,~rep(.x,.y))) %&gt;% 
+  unnest() %&gt;% 
+  sample_frac(1)</code></pre>
+<pre><code>## # A tibble: 1,000 x 3
+##    speed_int count speed
+##        &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1      30.0 156    30.0
+##  2      32.0  99.0  32.0
+##  3      35.0  16.0  35.0
+##  4      31.0 157    31.0
+##  5      28.0 149    28.0
+##  6      34.0  31.0  34.0
+##  7      31.0 157    31.0
+##  8      31.0 157    31.0
+##  9      29.0 178    29.0
+## 10      28.0 149    28.0
+## # ... with 990 more rows</code></pre>
+<p>and do a bit of tidying before I save the results:</p>
+<pre class="r"><code>counts %&gt;% mutate(speed=map2(speed_int,count,~rep(.x,.y))) %&gt;% 
+  unnest() %&gt;% 
+  sample_frac(1) %&gt;% 
+  mutate(car_no=row_number()) %&gt;% 
+  select(car_no,speed)</code></pre>
+<pre><code>## # A tibble: 1,000 x 2
+##    car_no speed
+##     &lt;int&gt; &lt;dbl&gt;
+##  1      1  28.0
+##  2      2  27.0
+##  3      3  30.0
+##  4      4  27.0
+##  5      5  27.0
+##  6      6  29.0
+##  7      7  30.0
+##  8      8  30.0
+##  9      9  28.0
+## 10     10  31.0
+## # ... with 990 more rows</code></pre>
+<p>The last two lines create a column of “car numbers”, and then put the two columns I want to keep in a sensible order.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://stats.stackexchange.com/questions/15574/how-to-convert-a-frequency-table-into-a-vector-of-values?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa">Using <code>rep</code></a></p>
+<p><a href="https://stackoverflow.com/questions/6422273/how-to-randomize-or-permute-a-dataframe-rowwise-and-columnwise?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa">Randomly shuffling rows of a data frame</a></p>
+<p><a href="https://www.amazon.ca/Statistics-Binder-Ready-Version-Decision/dp/0470559942/ref=sr_1_1?ie=UTF8&amp;qid=1527868509&amp;sr=8-1&amp;keywords=watkins+scheaffer+cobb+statistics&amp;dpID=51kUOPO2Y0L&amp;preST=_SX198_BO1,204,203,200_QL40_&amp;dpSrc=srch">Watkins, Schaeffer and Cobb</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

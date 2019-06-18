@@ -1,0 +1,14 @@
+---
+title: R, it's OK I guess
+author: Ken
+date: '2018-04-05'
+slug: r-it-s-ok-i-guess
+categories:
+  - R
+tags:
+  - rstats
+---
+
+On a dare from @dataandme and @littlemissdata, last night I bought the domain `ritsokiguess.site`, and now this blog lives there (as well as at the old [nxskok.github.io](http://nxskok.github.io), which is the "actual" home for the site). I used, extensively, [Brooke Watson's guide](http://blog.brooke.science/posts/custom-domain-hosting-with-github-and-namecheap/), for which many thanks. There seems to need to be a two-way connection between where the static website actually lives, and where it looks to the outside world as if it lives.
+
+I guess I now have to call my blog "R, it's OK I guess", which would be a delicious ironical thingy.

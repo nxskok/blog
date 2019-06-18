@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Safely, possibly</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/09/07/safely-possibly/">Safely, possibly</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Sep 7, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;6 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>You know how, when you’re reading documentation, you nod sagely as you read some part, but when you come back to it later, you realize that <em>you really don’t understand it at all</em>. This happened to me with the <code>purrr</code> documentation. I mean, I could manage <code>map</code> and some of its variants, but when it came down to it, I really had no clue about <code>safely</code> and <code>possibly</code>. Until today, when I actually had a reason to study them. Hence, this post.</p>
+</div>
+<div id="downloading-web-pages-with-rvest" class="section level2">
+<h2>Downloading web pages with <code>rvest</code></h2>
+<p>Let’s load a couple of packages first:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<pre class="r"><code>library(rvest)</code></pre>
+<pre><code>## Loading required package: xml2</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     pluck</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     guess_encoding</code></pre>
+<p>The package <code>rvest</code> is a very nice way to download and extract information from web pages. It goes like this:</p>
+<pre class="r"><code>url1=&quot;http://www.utsc.utoronto.ca/~butler/c32/assignments/index.html&quot;
+read_html(url1) %&gt;% html_nodes(&quot;li&quot;) %&gt;% html_text()</code></pre>
+<pre><code>## [1] &quot;\&quot;Assignment 0\&quot;, not to be handed in. For\n      tutorial 2017-09-06. Last update 2017-07-29.\n    &quot;                                                                           
+## [2] &quot;Assignment 1, due Thursday September 14\n    at 11:59pm. For tutorial September 13. The first three questions\n    are for practice; do and hand in the last two questions.\n  &quot;</code></pre>
+<p>This takes one of my course web pages, parses the HTML, and searches it for “list items”, extracting the text from each one. Since this is an assignment page for one of my courses, these are the descriptions of the assignments I’ve put up so far for my students.</p>
+<p>Let’s make a function to do this for any URL:</p>
+<pre class="r"><code>read_text=function(url) {
+  read_html(url) %&gt;% html_nodes(&quot;li&quot;) %&gt;% html_text()
+}</code></pre>
+<p>and check that it works:</p>
+<pre class="r"><code>read_text(url1)</code></pre>
+<pre><code>## [1] &quot;\&quot;Assignment 0\&quot;, not to be handed in. For\n      tutorial 2017-09-06. Last update 2017-07-29.\n    &quot;                                                                           
+## [2] &quot;Assignment 1, due Thursday September 14\n    at 11:59pm. For tutorial September 13. The first three questions\n    are for practice; do and hand in the last two questions.\n  &quot;</code></pre>
+<p>It does.</p>
+</div>
+<div id="getting-the-list-items-from-several-pages" class="section level2">
+<h2>Getting the list items from several pages</h2>
+<p>Let’s set up some more URLs and get the list items from each of them:</p>
+<pre class="r"><code>url2=&quot;http://www.utsc.utoronto.ca/~butler/assignments/index.html&quot;
+url3=&quot;http://www.utsc.utoronto.ca/~butler/c32/oldexams/index.html&quot;</code></pre>
+<p>The <code>tidyverse</code>-approved way to do this is to make a list out of the things you want to iterate over (the URLs), and pass that into <code>map</code> along with the function that you want to run for each of them. That looks like this:</p>
+<pre class="r"><code>url_list=list(url1,url2,url3)
+map(url_list,read_text)</code></pre>
+<pre><code>## Error in open.connection(x, &quot;rb&quot;): HTTP error 404.</code></pre>
+<p>This ought to produce a list of three vectors of list-item texts. But it doesn’t. The reason for that is that there is no page at <code>url2</code>, so that when <code>read_html</code> tried to get the HTML, it failed. Because of the error, the whole <code>map</code> call failed, and we didn’t get anything, even though two of our three URLs would have produced some output. The same thing would happen if the web page existed, but we couldn’t connect to it for some reason.</p>
+<p>Imagine encountering this when you were trying to extract something from a hundred web pages, and the 99th one failed, leaving you with nothing.</p>
+</div>
+<div id="returning-something-else-on-error" class="section level2">
+<h2>Returning something else on error</h2>
+<p>Some languages (including R itself) have a <code>try-catch</code> mechanism that enables you to run something, and if it produces an error, to intercept that error and return something else. The advantage to this is that the code keeps running if there’s an error, and produces the rest of the output that you were expecting.</p>
+<p>The <code>purrr</code> way of doing this uses either of two “adverbs” <code>possibly</code> and <code>safely</code>. The idea is that you use these to create “safe” versions of your function where any errors get intercepted, and then pass the “safe” function into <code>map</code>. Like this:</p>
+<pre class="r"><code>read_text_possibly=possibly(read_text,otherwise=&quot;This page could not be accessed&quot;)
+map(url_list,read_text_possibly)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;\&quot;Assignment 0\&quot;, not to be handed in. For\n      tutorial 2017-09-06. Last update 2017-07-29.\n    &quot;                                                                           
+## [2] &quot;Assignment 1, due Thursday September 14\n    at 11:59pm. For tutorial September 13. The first three questions\n    are for practice; do and hand in the last two questions.\n  &quot;
+## 
+## [[2]]
+## [1] &quot;This page could not be accessed&quot;
+## 
+## [[3]]
+## [1] &quot; Old final exams for STAC32\n\n\t      YearExamCode &amp; outputSolutions2013Exam\n\tNone (in exam)\n\tSolutions\n      2014Exam\n\tCode and output\n\tSolutions\n      2015Exam\n\tCode and output\n\tSolutions\n      2016Exam\n\tCode and output\n\tSolutions\n      &quot;                                                                                                     
+## [2] &quot;       \n    \nOld midterm exams for STAC32\n\nI have 2013 somewhere, but the exams in my 2013 folder are 2012!\n\nYearExamCode and outputSolutions2012\n    Exam\n    None (in exam)\n    Solutions\n  2014\n    Exam\n    None (in exam)\n    Solutions\n  2015\n    Exam\n    Code and output\n    Solutions\n  2016\n    Exam\n    Code and output\n    Solutions\n  &quot;</code></pre>
+<p>The input to <code>possibly</code> is a function you want to intercept errors in, along with an obligatory second argument <code>otherwise</code> that says what value to return if the original function returns an error; in this case, it’s a semi-informative message. We see the first and third URLs exist and have list items in them (the last one being my old exam page), but the second one doesn’t.</p>
+<p>The other adverb <code>safely</code> uses the same idea, but the output looks a bit different:</p>
+<pre class="r"><code>read_text_safely=safely(read_text)
+map(url_list,read_text_safely)</code></pre>
+<pre><code>## [[1]]
+## [[1]]$result
+## [1] &quot;\&quot;Assignment 0\&quot;, not to be handed in. For\n      tutorial 2017-09-06. Last update 2017-07-29.\n    &quot;                                                                           
+## [2] &quot;Assignment 1, due Thursday September 14\n    at 11:59pm. For tutorial September 13. The first three questions\n    are for practice; do and hand in the last two questions.\n  &quot;
+## 
+## [[1]]$error
+## NULL
+## 
+## 
+## [[2]]
+## [[2]]$result
+## NULL
+## 
+## [[2]]$error
+## &lt;simpleError in open.connection(x, &quot;rb&quot;): HTTP error 404.&gt;
+## 
+## 
+## [[3]]
+## [[3]]$result
+## [1] &quot; Old final exams for STAC32\n\n\t      YearExamCode &amp; outputSolutions2013Exam\n\tNone (in exam)\n\tSolutions\n      2014Exam\n\tCode and output\n\tSolutions\n      2015Exam\n\tCode and output\n\tSolutions\n      2016Exam\n\tCode and output\n\tSolutions\n      &quot;                                                                                                     
+## [2] &quot;       \n    \nOld midterm exams for STAC32\n\nI have 2013 somewhere, but the exams in my 2013 folder are 2012!\n\nYearExamCode and outputSolutions2012\n    Exam\n    None (in exam)\n    Solutions\n  2014\n    Exam\n    None (in exam)\n    Solutions\n  2015\n    Exam\n    Code and output\n    Solutions\n  2016\n    Exam\n    Code and output\n    Solutions\n  &quot;
+## 
+## [[3]]$error
+## NULL</code></pre>
+<p>You would use this variation if you care about what the error message is, not just that there is one. Using <code>safely</code> gets you two-item lists for each run of the function. Each inner list has an item <code>result</code>, which is the actual result returned from the function, if any. My second result is <code>NULL</code>, showing that the function had an error when run on <code>url2</code>. I could have supplied an <code>otherwise</code> in <code>safely</code> to return something else; unlike with <code>possibly</code>, the <code>otherwise</code> is optional with <code>safely</code>. The second inner-list item is called <code>error</code> and is the actual error message returned. This is <code>NULL</code> if no error, but in trying to access a web page that didn’t exist, we got an HTTP 404 error. This would enable us to distinguish a page that does not exist from a page that we were unable to connect to (which might produce a “403 Forbidden” or a “429 Too Many Requests” or something like that).</p>
+<p>In my application, all I wanted to do was skip the web page access if there was an error, rather than doing any sort of diagnosis (I knew the page existed, so the problem was that I couldn’t connect to it), so <code>possibly</code> was certainly what I needed.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Scraping Icelandic soccer results with rvest and selenium</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/09/01/scraping-icelandic-soccer-results-with-rvest-and-selenium/">Scraping Icelandic soccer results with rvest and selenium</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Sep 1, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;14 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The other day, I wanted to download all of this season’s results in the Icelandic soccer league. I’m sure you often want to do this. Or, more seriously, you want to grab something from a web page, but something is standing in the way of making it simple. In this post, we explore the use of <code>rvest</code> for this task, along with <code>RSelenium</code>, which we need for the more sophisticated stuff later.</p>
+<p>The website I like to use for this is <a href="http://www.scoresway.com/?sport=soccer&amp;page=home">Scoresway</a>. I checked the <code>robots.txt</code> file, and we are good to go. Responsibly, of course.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
+## ✔ tibble  1.4.2     ✔ dplyr   0.7.6
+## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
+## ✔ readr   1.1.1     ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(rvest)</code></pre>
+<pre><code>## Loading required package: xml2</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     pluck</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     guess_encoding</code></pre>
+<pre class="r"><code>library(lubridate)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;lubridate&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:base&#39;:
+## 
+##     date</code></pre>
+<pre class="r"><code>library(RSelenium)</code></pre>
+<p>Note the capitalization on the last one.</p>
+</div>
+<div id="downloading-page-1-with-rvest" class="section level2">
+<h2>Downloading page 1 with <code>rvest</code></h2>
+<p>The purpose of <code>rvest</code> is to download a web page and extract information from it. Suppose we are staring at <a href="http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=31&amp;view=matches">this page, accessed on the evening of September 3, 2018</a>. These are the most recent matches in the Icelandic soccer league, ones that have been played, with a score in them, and ones that have not been played yet, with a kickoff time in the middle column. The dates, we note, are European style, day before month.</p>
+<p>The way to use <code>rvest</code> is to feed <code>read_html</code> a URL, and then to create a pipe that pulls out what you need, in this case an HTML table that we want to turn into a data frame. Let’s build the pipe step by step, so that we can see what’s going on. The reading of the web page is the slowest part of the enterprise, so let’s do that first and save it:</p>
+<pre class="r"><code>url=&quot;http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=31&amp;view=matches&quot;
+(html=read_html(url))</code></pre>
+<pre><code>## {xml_document}
+## &lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;&gt;
+## [1] &lt;head&gt;\n&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset= ...
+## [2] &lt;body class=&quot;sport-soccer localization-www&quot;&gt;\n\n&lt;div id=&quot;top-backgro ...</code></pre>
+<p>As far as <code>rvest</code> is concerned, a web page consists of a head and a body. They have something in them, so it looks as if we are good so far. Let’s take another step. <code>html_nodes</code> pulls out all the HTML entities by the name we give it, <code>table</code>s here:</p>
+<pre class="r"><code>html %&gt;% 
+  html_nodes(css=&quot;table&quot;)</code></pre>
+<pre><code>## {xml_nodeset (1)}
+## [1] &lt;table class=&quot;matches   &quot;&gt;\n&lt;thead&gt;&lt;tr class=&quot;sub-head&quot;&gt;\n&lt;th class= ...</code></pre>
+<p>There is only one table here. To turn it into a data frame (well, a list of data frames), we run it through <code>html_table</code>:</p>
+<pre class="r"><code>html %&gt;% 
+  html_nodes(css=&quot;table&quot;) %&gt;% 
+  html_table()</code></pre>
+<pre><code>## [[1]]
+##    Day     Date          Home team Score/Time          Away team
+## 1  Sat 25/08/18 Víkingur Reykjavík      2 - 2                 KA
+## 2  Sat 25/08/18           Stjarnan      2 - 1         Breidablik
+## 3  Sat 25/08/18              Valur      5 - 3            Fjölnir
+## 4  Sun 26/08/18                 KR      4 - 1                ÍBV
+## 5  Sun 26/08/18           Keflavík      1 - 3                 FH
+## 6  Mon 27/08/18             Fylkir      3 - 1          Grindavík
+## 7  Wed 29/08/18           Stjarnan      1 - 1              Valur
+## 8  Fri 31/08/18           Keflavík      1 - 2             Fylkir
+## 9  Sun 02/09/18            Fjölnir      1 - 3           Stjarnan
+## 10 Sun 02/09/18                 KA      3 - 3              Valur
+## 11 Sun 02/09/18                ÍBV      1 - 1 Víkingur Reykjavík
+## 12 Sun 02/09/18         Breidablik      1 - 1          Grindavík
+## 13 Sun 02/09/18                 FH      4 - 0                 KR
+## 14 Sun 16/09/18                 KR    16 : 00           Keflavík
+## 15 Sun 16/09/18 Víkingur Reykjavík    16 : 00                 FH
+## 16 Sun 16/09/18          Grindavík    16 : 00            Fjölnir
+## 17 Sun 16/09/18              Valur    19 : 00                ÍBV
+## 18 Wed 19/09/18           Stjarnan    20 : 00                 KA
+## 19 Wed 19/09/18             Fylkir    21 : 15         Breidablik
+## 20 Sun 23/09/18                 FH    16 : 00              Valur
+## 21 Sun 23/09/18           Keflavík    16 : 00 Víkingur Reykjavík
+## 22 Sun 23/09/18                 KR    16 : 00             Fylkir
+## 23 Sun 23/09/18            Fjölnir    16 : 00         Breidablik
+## 24 Sun 23/09/18                ÍBV    16 : 00           Stjarnan
+## 25 Sun 23/09/18                 KA    16 : 00          Grindavík
+##                         
+## 1  View events More info
+## 2  View events More info
+## 3  View events More info
+## 4  View events More info
+## 5  View events More info
+## 6  View events More info
+## 7  View events More info
+## 8  View events More info
+## 9  View events More info
+## 10 View events More info
+## 11 View events More info
+## 12 View events More info
+## 13 View events More info
+## 14             More info
+## 15             More info
+## 16             More info
+## 17             More info
+## 18             More info
+## 19             More info
+## 20             More info
+## 21             More info
+## 22             More info
+## 23             More info
+## 24             More info
+## 25             More info</code></pre>
+<p>and you see that this reproduces the (text of the) table on the website. There is actually more information in the HTML than displays here; for example, each team has an ID number, and clicking on a team name on the website will take you to that team’s home page. Also, clicking on the score will take you to the page for that match, where you find the team line-ups, goalscorers, attendance and suchlike things.</p>
+<p>This is good, but there is an immediate problem. It only goes back (as I write this) to August 19. The Icelandic season starts in April (and runs through the summer). What happened to the rest of the games?</p>
+<p>If you look at the list of matches on the website, you see little clickable things marked Previous and Next at the top right. Clicking on them will bring up the Previous or Next page of matches. On some websites, you can get to a certain page number via a link that ends with something like <code>Page 3</code>, but that isn’t the case here: all you can do is click on Previous and Next, which fires up a bit of Javascript that pulls the previous or next page from a database. So there seems to be no way to get to the previous page other than by physically clicking the link.</p>
+</div>
+<div id="enter-selenium" class="section level2">
+<h2>Enter Selenium</h2>
+<p>Selenium is a web browser that you “drive” (that is, control) programmatically rather than by being physically present to click buttons. It enables you to do other things programatically apart from click buttons (like fill out forms). <code>rvest</code> can do <em>that</em> but it can’t do what I want it to do here. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">After I thought about this I realized that rvest does have “follow_link” for use in a session. Maybe this will work; it seems to use the same idea of clicking on something that isn’t a URL.</span></p>
+<p>The recommended way, these days, to run Selenium is via Docker. Docker is a mechanism for running different things in their own separate “containers” so that they don’t interfere with each other. <a href="https://callumgwtaylor.github.io/blog/2018/02/01/using-rselenium-and-docker-to-webscrape-in-r-using-the-who-snake-database/">Callum Taylor’s blog post</a> shows how it goes. Once I had downloaded and installed everything, I fired up a terminal window and ran</p>
+<pre class="r"><code>docker run -d -p 4445:4444 selenium/standalone-firefox</code></pre>
+<p>(my virtual browser is apparently Firefox). I checked that it was running by</p>
+<pre class="bash"><code>docker ps</code></pre>
+<pre><code>## CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS                    NAMES
+## 336e5084439b        selenium/standalone-firefox   &quot;/opt/bin/entry_poin…&quot;   7 minutes ago       Up 7 minutes        0.0.0.0:4445-&gt;4444/tcp   nostalgic_spence</code></pre>
+<p>which shows that this is the only Docker container I am running now. (I have also used Docker with <code>splashr</code>.)</p>
+<p>Next, we have to connect to our virtual browser, which is done like this:</p>
+<pre class="r"><code>remdr &lt;- RSelenium::remoteDriver(remoteServerAddr = &quot;localhost&quot;,
+                                 port = 4445L,
+                                 browserName = &quot;firefox&quot;)
+remdr$open()</code></pre>
+<pre><code>## [1] &quot;Connecting to remote server&quot;
+## $acceptInsecureCerts
+## [1] FALSE
+## 
+## $browserName
+## [1] &quot;firefox&quot;
+## 
+## $browserVersion
+## [1] &quot;61.0.2&quot;
+## 
+## $`moz:accessibilityChecks`
+## [1] FALSE
+## 
+## $`moz:headless`
+## [1] FALSE
+## 
+## $`moz:processID`
+## [1] 854
+## 
+## $`moz:profile`
+## [1] &quot;/tmp/rust_mozprofile.5lTWARc2iZzx&quot;
+## 
+## $`moz:useNonSpecCompliantPointerOrigin`
+## [1] FALSE
+## 
+## $`moz:webdriverClick`
+## [1] TRUE
+## 
+## $pageLoadStrategy
+## [1] &quot;normal&quot;
+## 
+## $platformName
+## [1] &quot;linux&quot;
+## 
+## $platformVersion
+## [1] &quot;4.15.0-33-generic&quot;
+## 
+## $rotatable
+## [1] FALSE
+## 
+## $timeouts
+## $timeouts$implicit
+## [1] 0
+## 
+## $timeouts$pageLoad
+## [1] 300000
+## 
+## $timeouts$script
+## [1] 30000
+## 
+## 
+## $webdriver.remote.sessionid
+## [1] &quot;7906155a-f868-4aa9-8c39-e407cbb8241b&quot;
+## 
+## $id
+## [1] &quot;7906155a-f868-4aa9-8c39-e407cbb8241b&quot;</code></pre>
+<p>Up and running. Let’s go back to where we were before. The way you operate this virtual browser is to add a dollar sign after its name (here <code>remdr</code>) and then the name of something for it to do. <code>navigate</code> goes to a URL:</p>
+<pre class="r"><code>url=&quot;http://www.scoresway.com/?sport=soccer&amp;page=competition&amp;id=31&amp;view=matches&quot;
+remdr$navigate(url)</code></pre>
+<p>Since we are not physically operating this browser, we don’t know that it has actually connected to this website. If, however, you run this:</p>
+<pre class="r"><code>remdr$screenshot()</code></pre>
+<p>you see a screenshot of the page that Selenium is connected to, in the R Studio Viewer window. This is <em>very</em> handy for debugging.</p>
+</div>
+<div id="finding-things-on-a-page-and-sending-events-to-them" class="section level2">
+<h2>Finding things on a page and sending events to them</h2>
+<p>What we want to do here is to click that Previous link. The first thing we need to do is to refer to it. I like to inspect the HTML in (my real) browser by pressing control-shift-I. This has a box with an arrow in it at the top left, whose tooltip is “Select an element in the page to inspect it”. Click that. Then click on the Previous link. This highlights the piece of the HTML code that produces the “Previous” link. It is an <code>a</code> tag with class <code>previous</code>. You can get the CSS selector for it by right-clicking the highlighted HTML and then selecting Copy and Copy Selector. This is what will enable you to select this link and send a click to it. I got a very long CSS selector and reasoned that <code>a.previous</code> also ought to work (it does).</p>
+<p>To select the Previous link in code, you do something like this:</p>
+<pre class="r"><code>element=remdr$findElement(using=&quot;css&quot;, &quot;a.previous&quot;)</code></pre>
+<p>and then to click on it, you do this:</p>
+<pre class="r"><code>element$clickElement()</code></pre>
+<p>Now, if you grab another screenshot via</p>
+<pre class="r"><code>remdr$screenshot()</code></pre>
+<p>you will find that you are indeed on the previous page of matches. And if you repeat the process of selecting <em>that</em> page’s Previous link, clicking on it, and screenshotting the result, you will see that you have gone a page further back. I was very excited when I did this and <em>it worked</em>!</p>
+</div>
+<div id="getting-the-matches-from-each-page" class="section level2">
+<h2>Getting the matches from each page</h2>
+<p>We are not home yet, though. What I was lacking in my mind was the way of getting hold of each page’s HTML code, so that I could throw it into <code>rvest</code> and pull out what I wanted. A Stack Overflow answer alerted me to <code>getPageSource</code>, which grabs the HTML of the page that the virtual browser is looking at. <em>This</em> can be thrown into <code>rvest</code> and that page’s matches turned into a data frame.</p>
+<p>I have been trying to get my mind onto <code>purrr::map</code> and to avoid thinking about loops, but this is a natural for a loop, because the pages come to us one at a time and all we can do is get the previous one. So I came up with this pseudocode:</p>
+<pre><code>repeat
+  get the current page
+  get its HTML
+  turn the HTML into a data frame for that page
+  find the Previous link and click on it
+until error (or we otherwise know when to stop)</code></pre>
+<p>To my mind this is more naturally a repeat-until rather than a while-do since we won’t know whether to stop until the end of the loop, or at least the middle. I was surprised to learn that R has <code>repeat</code> (having never used it before). After <code>repeat</code> comes a code block in curly brackets, and instead of an explicit <code>until</code> (which is what I remember from my Pascal days) you use a <code>break</code> to jump out of the loop at any point. In that sense it’s a lot like a <code>while(TRUE)</code> loop that is infinite unless you explicitly break out of it.</p>
+<p>I wasn’t quite sure about my exit condition until I played with it a bit. If you point your real browser at the page and click Previous a few times, when you get back to the beginning of the season, the Previous link is greyed out and doesn’t do anything when you click on it, but <code>a.previous</code> <em>will still exist</em>. So I changed tack: if I “clicked” on Previous and got back the same page that I just had, with the same matches I had previously, I would stop there (and throw away the last one).</p>
+<p>So, in code, that comes out like this:</p>
+<pre class="r"><code>gamelist=list()
+i=0
+remdr$navigate(url)
+repeat {
+  i=i+1
+  html=remdr$getPageSource()[[1]]
+  read_html(html) %&gt;% 
+    html_node(css=&quot;table&quot;) %&gt;% 
+    html_table() -&gt;
+  gamelist[[i]]
+  if (i&gt;=2) 
+    if (identical(gamelist[[i]], gamelist[[i-1]])) 
+      break
+  element=remdr$findElement(using=&quot;css&quot;, &quot;a.previous&quot;)
+  element$clickElement()
+  if (i&gt;20) break
+}</code></pre>
+<p>Each time through the loop would give me a data frame, so I thought I would use a list to store them in. <code>getPageSource</code> actually returns a list itself, of which I need the first element. Then I pass the HTML to <code>rvest</code> and save it. Then my exit condition: if I’ve been through at least twice, check whether this time’s data frame of games is identical to last time’s, and if so quit. Otherwise, find the Previous link and click on it. Finally, to make sure that I end the loop eventually, I break out if <code>i</code> has gotten bigger than I think it ought to be.</p>
+<p>So now I should have a thing called <code>gamelist</code> that is a list of data frames, each one earlier than the previous. How many data frames do I have in the list?</p>
+<pre class="r"><code>(ll=length(gamelist))</code></pre>
+<pre><code>## [1] 7</code></pre>
+<p>7 pages. The last one will be thrown away (since it is a repeat of the second-last one), but let’s take a look at the dates on the last one:</p>
+<pre class="r"><code>gamelist[[ll]]</code></pre>
+<pre><code>##   Day     Date Home team Score/Time Away team                      
+## 1 Fri 27/04/18     Valur      2 - 1        KR View events More info</code></pre>
+<p>Late April. For Iceland, that is right.</p>
+<p>There should be 25 matches on each page, except for the last one (repeated), which might have fewer. How many are there?</p>
+<pre class="r"><code>gamelist %&gt;% map_dbl(~nrow(.))</code></pre>
+<pre><code>## [1] 25 25 25 25 25  1  1</code></pre>
+<p>It so happens that the earliest page (in terms of date) has 1 game on it.</p>
+</div>
+<div id="tidying-up" class="section level2">
+<h2>Tidying up</h2>
+<p>We want to glue this list of data frames into one data frame, and also:</p>
+<ul>
+<li>throw away any games that don’t have scores (just a kickoff time)</li>
+<li>turn the dates into real dates</li>
+<li>fill in the blank ones (with the value above)</li>
+<li>separate out the score column into the home team’s score and the away team’s score</li>
+</ul>
+<p>which can be achieved this way:</p>
+<pre class="r"><code>gamelist %&gt;% 
+  enframe() %&gt;% 
+  filter(name&lt;ll) %&gt;% unnest() %&gt;% 
+  select(Date:`Away team`) %&gt;% 
+  filter(str_detect(`Score/Time`,&quot; - &quot;)) %&gt;% 
+  mutate(thedate=dmy(Date)) %&gt;% 
+  fill(thedate) %&gt;% 
+  separate(`Score/Time`, into=c(&quot;s1&quot;, &quot;s2&quot;)) %&gt;% 
+  select(date=thedate, t1=`Home team`, s1, t2=`Away team`, s2)</code></pre>
+<pre><code>## # A tibble: 114 x 5
+##    date       t1                 s1    t2         s2   
+##    &lt;date&gt;     &lt;chr&gt;              &lt;chr&gt; &lt;chr&gt;      &lt;chr&gt;
+##  1 2018-08-25 Víkingur Reykjavík 2     KA         2    
+##  2 2018-08-25 Stjarnan           2     Breidablik 1    
+##  3 2018-08-25 Valur              5     Fjölnir    3    
+##  4 2018-08-26 KR                 4     ÍBV        1    
+##  5 2018-08-26 Keflavík           1     FH         3    
+##  6 2018-08-27 Fylkir             3     Grindavík  1    
+##  7 2018-08-29 Stjarnan           1     Valur      1    
+##  8 2018-08-31 Keflavík           1     Fylkir     2    
+##  9 2018-09-02 Fjölnir            1     Stjarnan   3    
+## 10 2018-09-02 KA                 3     Valur      3    
+## # ... with 104 more rows</code></pre>
+<p>Some observations on this:</p>
+<ul>
+<li>I am deliberately creating a list column via <code>enframe</code> with names 1 through 7 and values the data frames for each page.</li>
+<li>This is to enable me to pick out (and throw away) the last one I found.</li>
+<li>Matches that have happened have a score in them, two numbers separated by space-dash-space. (Matches that have not happened yet have a kickoff time with a colon in it.)</li>
+<li><code>dmy</code> is from <code>lubridate</code>, for turning date-as-text into a real date.</li>
+<li><code>fill</code> turns missing values in a column into the previous non-missing value. This one is a bit of a cheat, since the <code>Date</code> lines without a date are actually empty, but <code>dmy</code> will turn things it cannot parse as dates (such as blanks) into missings. Thus <code>thedate</code> when created has <code>NA</code>s in it, which <code>fill</code> replaces with the previous non-missing value.</li>
+<li>I wanted the individual team scores (for modelling). <code>separate</code> splits the <code>Score/Time</code> column into its two constituent numbers. I’m not quite sure how I got away without using a <code>sep=</code>, but <code>-</code> must be in its list of default delimiters.</li>
+<li>Using <code>=</code> in <code>select</code> allows you to rename columns as you select them.</li>
+</ul>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://stackoverflow.com/questions/46019367/how-to-access-a-page-scraped-using-rselenium-with-rvest">Stack Overflow answer by Alistaire that alerted me to getPageSource</a></p>
+<p><a href="https://www.computerworld.com/article/2971265/application-development/how-to-drive-a-web-browser-with-r-and-rselenium.html">Sharon Machlis’ tutorial on driving a web browser with R</a></p>
+<p><a href="https://callumgwtaylor.github.io/blog/2018/02/01/using-rselenium-and-docker-to-webscrape-in-r-using-the-who-snake-database/">Callum Taylor’s blog post on RSelenium and Docker</a></p>
+<p><a href="https://rawgit.com/petrkeil/Blog/master/2017_08_15_Web_scraping/web_scraping.html">Petr Keil on webscraping in R</a></p>
+<p><a href="http://rpubs.com/johndharrison/RSelenium-Docker">Selenium and Docker</a></p>
+<p><a href="https://ropensci.org/tutorials/rselenium_tutorial/">Tutorial on Selenium Server</a></p>
+<p><a href="https://cran.r-project.org/web/packages/splashr/vignettes/intro_to_splashr.html">Splashr vignette</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

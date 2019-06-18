@@ -1,0 +1,32 @@
+---
+title: Name your code chunks!
+author: Ken
+date: '2018-04-08'
+slug: name-your-code-chunks
+categories:
+  - R
+  - blogdown
+tags:
+  - R
+  - blogdown
+---
+
+
+
+<p>Blogdown is amazing, but there is one thing that tripped me up, and I just worked out why.</p>
+<p>I have lots of graphs in my posts, but I was sometimes getting the wrong ones, and I was wondering why that was. I took a look in the Git pane in R Studio and discovered something.</p>
+<p>If you make a graph like this with an unnamed code chunk</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>ggplot(iris,aes(x=Species,y=Sepal.Width))+geom_boxplot()</code></pre>
+<p><img src="/rmarkdown-libs/figure-html4/irisbox-1.png" width="672" /></p>
+<p>you get a .png file in <code>static</code> with a name like <code>unnamed-chunk-2-1.png</code>. <em>All</em> images on a blogdown website go in <code>static</code>, so the name might have been used before, in which case your new graph will overwrite the old one with that name, and suddenly all references to that graph before will be to the new (wrong) graph.</p>
+<p>So, the moral of the story is <em>name all your code chunks that contain a graph</em>, and I guess this means that the names have to be unique over your whole blogdown site. Maybe having multipart chunk names that contain the post title and something like a title for the plot is the way to go.</p>
+<p>But as for now, I have to go all the way through my blog and make sure that all the code chunks with graphs have chunk names!</p>

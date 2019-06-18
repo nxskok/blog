@@ -1,0 +1,87 @@
+---
+title: Ordered alternatives in ANOVA
+author: Ken
+date: '2018-04-11'
+slug: ordered-alternatives-in-anova
+categories:
+  - R
+  - nonparametrics
+tags:
+  - rstats
+---
+
+## Introduction 
+
+Standard analysis of variance, and nonparametric alternatives to it such as the Kruskal-Wallis test, test a null hypothesis of "all the groups have the same mean" against a vague alternative of "two or more of the groups have different means". We typically carry out ANOVA in two stages: do the $F$-test or Kruskal-Wallis, and, having rejected the null that all the groups are the same, then carry out a multiple-comparisons method such as Tukey's to determine which groups differ from which.
+
+This is something of a scatter-gun approach, and at times we want to be more focused. For example, we might have specific comparisons that we want to test (ones that we can name ahead of time), in which case we could set up [contrasts (R Notebook)](http://www.utsc.utoronto.ca/~butler/d29/20180228.Rmd) and test only those contrasts of interest to us. Or we might have an a priori idea of the *order* in which the means will come out, if they are not all the same. It is this latter that we concern ourselves with here.
+
+## Packages
+
+Two:
+
+```{r}
+library(clinfun)
+library(tidyverse)
+```
+
+
+## The Terpstra-Jonckheere test
+
+Let's start with an example. This one is stolen from [Neave & Worthington](https://www.amazon.com/Distribution-free-Tests-Henry-R-Neave/dp/0045190208/ref=sr_1_1?ie=UTF8&qid=1523471770&sr=8-1&keywords=neave+worthington). The authors bought six store-brand light bulbs from each of three different stores: A, a national low-priced supermarket, B, an international general store, and C, a high-class department store. It seems likely that, if there is any difference in the lifetimes of the lightbulbs, they will be in order A<B<C.
+
+The data (lifetimes in hours) as presented were:
+
+```
+   A    B    C
+ 619  343 3670
+  35 2437 2860
+ 126  409  502
+2031  267 2008
+ 215 1953 5004
+  NA 1804 4782
+```
+
+Unfortunately, "one of brand A's bulbs was broken", so one of the values is missing.
+
+To get a test statistic, we take each pair of groups, and obtain the Mann-Whitney test statistic for that pair of groups. Under the alternative, the values in group B should be bigger than the values in group A, so we count what we expect to be *small*, namely  the number of A that are bigger than a B. 619 is bigger than 3 of the values  in B, and 2031 is bigger than 5 of the values in B. All the other values in A are smaller than all the values in B, so the contribution to the test statistic from groups A and B is $3+5=8$. In similar fashion, there are three As bigger than a C (2031 bigger than 502 and 2008; 619 bigger than 502) and 4 Bs bigger than a C, so the test statistic is $8+3+4=15$. Referring this to tables in the back of the book, the P-value is less than 0.01. `r tufte::margin_note("Gosh, how retro this process feels.")` The null hypothesis of equal locations is rejected, and we conclude that light bulbs do have longer lifetimes if they come from a higher-quality store. 
+
+With this test, we no longer have to worry about multiple comparisons, because our alternative hypothesis tells us exactly what order the groups should be arranged in.
+
+R has a `jonckheere.test` that lives in package `clinfun`. I saved the data in the above format in the file with URL shown below:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/lightbulbs.txt"
+lightbulbs0=read_table(my_url)
+lightbulbs0
+```
+
+The function running the test requires a column of lifetimes and a column of groups, which we don't have because the data as read in are untidy, so we fix that first: `r tufte::margin_note("That's a right-arrow assignment at the end, read as \"and save it in lightbulbs\".")`
+
+```{r}
+lightbulbs0 %>% 
+  gather(brand,lifetime,everything(),na.rm=T) -> lightbulbs
+lightbulbs
+```
+
+`jonckheere.test` requires two inputs: quantitative variable and groups, in that order. In addition, there is an argument `alternative` which can be `increasing`, `decreasing` or `two.sided`, defaulting to the latter. The user needs to make sure that the order of levels in the categorical variable is an ordered factor that represents the desired alternative-hypothesis in either increasing or decreasing order. `brand` is text, so we need to arrange that first:
+
+```{r}
+my_levels=c("A","B","C")
+lightbulbs %>% mutate(brand=ordered(brand,levels=my_levels)) %>% 
+  with(.,jonckheere.test(lifetime,brand,alternative = "increasing"))
+```
+
+The P-value is indeed less than 0.01.
+
+`jonckheere.test` has no `data=` argument, so the pipe version needs to work this way.
+
+It looks as if this function has counted the number of As less than a B, Bs less than a C and so on (expecting a large value if the alternative is true), since there are $(5)(6)+(5)(6)+(6)(6)=96$ inter-group comparisons altogether and no ties, and $96-15=81$.
+
+## References
+
+Olivia Rennie, for discussion that led to this post.
+
+[Neave & Worthington, "Distribution-Free Tests"](https://www.amazon.com/Distribution-free-Tests-Henry-R-Neave/dp/0045190208/ref=sr_1_1?ie=UTF8&qid=1523471770&sr=8-1&keywords=neave+worthington)
+
+[Bob Rudis on right-arrow assignment](https://rud.is/b/2015/02/04/a-step-to-the-right-in-r-assignments/)

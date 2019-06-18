@@ -1,0 +1,284 @@
+---
+title: "Drawing a network with ggraph and tidygraph"
+author: "Ken"
+date: '2017-12-30'
+output: word_document
+slug: drawing-a-network-with-ggraph-and-tidygraph
+tags:
+- rstats
+- tidyverse
+categories:
+- R
+- trains
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p><a href="https://github.com/thomasp85">Thomas Lin Pedersen</a> is the author of a lot of packages, including two that deal with graphs (in the sense of networks), <code>tidygraph</code> for storing and handling graphs, and <code>ggraph</code> for drawing them, <code>ggplot</code>-style. I have a feeling I will be spending a lot of time with <code>tidygraph</code>, but in this post, I get my feet wet reading in and storing a graph and then making a picture of it.</p>
+<p>Packages:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(tidygraph)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;tidygraph&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter</code></pre>
+<pre class="r"><code>library(ggraph)</code></pre>
+</div>
+<div id="example-the-west-yorkshire-train-network" class="section level2">
+<h2>Example: the West Yorkshire train network</h2>
+<p><a href="https://en.wikipedia.org/wiki/West_Yorkshire">West Yorkshire</a> is a metropolitan county of northern England, containing the city of Leeds. It has a considerable local rail network, as shown below:</p>
+<p><embed src="/Rail-network-map.pdf" /></p>
+<p>My aim is to treat the stations as nodes in a graph and rail lines between them as edges, and see how I succeed and fail in reproducing this map.</p>
+</div>
+<div id="reading-in-the-data-and-storing-as-a-graph" class="section level2">
+<h2>Reading in the data and storing as a graph</h2>
+<p>I had to think about how I wanted to represent the network. If these had been plane flights, I would have had a starting point and an ending point for each one. But trains, especially local trains, stop at a long list of places one after the other. For example, a train from Bradford (Forster Square) to Ilkley will travel between Bradford, Frizinghall, Shipley, Baildon, Guiseley, etc., to Ben Rhydding and Ilkley. I decided to list all the stations on one route in a long list, one per line, with an <code>NA</code> at the end to indicate the end of one line and the beginning of another. The input file (part) looks like this:</p>
+<pre class="bash"><code>head --lines=20 yorkshire.txt</code></pre>
+<pre><code>## station
+## Skipton
+## Cononley
+## Steeton &amp; Silsden
+## Keighley
+## Crossflatts
+## Bingley
+## Saltaire
+## Shipley
+## Frizinghall
+## Bradford
+## NA
+## Shipley
+## Apperley Bridge
+## Kirkstall Forge
+## Leeds
+## NA
+## Ilkley
+## Ben Rhydding
+## Burley-in-Wharfedale</code></pre>
+<p>In actuality, Bradford and Wakefield have two stations and Pontefract has three, but I treated each place as having only one station to simplify things. (The rail network around Wakefield Kirkgate is complicated, with one line passing under another without being connected.)</p>
+<p>To read this in, I treat it as a one-column .csv, since some of the stations have spaces inside their names:</p>
+<pre class="r"><code>yorks=read_csv(&quot;yorkshire.txt&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   station = col_character()
+## )</code></pre>
+<pre class="r"><code>yorks %&gt;% print(n=20)</code></pre>
+<pre><code>## # A tibble: 145 x 1
+##    station             
+##    &lt;chr&gt;               
+##  1 Skipton             
+##  2 Cononley            
+##  3 Steeton &amp; Silsden   
+##  4 Keighley            
+##  5 Crossflatts         
+##  6 Bingley             
+##  7 Saltaire            
+##  8 Shipley             
+##  9 Frizinghall         
+## 10 Bradford            
+## 11 &lt;NA&gt;                
+## 12 Shipley             
+## 13 Apperley Bridge     
+## 14 Kirkstall Forge     
+## 15 Leeds               
+## 16 &lt;NA&gt;                
+## 17 Ilkley              
+## 18 Ben Rhydding        
+## 19 Burley-in-Wharfedale
+## 20 Menston             
+## # ... with 125 more rows</code></pre>
+<p>Now, how to connect each station with the next one on the list? I realized that the <code>lag</code> function would do exactly this:</p>
+<pre class="r"><code>yorks %&gt;% mutate(station2=lag(station)) %&gt;% 
+  print(n=20)</code></pre>
+<pre><code>## # A tibble: 145 x 2
+##    station              station2            
+##    &lt;chr&gt;                &lt;chr&gt;               
+##  1 Skipton              &lt;NA&gt;                
+##  2 Cononley             Skipton             
+##  3 Steeton &amp; Silsden    Cononley            
+##  4 Keighley             Steeton &amp; Silsden   
+##  5 Crossflatts          Keighley            
+##  6 Bingley              Crossflatts         
+##  7 Saltaire             Bingley             
+##  8 Shipley              Saltaire            
+##  9 Frizinghall          Shipley             
+## 10 Bradford             Frizinghall         
+## 11 &lt;NA&gt;                 Bradford            
+## 12 Shipley              &lt;NA&gt;                
+## 13 Apperley Bridge      Shipley             
+## 14 Kirkstall Forge      Apperley Bridge     
+## 15 Leeds                Kirkstall Forge     
+## 16 &lt;NA&gt;                 Leeds               
+## 17 Ilkley               &lt;NA&gt;                
+## 18 Ben Rhydding         Ilkley              
+## 19 Burley-in-Wharfedale Ben Rhydding        
+## 20 Menston              Burley-in-Wharfedale
+## # ... with 125 more rows</code></pre>
+<p>and now the rows of this data frame will be the edges of my graph. Separating the routes with <code>NA</code> was an accidentally-smart thing to do, since if I remove all the rows with <code>NA</code> in them, I will get only the genuine edges I want for my graph:</p>
+<pre class="r"><code>yorks2 = yorks %&gt;% 
+  mutate(station2=lag(station)) %&gt;% 
+  filter(!is.na(station),!is.na(station2)) %&gt;% 
+  print(n=20)</code></pre>
+<pre><code>## # A tibble: 110 x 2
+##    station              station2            
+##    &lt;chr&gt;                &lt;chr&gt;               
+##  1 Cononley             Skipton             
+##  2 Steeton &amp; Silsden    Cononley            
+##  3 Keighley             Steeton &amp; Silsden   
+##  4 Crossflatts          Keighley            
+##  5 Bingley              Crossflatts         
+##  6 Saltaire             Bingley             
+##  7 Shipley              Saltaire            
+##  8 Frizinghall          Shipley             
+##  9 Bradford             Frizinghall         
+## 10 Apperley Bridge      Shipley             
+## 11 Kirkstall Forge      Apperley Bridge     
+## 12 Leeds                Kirkstall Forge     
+## 13 Ben Rhydding         Ilkley              
+## 14 Burley-in-Wharfedale Ben Rhydding        
+## 15 Menston              Burley-in-Wharfedale
+## 16 Guiseley             Menston             
+## 17 Baildon              Guiseley            
+## 18 Shipley              Baildon             
+## 19 Kirkstall Forge      Guiseley            
+## 20 Burley Park          Leeds               
+## # ... with 90 more rows</code></pre>
+<p>(something I discovered the other day: if you put a <code>print</code> on the end of a pipeline, it prints the result <em>even if you have saved it in a variable</em>.)</p>
+<p><code>tidygraph</code> has a function for turning a data frame structured like this, with edges as rows, into an actual tidy graph:</p>
+<pre class="r"><code>yorks_g &lt;- as_tbl_graph(yorks2)
+yorks_g</code></pre>
+<pre><code>## # A tbl_graph: 98 nodes and 110 edges
+## #
+## # A directed acyclic simple graph with 1 component
+## #
+## # Node Data: 98 x 1 (active)
+##   name             
+##   &lt;chr&gt;            
+## 1 Cononley         
+## 2 Steeton &amp; Silsden
+## 3 Keighley         
+## 4 Crossflatts      
+## 5 Bingley          
+## 6 Saltaire         
+## # ... with 92 more rows
+## #
+## # Edge Data: 110 x 2
+##    from    to
+##   &lt;int&gt; &lt;int&gt;
+## 1     1    97
+## 2     2     1
+## 3     3     2
+## # ... with 107 more rows</code></pre>
+<p>The nodes and edges are shown separately, with the nodes numbered (those numbers are used in the edges).</p>
+</div>
+<div id="extracting-the-nodes-and-edges" class="section level2">
+<h2>Extracting the nodes and edges</h2>
+<p><code>tidygraph</code> uses the same pipeline ideas as the <code>tidyverse</code>, but extra care is required because a tidy graph object has both nodes and edges in it. An extra verb <code>activate</code> lets you specify which one you would like to be “primary” (but you can also access the other one). Piping the output of <code>activate</code> into <code>as_tibble</code> lets you save the nodes or edges as a data frame, separately:</p>
+<pre class="r"><code>nodes = yorks_g %&gt;% 
+  activate(nodes) %&gt;% 
+  as_tibble() %&gt;% 
+  mutate(node_number=row_number()) %&gt;%
+  print(n=10)</code></pre>
+<pre><code>## # A tibble: 98 x 2
+##    name              node_number
+##    &lt;chr&gt;                   &lt;int&gt;
+##  1 Cononley                    1
+##  2 Steeton &amp; Silsden           2
+##  3 Keighley                    3
+##  4 Crossflatts                 4
+##  5 Bingley                     5
+##  6 Saltaire                    6
+##  7 Shipley                     7
+##  8 Frizinghall                 8
+##  9 Bradford                    9
+## 10 Apperley Bridge            10
+## # ... with 88 more rows</code></pre>
+<pre class="r"><code>edges = yorks_g %&gt;% 
+  activate(edges) %&gt;% 
+  as_tibble() %&gt;% print(n=10)</code></pre>
+<pre><code>## # A tibble: 110 x 2
+##     from    to
+##    &lt;int&gt; &lt;int&gt;
+##  1     1    97
+##  2     2     1
+##  3     3     2
+##  4     4     3
+##  5     5     4
+##  6     6     5
+##  7     7     6
+##  8     8     7
+##  9     9     8
+## 10    10     7
+## # ... with 100 more rows</code></pre>
+<p>I saved the node numbers as well as names into the nodes data frame. This lets me look up the <em>names</em> of the nodes referred to in the edges, to convince myself that I have something sensible:</p>
+<pre class="r"><code>edges %&gt;% 
+  left_join(nodes,by=c(&quot;from&quot;=&quot;node_number&quot;)) %&gt;% 
+  left_join(nodes,by=c(&quot;to&quot;=&quot;node_number&quot;)) %&gt;% 
+  print(n=20)</code></pre>
+<pre><code>## # A tibble: 110 x 4
+##     from    to name.x               name.y              
+##    &lt;int&gt; &lt;int&gt; &lt;chr&gt;                &lt;chr&gt;               
+##  1     1    97 Cononley             Skipton             
+##  2     2     1 Steeton &amp; Silsden    Cononley            
+##  3     3     2 Keighley             Steeton &amp; Silsden   
+##  4     4     3 Crossflatts          Keighley            
+##  5     5     4 Bingley              Crossflatts         
+##  6     6     5 Saltaire             Bingley             
+##  7     7     6 Shipley              Saltaire            
+##  8     8     7 Frizinghall          Shipley             
+##  9     9     8 Bradford             Frizinghall         
+## 10    10     7 Apperley Bridge      Shipley             
+## 11    11    10 Kirkstall Forge      Apperley Bridge     
+## 12    12    11 Leeds                Kirkstall Forge     
+## 13    13    98 Ben Rhydding         Ilkley              
+## 14    14    13 Burley-in-Wharfedale Ben Rhydding        
+## 15    15    14 Menston              Burley-in-Wharfedale
+## 16    16    15 Guiseley             Menston             
+## 17    17    16 Baildon              Guiseley            
+## 18     7    17 Shipley              Baildon             
+## 19    11    16 Kirkstall Forge      Guiseley            
+## 20    18    12 Burley Park          Leeds               
+## # ... with 90 more rows</code></pre>
+<p>This is what I started with.</p>
+</div>
+<div id="drawing-the-graph" class="section level2">
+<h2>Drawing the graph</h2>
+<p>Thomas Lin Pedersen also wrote the package <code>ggraph</code> which allows <code>ggplot</code>-style plotting of graphs. For our example, this was my ultimate aim: I wanted to see how well the connection information enabled us to reproduce the map above.</p>
+<p>Graphs can be plotted in many different ways. For this graph, I know there is a representation in two dimensions, since the stations are scattered across the 2D-space of West Yorkshire. In <code>ggraph</code>, this is controlled by the <code>layout</code> parameter of the <code>ggraph</code> command. The Kamada-Kawai method tries to plot neighbouring nodes a constant distance apart, and chooses their locations as if they are connected by unit-length springs. I find this works well here. In addition, I want to draw the edges (as lines), draw the nodes (as points), and label the nodes by which station they are. These are accomplished by <code>geom_edge_link</code>, <code>geom_node_point</code> and <code>geom_node_text</code>. Additional notes: the <code>alpha=0.3</code> draws the edges partly transparent, so that the station names stand out; the use of <code>repel=T</code> “repels” the station names away from the points they represent so that you can see them (in the manner of <code>geom_text_repel</code>):</p>
+<pre class="r"><code>ggraph(yorks_g,layout=&quot;kk&quot;)+
+  geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggra-1.png" width="672" /></p>
+<p>This seems to do a nice job of reproducing the topology in a clear fashion with no overlaps where there shouldn’t be any. (I tried this using the separate stations, Westgate and Kirkgate, in Wakefield, and the display was a lot more confusing.) It doesn’t get compass directions right (it seems to have west and east reversed), but we had no right to expect that it would.</p>
+<p>Another plausible layout is the one called <code>lgl</code>. How does that work here? We leave everything else the same:</p>
+<pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;)+
+  geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggrb-1.png" width="672" /></p>
+<p>This is much less pleasing, especially in the middle. Can I make it try more iterations than the default 150?</p>
+<pre class="r"><code>ggraph(yorks_g,layout=&quot;lgl&quot;,maxiter=400)+
+  geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggrc-1.png" width="672" /></p>
+<p>This is a lot better, but still has some unnecessary crossings.</p>
+<p>One more try: the GEM “force-directed” layout:</p>
+<pre class="r"><code>ggraph(yorks_g,layout=&quot;gem&quot;)+
+  geom_edge_link(colour=&quot;blue&quot;,alpha=0.3)+
+  geom_node_point()+
+  geom_node_text(aes(label=name),size=2,repel=T)</code></pre>
+<p><img src="/post/2017-12-30-drawing-a-network-with-ggraph-and-tidygraph_files/figure-html/ggrd-1.png" width="672" /></p>
+<p>This is better, but I like the <code>kk</code> one the best.</p>
+</div>

@@ -1,0 +1,91 @@
+---
+title: Displaying grouped bar charts in ggplot
+author: Ken
+date: '2018-01-20'
+slug: displaying-grouped-bar-charts-in-ggplot
+categories:
+  - R
+tags:
+  - '#tidyverse'
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>When you have two categorical variables to plot, grouped bar charts are one possible visualization. I learned something new about them today, from Hadley Wickham himself (well, via a tweet, anyway).</p>
+<p>As an example, let’s use some data from the Australian Institute for Sport:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.1          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.7.2          ✔ stringr 1.2.0     
+## ✔ readr   1.1.1          ✔ forcats 0.2.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>athletes=read_tsv(&quot;http://www.utsc.utoronto.ca/~butler/c32/ais.txt&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Sex = col_character(),
+##   Sport = col_character(),
+##   RCC = col_double(),
+##   WCC = col_double(),
+##   Hc = col_double(),
+##   Hg = col_double(),
+##   Ferr = col_integer(),
+##   BMI = col_double(),
+##   SSF = col_double(),
+##   `%Bfat` = col_double(),
+##   LBM = col_double(),
+##   Ht = col_double(),
+##   Wt = col_double()
+## )</code></pre>
+<pre class="r"><code>athletes</code></pre>
+<pre><code>## # A tibble: 202 x 13
+##    Sex   Sport   RCC   WCC    Hc    Hg  Ferr   BMI   SSF `%Bf…   LBM    Ht
+##    &lt;chr&gt; &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 fema… Netb…  4.56 13.3   42.2  13.6    20  19.2  49.0  11.3  53.1   177
+##  2 fema… Netb…  4.15  6.00  38.0  12.7    59  21.2 110    25.3  47.1   173
+##  3 fema… Netb…  4.16  7.60  37.5  12.3    22  21.4  89.0  19.4  53.4   176
+##  4 fema… Netb…  4.32  6.40  37.7  12.3    30  21.0  98.3  19.6  48.8   170
+##  5 fema… Netb…  4.06  5.80  38.7  12.8    78  21.8 122    23.1  56.0   183
+##  6 fema… Netb…  4.12  6.10  36.6  11.8    21  21.4  90.4  16.9  56.4   178
+##  7 fema… Netb…  4.17  5.00  37.4  12.7   109  21.5 107    21.3  53.1   177
+##  8 fema… Netb…  3.80  6.60  36.5  12.4   102  24.4 157    26.6  54.4   174
+##  9 fema… Netb…  3.96  5.50  36.3  12.4    71  22.6 101    17.9  56.0   174
+## 10 fema… Netb…  4.44  9.70  41.4  14.1    64  22.8 126    25.0  51.6   174
+## # ... with 192 more rows, and 1 more variable: Wt &lt;dbl&gt;</code></pre>
+<p>This contains some physical and physiological information about 202 male and female elite athletes who play several different sports. One immediate question is “what sports do these athletes play”, with the followup question of whether it differs for males and females. Gender and sport are categorical variables, so a grouped bar chart is a reasonable display.</p>
+</div>
+<div id="types-of-two-variable-bar-chart" class="section level2">
+<h2>Types of two-variable bar chart</h2>
+<div id="stacked-bar-chart" class="section level3">
+<h3>Stacked bar chart</h3>
+<p>The way to depict two variables on a bar chart is to specify one of them as <code>x</code> and the other one as <code>fill</code>, like this:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Sport,fill=Sex))+geom_bar()</code></pre>
+<p><img src="/post/2018-01-20-displaying-grouped-bar-charts-in-ggplot_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>The variable in <code>x</code> is the “outer” variable, and in <code>fill</code> is “inner”, in the sense that we are looking at each <code>Sport</code>, and then within each sport we are looking at how many males and females there are. This seems to be sensible.</p>
+<p>These are “stacked bars”: if the blue part of the bar is bigger, more males than females play that sport, and if the red part is bigger, more females than males. The height of the bar is the total number of athletes playing each sport.</p>
+<p>Aside: if we do it the other way around:</p>
+<pre class="r"><code>ggplot(athletes,aes(fill=Sport,x=Sex))+geom_bar()</code></pre>
+<p><img src="/post/2018-01-20-displaying-grouped-bar-charts-in-ggplot_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>we get two bars, one for each <code>Sex</code>, subdivided by what sport they play. This is hard to follow because there are a lot of sports. End of aside.</p>
+<p>If our focus is on comparing the number of males and females within a sport, a stacked bar chart of this kind is not helpful, because the bars that we want to compare are not side by side. About the only hope within the stacked-bar world is to make all the bars the same height. We lose the total frequencies, but we gain something for comparison:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Sport,fill=Sex))+geom_bar(position=&quot;fill&quot;)</code></pre>
+<p><img src="/post/2018-01-20-displaying-grouped-bar-charts-in-ggplot_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>A bar that is more than half red indicates a sport that mostly females play, such as gymnastics or netball. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">If you are female and grew up in the British Commonwealth, you probably played netball and not basketball.</span> This plot at least enables us to compare sports in terms of male and female participation.</p>
+</div>
+<div id="grouped-bar-chart" class="section level3">
+<h3>Grouped bar chart</h3>
+<p>What I think makes the best picture is not to stack the bars for each sport, but to put them side by side, to enable comparison by height:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Sport,fill=Sex))+geom_bar(position=&quot;dodge&quot;)</code></pre>
+<p><img src="/post/2018-01-20-displaying-grouped-bar-charts-in-ggplot_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>This shows not only what sports tend to be played by males or females, but also which sports are popular overall, such as rowing, or less popular, such as tennis, even though the sports are played by both genders.</p>
+<p>And now we come to the reason for this post. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Mainly I write notes like this so that <em>I</em> can find them again when I forget, as I inevitably will.</span> If you look at sports played by only one sex, such as netball or water polo, you’ll see that their bars are twice as wide, whereas aesthetics appears to require them to be the normal width with an empty bar beside them. I didn’t know how to do that until just now. It’s a variation on <code>position=&quot;dodge&quot;</code>, thus:</p>
+<pre class="r"><code>ggplot(athletes,aes(x=Sport,fill=Sex))+
+  geom_bar(position=position_dodge(preserve=&quot;single&quot;))</code></pre>
+<p><img src="/post/2018-01-20-displaying-grouped-bar-charts-in-ggplot_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The bars are all the same width, even where one of the bars is empty for a sport.</p>
+</div>
+</div>

@@ -1,0 +1,122 @@
+---
+title: Scraping Manhattan with rvest
+author: Ken
+date: '2017-09-18'
+slug: scraping-a-bar-chart-with-rvest
+categories:
+  - R
+tags:
+  - 'rstats'
+---
+
+## Introduction
+
+In cricket, a Manhattan chart records how many runs a team score in each over (and how many wickets fall). An example is [here](http://www.espncricinfo.com/series/10719/statistics/1031665/England-vs-West-Indies-Only-T20I-west-indies-in-england-t20i-match) (scroll down to find it). Is it possible to extract the numbers of runs and wickets for each team from this graph?
+
+The answer turns out to be "yes", because this graph is an SVG graphic, and the data used to create it is embedded in the HTML code, so it is "simply" a matter of pulling it out. I downloaded a copy of the file first and saved it in `stats.html`. `r tufte::margin_note("This appears to be necessary because the document may not have finished loading when we start to scrape it.")`
+
+It's called a Manhattan chart because it resembles the Manhattan skyline. One of the other charts here is called "the worm".
+
+## Getting the HTML
+
+That goes like this:
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(pracma)
+html=read_html("stats.html")
+html
+```
+
+The `head` and the `body` of the HTML are stored in the variable I called `html`.
+
+## Pulling it apart
+
+The bars of the bar chart are coded for as `<rect>` in the HTML. I discovered this (in Chrome) by right-clicking on the graph and selecting Inspect (control-shift-I for those who prefer the keyboard), and then delving into the HTML `svg` object.
+
+Let's start by finding out how many `rect` objects we have:
+
+```{r}
+html %>% html_nodes('rect') 
+```
+
+There are 46. This is more than I was expecting given that this was a 20-over match (and so there should be at most 40 bars on the Manhattan chart). Are any of these different in terms of the names of the attributes they have? We can find out:
+
+```{r}
+html %>% html_nodes("rect") %>% 
+  html_attrs() %>% map(names)
+```
+
+The last six are different in that they have a `fill` attribute. I think these are the legends on the Manhattan, run rate and worm graphs.`r tufte::margin_note("Another way of doing this is to search for the g-containers for each subgraph, which in retrospect might have been better.")`
+
+This gets in the way rather, because if all the `rect`s had the same collection of names, we could more easily build a data frame out of the values. So we have to go around the houses: first find which `rect`s have a `fill` attribute, select all the others, and then make a data frame of those:
+
+```{r}
+html %>% html_nodes("rect") %>% 
+  html_attr("fill") -> has_fill
+has_fill
+want=is.na(has_fill)
+want
+html %>% html_nodes("rect") %>% 
+  html_attrs() %>% 
+  .[want] -> wanted_rect
+do.call(rbind,wanted_rect) %>% as.tibble() %>% 
+  modify_if(is.character,as.numeric) -> d
+d
+```
+
+Made it! I was expecting `bind_rows` to work, but it threw me a strange error, so I went this way. The `do.call` returned a matrix (since it used the base `rbind`), so I turned that into a `tibble`; all its columns were text, so I turned any of them that were text (all of them) into numbers. Before that, the `.[want]` extracts only elements from the list output from the previous step for which `want` is true: that is, the `rect` elements that have no `fill` attribute, for which `has_fill` is `NA`.
+
+## Translating the bars
+
+What I want to retrieve is the number of runs scored by each team in each over. This is proportional to the height of each bar, but I don't know the constant of proportionality. What I *do* know, however, is that the number of runs scored in each over is an integer, so that the bar heights should all be multiples of some common value. What value?
+
+I had the idea of turning all the bar heights into integers (eg. by multiplying them all by 1000), then finding the greatest common divisor (which should be the height that corresponds to scoring 1 run in an over), and then dividing by that. The package `pracma` has a `gcd` function that will do that. But I need to find the GCD of some largish collection of numbers, not just two, which is what `gcd` handles:
+
+```{r}
+gcd(12,20)
+```
+
+but I can't do
+
+```{r}
+gcd(12,20,34)
+```
+
+and have it give me the right thing. Enter `reduce` from `purrr`:
+
+```{r}
+reduce(c(12,20,34),gcd)
+```
+
+This works out the GCD of 12 and 20, getting 4, and then works out the GCD of 4 and 34, getting 2. So, now we can find the `height` in our bar chart that goes with 1 run:
+
+```{r}
+k=1000
+h1=reduce(d$height*k,gcd)
+h1/k
+```
+
+14.25, and then create a new column that is the number of runs:
+
+```{r}
+d %>% mutate(runs=height*k/h1) -> d
+d
+```
+
+I should probably round to be safe, but I wanted to convince myself that these had indeed come out as integers.
+
+As you can see from the original Manhattan graph, these are the number of runs from the first 10 red bars, corresponding to England. 
+
+## Still to do
+
+Our data frame `d` now has the number of runs for each over for *both* teams. The switch-over from one team to another is when the x-coordinate decreases:
+
+```{r}
+d %>% slice(15:25)
+```
+
+These are the last 6 overs for England and the first 5 for West Indies.
+
+Also on the Manhattan chart are those little circles above the bars, which represent wickets falling. Their x-coordinates are the same as for the bars for runs for the corresponding over and team. That would mean extracting their x-coordinates, looking them up in the data frame `d` we just created (via a `join`) and counting them. 

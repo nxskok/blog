@@ -1,0 +1,150 @@
+1                                                          The SAS System                            21:39 Thursday, August 23, 2018
+
+NOTE: Copyright (c) 2002-2012 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.4 (TS1M4) 
+      Licensed to UNIVERSITY OF TORONTO/COMPUTING & COMMUNICATIONS, Site 70117891.
+NOTE: This session is executing on the Linux 4.15.0-32-generic (LIN X64) platform.
+
+
+
+NOTE: Updated analytical products:
+      
+      SAS/STAT 14.2
+      SAS/ETS 14.2
+      SAS/OR 14.2
+      SAS/IML 14.2
+      SAS/QC 14.2
+
+WARNING: Your system is scheduled to expire on August 29, 2018, which is 6 days from now. The SAS System will no longer function on 
+         or after that date. Please contact your SAS Installation Representative to obtain your updated SAS Installation Data (SID) 
+         file, which includes SETINIT information.
+To locate the name of your SAS Installation Representative go to http://support.sas.com/repfinder and provide your site number 
+70117891 and company name as UNIVERSITY OF TORONTO/COMPUTING & COMMUNICATIONS. On the SAS REP list provided, locate the REP for 
+operating system LIN X64.
+NOTE: Additional host information:
+
+ Linux LIN X64 4.15.0-32-generic #35-Ubuntu SMP Fri Aug 10 17:58:07 UTC 2018 x86_64 Unrecognized Linux Distribution 
+
+You are running SAS 9. Some SAS 8 files will be automatically converted 
+by the V9 engine; others are incompatible.  Please see 
+http://support.sas.com/rnd/migration/planning/platform/64bit.html
+
+PROC MIGRATE will preserve current SAS file attributes and is 
+recommended for converting all your SAS libraries from any 
+SAS 8 release to SAS 9.  For details and examples, please see
+http://support.sas.com/rnd/migration/index.html
+
+
+This message is contained in the SAS news file, and is presented upon
+initialization.  Edit the file "news" in the "misc/base" directory to
+display site-specific news and information in the program log.
+The command line option "-nonews" will prevent this display.
+
+
+
+
+NOTE: SAS initialization used:
+      real time           0.19 seconds
+      cpu time            0.02 seconds
+      
+1          filename myurl url "https://www.utsc.utoronto.ca/~butler/c32/soap.txt";
+2          
+3          proc import
+WARNING: The Base SAS Software product with which IMPORT is associated will be expiring soon, and is currently in warning mode to 
+         indicate this upcoming expiration. Please run PROC SETINIT to obtain more information on your warning period.
+4            datafile=myurl
+5            out=soap
+6            dbms=dlm
+7            replace;
+8            getnames=yes;
+9            delimiter=" ";
+2                                                          The SAS System                            21:39 Thursday, August 23, 2018
+
+10         
+
+11         proc means;
+12          /**********************************************************************
+13          *   PRODUCT:   SAS
+14          *   VERSION:   9.4
+15          *   CREATOR:   External File Interface
+16          *   DATE:      23AUG18
+17          *   DESC:      Generated SAS Datastep Code
+18          *   TEMPLATE SOURCE:  (None Specified.)
+19          ***********************************************************************/
+20             data WORK.SOAP    ;
+21             %let _EFIERR_ = 0; /* set the ERROR detection macro variable */
+22             infile MYURL delimiter = ' ' MISSOVER DSD lrecl=32767 firstobs=2 ;
+23                informat case best32. ;
+24                informat scrap best32. ;
+25                informat speed best32. ;
+26                informat line $1. ;
+27                format case best12. ;
+28                format scrap best12. ;
+29                format speed best12. ;
+30                format line $1. ;
+31             input
+32                         case
+33                         scrap
+34                         speed
+35                         line $
+36             ;
+37             if _ERROR_ then call symputx('_EFIERR_',1);  /* set ERROR detection macro variable */
+38             run;
+
+NOTE: The infile MYURL is:
+      Filename=https://www.utsc.utoronto.ca/~butler/c32/soap.txt,
+      Local Host Name=ken-laptop,
+      Local Host IP addr=127.0.1.1,
+      Service Hostname Name=www.utsc.utoronto.ca,
+      Service IP addr=142.1.96.30,Service Name=N/A,
+      Service Portno=443,Lrecl=32767,Recfm=Variable
+
+NOTE: 27 records were read from the infile MYURL.
+      The minimum record length was 11.
+      The maximum record length was 12.
+NOTE: The data set WORK.SOAP has 27 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.63 seconds
+      cpu time            0.05 seconds
+      
+
+27 rows created in WORK.SOAP from MYURL.
+  
+  
+  
+NOTE: WORK.SOAP data set was successfully created.
+NOTE: The data set WORK.SOAP has 27 observations and 4 variables.
+NOTE: PROCEDURE IMPORT used (Total process time):
+      real time           3.38 seconds
+      cpu time            0.25 seconds
+      
+3                                                          The SAS System                            21:39 Thursday, August 23, 2018
+
+
+39           var scrap speed;
+40         
+41         ods graphics / imagename="scatter";
+42         
+
+NOTE: There were 27 observations read from the data set WORK.SOAP.
+NOTE: The PROCEDURE MEANS printed page 1.
+NOTE: PROCEDURE MEANS used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.03 seconds
+      
+
+43         proc sgplot;
+44           scatter x=speed y=scrap;
+45         
+NOTE: PROCEDURE SGPLOT used (Total process time):
+      real time           3.02 seconds
+      cpu time            0.06 seconds
+      
+NOTE: Listing image output written to /home/ken/teaching/blog/content/post/scatter.png.
+NOTE: There were 27 observations read from the data set WORK.SOAP.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           6.64 seconds
+      cpu time            0.37 seconds
+      

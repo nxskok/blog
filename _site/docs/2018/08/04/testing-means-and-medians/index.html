@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Testing means and medians</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/08/04/testing-means-and-medians/">Testing means and medians</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Aug 4, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;12 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The data set that inspired this post comes from <a href="https://www.amazon.ca/Second-Course-Business-Statistics-Regression/dp/B01JXTDB4A/ref=sr_1_16?ie=UTF8&amp;qid=1533431456&amp;sr=8-16&amp;keywords=mendenhall+sincich">this edition of Mendenhall and Sincich</a>. It comes from an investigation of how you learn people’s names effectively. 139 students were randomly divided into three groups, and had to learn the first and last names of all the people in the group they had been randomized to (between 40 and 50 other students). The study investigated three methods of learning names:</p>
+<ul>
+<li><p>pairwise: the students were divided into pairs, and the students in each pair had to learn each others’ names well enough to introduce their partner to all the people in the group. (You could imagine that this was like a control group.)</p></li>
+<li><p>simple name game: the first student gives their own name, the second student repeats the first name and gives their own, the third student repeats the first two names and then gives their own name, and so on. (Presumably the other students in the group could help if someone forgot one of the previous names.)</p></li>
+<li><p>elaborate name game: like the simple name game, but each student when giving their name also stated their favourite activity, which also had to be repeated along with the name. (The intention was to see whether adding an activity helped with recall of the name; you might imagine that seeing a person and happening to remember “this is the person who likes backgammon” could help with recalling their name.)</p></li>
+</ul>
+<p>After all this, <em>one year</em> later, all the participants received photographs of all the people in their group, and were asked to give everyone’s name, and the percent correctly recalled was recorded. (The groups were not quite the same size.)</p>
+<p>With one categorical variable <code>game</code> (the name-learning method used in the group) and one quantitative variable <code>recall</code>, you might imagine that a one-way analysis of variance would be called for.</p>
+<p>The data are <a href="https://www.utsc.utoronto.ca/~butler/c32/namegame.txt">here</a>, space delimited.</p>
+</div>
+<div id="reading-the-data-and-graphical-assessment" class="section level2">
+<h2>Reading the data and graphical assessment</h2>
+<p>We start with the usual, and use <code>read_delim</code> from <code>readr</code> to read in the data:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The original data source has aligned columns for which read_table works, but I did some editing.</span></p>
+<pre class="r"><code>library(tidyverse)
+library(smmr) # see below</code></pre>
+<pre class="r"><code>my_url=&quot;https://www.utsc.utoronto.ca/~butler/c32/namegame.txt&quot;
+names=read_delim(my_url, &quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   game = col_character(),
+##   recall = col_integer()
+## )</code></pre>
+<pre class="r"><code>names</code></pre>
+<pre><code>## # A tibble: 139 x 2
+##    game   recall
+##    &lt;chr&gt;   &lt;int&gt;
+##  1 simple     24
+##  2 simple     43
+##  3 simple     38
+##  4 simple     65
+##  5 simple     35
+##  6 simple     15
+##  7 simple     44
+##  8 simple     44
+##  9 simple     18
+## 10 simple     27
+## # ... with 129 more rows</code></pre>
+<p>Investigation of the data reveals that we have all three <code>games</code>, as well as the correct 139 rows.</p>
+<p>In with my lecture notes on making graphs in R, I give my students a slide that says what kind of graph is useful for each number of variables that are categorical or quantitative. My recommendation for one quantitative and one categorical is side-by-side boxplots, thus:</p>
+<pre class="r"><code>ggplot(names, aes(x=game, y=recall))+geom_boxplot()</code></pre>
+<p><img src="../../../../post/2018-08-04-testing-means-and-medians_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>I recommend this because boxplots tell you something about centre, spread and shape, which are the kind of initial interest you might typically have. Here, you see that average recall for <code>pairwise</code> was quite a bit lower than for <code>simple</code> or <code>elaborate</code>, which are quite similar to each other. In addition, there is some right-skewness, as evidenced by the long upper tail (whisker) on <code>elaborate</code>, and the upper outliers on each of the other two groups.</p>
+<p>I am not surprised by the skewness, since recall (a percentage) was typically rather small, but cannot be less than zero, and variables are often skewed away from a limit (and there really were students who recalled <em>none</em> of the names, so the lower limit does come into play).</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Currently playing: Mozart’s piano concerto no. 22, which is my favourite despite being one of his less famous examples of the genre.</span></p>
+<p>Another plot that you might make here is a histogram for each group, placed side by side. To do that in <code>ggplot</code>, the mechanism is called <strong>facets</strong>. Since I want to compare the three histograms, I’ll place them one above the other in a vertical column:</p>
+<pre class="r"><code>ggplot(names, aes(x=recall))+
+  geom_histogram(bins=7)+
+  facet_grid(game~.)</code></pre>
+<p><img src="../../../../post/2018-08-04-testing-means-and-medians_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>The skewness/outliers is evident again, along with something interesting in the shape for <code>elaborate</code> that we’ll come back to later.</p>
+<p>A couple of remarks:</p>
+<p><code>geom_histogram()</code> requires a number of bins (or a bin width) for the histogram(s). There is no default, because Hadley wisely says that you should be prepared to try different numbers of bins until you find one that tells the story of the data. Seven bins was actually my first guess, and it seems to have come out well. It actually came from
+<a href="https://en.wikipedia.org/wiki/Histogram#Sturges&#39;_formula">Sturges’ rule</a>, which I can calculate in my head: round up the per-group sample size to the next power of 2 (<span class="math inline">\(2^6=64\)</span>, since there were about 45 in each group), take that power (6) and add 1. It comes from an assumption of normality, and tends to give too few bins otherwise (see Rob Hyndman’s paper in the references below). The <a href="https://en.wikipedia.org/wiki/Histogram#Freedman%E2%80%93Diaconis&#39;_choice">Freedman-Diaconis rule</a> tends to give a more realistic number of bins, especially for large samples. But I can’t do it in my head.</p>
+<p>When you want to arrange the histograms according to the values of a categorical variable, <code>facet_grid</code> is the thing. It takes a model formula where the variable controlling up and down is the <span class="math inline">\(y\)</span> and the one controlling left-right is <span class="math inline">\(x\)</span>. If either of those is missing, we use a dot, as I did here with the <span class="math inline">\(x\)</span>.</p>
+</div>
+<div id="analysis-of-variance" class="section level2">
+<h2>Analysis of variance</h2>
+<p>Analysis of variance assumes normally distributed data within each group, with equal variances. Our boxplots suggested that this was questionable because of the skewness, but we do have 45 or so observations in each group, so we may be able to trade on “approximately normal with approximately equal spread”, shrug our shoulders and carry on. As I say to my students, “make a call and defend it”. If it’s a defensible call, I’m good with it. Decide for yourself whether you think this is defensible:</p>
+<pre class="r"><code>names.1=aov(recall~game, data=names)
+summary(names.1)</code></pre>
+<pre><code>##              Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+## game          2   6110  3054.9   7.687 0.000687 ***
+## Residuals   136  54046   397.4                     
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>The P-value on the <span class="math inline">\(F\)</span>-test is very small, so there is no doubt that the group means are not all the same. But which groups differ from which? This is where Tukey’s method comes in, thus:</p>
+<pre class="r"><code>TukeyHSD(names.1)</code></pre>
+<pre><code>##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = recall ~ game, data = names)
+## 
+## $game
+##                          diff        lwr       upr     p adj
+## pairwise-elaborate -11.086626 -21.117011 -1.056241 0.0263823
+## simple-elaborate     4.425714  -5.461648 14.313076 0.5400915
+## simple-pairwise     15.512340   5.915062 25.109619 0.0005681</code></pre>
+<p>This compares each pair of groups with each other, with P-values properly adjusted for the multiple comparisons. The <code>pairwise</code> method is significantly worse than the other two, which are not significantly different from each other. If we were going to recommend a method for name-learning, we’d recommend either <code>simple</code> or <code>elaborate</code>, but definitely not <code>pairwise</code>.</p>
+</div>
+<div id="moods-median-test" class="section level2">
+<h2>Mood’s median test</h2>
+<p>If we are bothered by the non-normality, what can we do instead? One possibility is a transformation, followed by the usual ANOVA on the transformed data. Another possibility is the Kruskal-Wallis test, but this comes with its own assumptions: that the distributions within each group are the same apart from a difference in median. I’m always bothered by this (and similarly by the assumption of symmetry in the signed-rank test), and would prefer not to have a test with assumptions that I have trouble remembering. I want, in the end, as assumption-free a test as I can get if the normal-theory one is no good.</p>
+<p>Hence, Mood’s median test. It’s kind of a multiple-group version of the sign test. It goes like this:</p>
+<ul>
+<li>find the median of all the data combined</li>
+<li>count up the number of data values above and below the overall median within each group (throwing away any exactly equal to the median)</li>
+<li>do a chi-squared test of association between group and above/below.<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The group sizes are known, and there should be the same total number of values above and below the overall median, so the margins are fixed, and you could justifiably do Fisher’s exact test rather than chi-squared.</span></li>
+</ul>
+<p>If the group medians were the same, there would be about a 50-50 split of values above and below the overall median in each group, and the chi-squared test would be non-significant. If the medians differ, there will be an imbalance: some groups will have the majority of observations above the median, and others the majority below.</p>
+<p>I wrote <a href="https://github.com/nxskok/smmr">a package <code>smmr</code></a> to do this:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This is the one time I mastered that enquo and !! stuff, as evidenced by the unquoted variable names.</span></p>
+<pre class="r"><code>names %&gt;% median_test(recall, game)</code></pre>
+<pre><code>## $table
+##            above
+## group       above below
+##   elaborate    23    19
+##   pairwise     12    35
+##   simple       34    14
+## 
+## $test
+##        what        value
+## 1 statistic 1.996337e+01
+## 2        df 2.000000e+00
+## 3   P-value 4.623911e-05</code></pre>
+<p><code>median_test</code> comes from <code>smmr</code>. <code>devtools::install_github(&quot;nxskok/smmr&quot;&quot;)</code> will install it.</p>
+<p>The P-value is actually a little smaller than for the ANOVA, and the conclusion is the same: the group medians are not all the same. The <code>pairwise</code> group has most of its recall below the overall median, and the other two groups have most of the values above.</p>
+<p>What Mood’s median test does not give you is something like Tukey controlled for multiple testing. The easiest way to make something seems to be to do Mood’s median test on all the pairs of groups, and then adjust the P-values by something like Bonferroni to account for the multiple testing.</p>
+<p>I’m thinking there’s one of those list-column things starting with this that would do this smoothly:</p>
+<pre class="r"><code>names %&gt;% nest(-game)</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   game      data             
+##   &lt;chr&gt;     &lt;list&gt;           
+## 1 simple    &lt;tibble [50 × 1]&gt;
+## 2 elaborate &lt;tibble [42 × 1]&gt;
+## 3 pairwise  &lt;tibble [47 × 1]&gt;</code></pre>
+<p>but in the spirit of not overheating my brain, I’m going to physically pull out the pairs of groups I want using <code>filter</code> and copy-paste. Previously, <code>simple</code> and <code>elaborate</code> were not significantly different:</p>
+<pre class="r"><code>names %&gt;% filter(game==&quot;simple&quot; | game==&quot;elaborate&quot;) %&gt;% 
+  median_test(recall, game)</code></pre>
+<pre><code>## $table
+##            above
+## group       above below
+##   elaborate    18    24
+##   simple       27    21
+## 
+## $test
+##        what     value
+## 1 statistic 1.6071429
+## 2        df 1.0000000
+## 3   P-value 0.2048939</code></pre>
+<p>This does a two-sample Mood’s median test on just these two groups, and finds them not significantly different. As you see, both groups are pretty close to 50-50 above and below the overall median (of just those two groups).</p>
+<p>So let’s compare <code>simple</code> and <code>pairwise</code>. These we found different before (comparing the means):</p>
+<pre class="r"><code>names %&gt;% filter(game==&quot;simple&quot; | game==&quot;pairwise&quot;) %&gt;% 
+  median_test(recall, game)</code></pre>
+<pre><code>## $table
+##           above
+## group      above below
+##   pairwise    12    34
+##   simple      36    14
+## 
+## $test
+##        what        value
+## 1 statistic 2.020174e+01
+## 2        df 1.000000e+00
+## 3   P-value 6.968955e-06</code></pre>
+<p>and different again, regardless of what adjustment we need to do to the P-value (eg. comparing it with <span class="math inline">\(0.05/3\)</span> for a Bonferroni adjustment).</p>
+<p>Finally, <code>elaborate</code> and <code>pairwise</code>, which were also different before:<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">My third paste, so I’m supposed to have turned this into a function by now.</span></p>
+<pre class="r"><code>names %&gt;% filter(game==&quot;elaborate&quot; | game==&quot;pairwise&quot;) %&gt;% 
+  median_test(recall, game)</code></pre>
+<pre><code>## $table
+##            above
+## group       above below
+##   elaborate    23    18
+##   pairwise     21    25
+## 
+## $test
+##        what     value
+## 1 statistic 0.9462129
+## 2        df 1.0000000
+## 3   P-value 0.3306851</code></pre>
+<p>Wait, what? Not significantly different, and close to 50-50 above and below? But the means and medians were a long way different:</p>
+<pre class="r"><code>names %&gt;% group_by(game) %&gt;% 
+  summarize(means=mean(recall), medians=median(recall))</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   game      means medians
+##   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;
+## 1 elaborate  26.2   26.0 
+## 2 pairwise   15.1    9.00
+## 3 simple     30.6   32.0</code></pre>
+<p>How can that happen? (The medians for these two groups are even further apart than the means.) How is it that such different medians can produce such non-unbalanced frequencies?</p>
+<p>Let’s take a look at the histograms again. The ones we want to compare are the top two:</p>
+<pre class="r"><code>ggplot(names,aes(x=recall))+
+  geom_histogram(bins=7)+
+  facet_grid(game~.)</code></pre>
+<p><img src="../../../../post/2018-08-04-testing-means-and-medians_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><code>pairwise</code> has your standard right-skewed shape, but something that we don’t see from the boxplots is that <code>elaborate</code> is <em>bimodal</em>: some people have moderate-good recall, and some people’s recall is very poor, with nothing much in between. The median for <code>elaborate</code> is in that second tall peak, and the mean is also pulled upwards by the skew, so that the mean and median for <code>elaborate</code> and <code>pairwise</code> look very different <em>even though the majority of the data values are fairly similar</em>. This last point is what Mood’s median test is actually assessing, even though I billed it as a test for medians: the overall median for these two groups is this:</p>
+<pre class="r"><code>names %&gt;% filter(game!=&quot;simple&quot;) %&gt;% summarize(med=median(recall))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##     med
+##   &lt;int&gt;
+## 1    13</code></pre>
+<p>The <code>elaborate</code> group actually has a lot of recall values below 13 (those ones in the first peak), because there’s a shortage of values in <code>elaborate</code> between the small ones and the big ones.</p>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>I don’t quite know what this all means. When I first did this analysis, I had to go back and physically check the non-significant Mood’s median test for <code>elaborate</code> and <code>pairwise</code>, because I didn’t believe it, but the shape of the data means in the end that it is not surprising that it came out this way: the median is bigger, but most of the data is not. Students who did the <code>elaborate</code> name game had good recall often enough to bring the median and mean up, but sometimes had poor recall.
+So Mood’s median test offers some insight that ANOVA+Tukey did not.</p>
+<p>So is <code>elaborate</code> really better than <code>pairwise</code>, or not? Make a call and defend it!</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://www.amazon.ca/Second-Course-Business-Statistics-Regression/dp/B01JXTDB4A/ref=sr_1_16?ie=UTF8&amp;qid=1533431456&amp;sr=8-16&amp;keywords=mendenhall+sincich">My ancient edition of Mendenhall and Sincich</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Histogram#Sturges&#39;_formula">Sturges Rule on Wikipedia</a></p>
+<p><a href="https://robjhyndman.com/papers/sturges.pdf">Rob Hyndman’s paper on Sturges rule</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

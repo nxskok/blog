@@ -1,0 +1,7 @@
+ID  answers
+ 1  a
+ 2  b,c
+ 3  d,e
+ 4  c,d
+ 5  b,c,e
+ 6  e

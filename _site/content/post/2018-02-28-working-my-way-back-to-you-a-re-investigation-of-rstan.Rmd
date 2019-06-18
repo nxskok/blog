@@ -1,0 +1,294 @@
+---
+title: Working my way back to you, a re-investigation of rstan
+author: Ken
+date: '2018-02-28'
+slug: working-my-way-back-to-you-a-re-investigation-of-rstan
+categories:
+  - R
+  - statistics
+  - Bayesian
+tags:
+  - 'rstats'
+  - 'rstan'
+---
+
+## Introduction
+
+I learned Stan a while back, when I was fitting some Bayesian models. I wanted to fix up one of them, and I realized that I had forgotten most of what I knew about Stan, so I had to go back and learn it again.
+
+A Bayesian model has two parts: a prior distribution, which summarizes your belief about the parameters you are trying to estimate before you look at any data, and a model that asserts the data-generating mechanism  conditional on the parameter value(s). These are combined into a posterior distribution which *is* your inference about your parameter(s) based on your prior beliefs and on the data. I learned my Bayesian statistics from [this guy](http://www.stat.sfu.ca/people/faculty/history/Villegas.html) and I can still hear him saying, with Uruguayan accent, "posterior is proportional to likelihhhhhood times pri-or". What you do is to summarize your posterior distribution somehow, its mean or mode or a highest posterior density interval (or region), which plays the same role as a confidence interval (or region). You can also generate simulated data from the posterior distribution, called a **predictive distribution**. An important part of model checking is to compare the distribution of your data with the predictive distribution. If they match reasonably well, you can have confidence in your model. This is something [Gelman et al](http://www.stat.columbia.edu/~gelman/book/) encourage doing.
+
+Stan provides a mechanism for randomly sampling from a posterior distribution, and enables you to do Bayesian inference for parameters (and such things as posterior predictive distributions) without having to worry about whether the model you are trying to fit is analytically tractable. 
+
+`r tufte::margin_note("The old-fashioned way of doing Bayesian inference required you to derive the posterior distribution using algebra; if you were lucky, it would be of a form you could recognize, but most of the time you would not be lucky. There was a lot of use at that time of so-called conjugate priors that were not necessarily reasonable, something I imagine that has now been consigned to the dustbin of history.")`
+
+The idea of sampling from the posterior distribution has revolutionized Bayesian statistics; basically, if you can write down a model, you can sample from the posterior distribution using Metropolis-Hastings or one of the modern variants that Stan uses, and then use the randomly generated posterior distribution as if it were the real thing.
+
+As I was thinking about this post and re-learning Stan, I was reminded of a song from my youth called [Working My Way Back To You Babe](https://www.youtube.com/watch?v=jHEiZy53r6k). I grew up in England, so this group was known to me as the Detroit Spinners, not to be confused with a British folk band of the time called [The Spinners](https://en.wikipedia.org/wiki/The_Supinners_(UK_band)). 
+
+## Starting point: estimating a Poisson mean
+
+The [Poisson distribution](https://www.umass.edu/wsp/resources/poisson/) is a model for counted data, such as goals in soccer or hockey or other relatively rare events like the number of flaws in a piece of cloth. The value it has for us is that it only has one parameter to estimate, called $\lambda$, which is both the mean and variance of the distribution.
+
+Let's make things easy for ourselves by generating some data that actually *is* from a Poisson distribution with a mean that we know, and see whether the estimation process recovers the true mean. (This is a good way of developing Stan code: try it out first on data known to be from the model you are trying to fit, and when that seems to be behaving itself, run the same code on your actual data.)
+
+Stan runs either independently (via the command-line version of Stan called `cmdstan`) or connected with other languages such as R, Python, [and others](http://mc-stan.org/users/interfaces/index.html).  We will use the R interface, which works via the package `rstan`. I probably need the `tidyverse` as well, and I will be reading an Excel sheet in later: 
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(rstan)
+```
+
+Let's generate some random Poisson data with mean 3. I set the random number seed first so that this is reproducible:
+
+```{r}
+set.seed(457299)
+x=rpois(50,3)
+x
+```
+
+50 random integers. The highest observed value is 11.
+
+The non-Bayesian "frequentist" inference here would estimate $\lambda$ using the sample mean:
+
+```{r}
+mean(x)
+```
+
+and obtain an interval estimate by leaning on the central limit theorem (with a sample size of 50, this seems reasonable):
+
+```{r}
+t.test(x,mu=3)
+```
+
+The sample mean is somewhere near the true value of 3, and the 95% confidence interval does indeed contain 3.
+
+To make this fly in Stan, we have to write a program in the Stan programming language (that looks a lot like R, in fact). This program is then turned into C++ code and then compiled, and then we can use it to sample from the posterior distribution. I build up the program step by step.
+
+The place to start thinking is about the model. The thing we observed was called `x`, and this had a Poisson distribution with a mean `lambda` that we are trying to estimate. This goes in a section of the program called `model` (there will be others later):
+
+```
+model {
+// likelihood
+x ~ poisson(lambda);
+}
+```
+
+The line starting with the slashes is a comment; the squiggle is read "is distributed as" in the familiar way. The [Stan manual](https://github.com/stan-dev/stan/releases/download/v2.17.0/stan-reference-2.17.0.pdf), chapters 49-64, details the distributions that are available and how to code them in Stan.
+
+In Stan terms, everything in the model is either a parameter or data. In our case, `lambda` is a parameter and `x` is data. All our parameters need to have prior distributions. What I'm willing to assume about `lambda` without looking at my data is that it's positive and not too big. I picked a chi-squared distribution with 5 df (which has mean 5) for the prior distribution. I could have gained more generality by using a gamma distribution or some other distribution on the positive real numbers. I add the prior to the `model` section thus:
+
+```
+model {
+// prior
+lambda ~ chi_square(5);
+// likelihood
+x ~ poisson(lambda);
+}
+```
+
+The prior could have parameters of its own, so-called "hyperparameters". For example, below I'll let the prior mean be specified as part of the data.
+
+Now that we know what the model, parameters and data are, we have to complete `data` and `parameters` sections that specify what kind of thing `x` and `lambda` actually are. Stan has two built-in data types, `real` (real numbers) and `int` (integers). You can declare arrays or matrices by adding a dimension to the declaration. In our case `lambda` is just a real number, but our data `x` is a vector with 50 entries, so we could proceed by adding these `data` and `parameters` sections:
+
+```
+data {
+int x[50];
+}
+
+parameters {
+real<lower=0> lambda;
+}
+
+model {
+// prior
+lambda ~ chi_square(5);
+// likelihood
+x ~ poisson(lambda);
+}
+```
+
+but it seems unnecessarily restrictive to hard-code the sample size and prior mean, since I might want to run this again with different data, so we'll declare `x` of length `n` and have `n` be part of our `data` section as well, in addition to adding the prior mean there:
+
+```
+data {
+int<lower=1> n;   
+int x[n];
+real prior_mean;
+}
+
+parameters {
+real<lower=0> lambda;
+}
+
+model {
+// prior
+lambda ~ chi_square(prior_mean);
+// likelihood
+x ~ poisson(lambda);
+}
+```
+
+Anything can have limits, expressed in angle brackets after the type. Here `n` is an integer that is at least 1, and `lambda` is zero or bigger.
+
+That is a functional Stan program, but I want to do a "posterior predictive" check of my model: that is, I want to generate a predictive distribution and compare it with my observed data. This is done by adding a `generated quantities` section to the end of my program, as shown below. To compile it, you can either store your program in a file, or, as here, as a text string:
+
+```{r}
+model='
+data {
+int<lower=1> n;   
+int x[n];
+real prior_mean;
+}
+
+parameters {
+real<lower=0> lambda;
+}
+
+model {
+// prior
+lambda ~ chi_square(prior_mean);
+// likelihood
+x ~ poisson(lambda);
+}
+
+generated quantities {
+  int x_new;
+  x_new=poisson_rng(lambda);
+}
+'
+```
+
+In `generated quantities`, this says that `x_new` is obtained by sampling a random Poisson for each value of `lambda` in the posterior distribution (`x_new` is declared first; since it only appears in `generated quantities`, it can be declared there, it being neither a parameter nor data.) Thus there will be as many `x_new` values as `lambda` values.
+
+I like to compile my model first, rather than compiling it each time I run my model, because that is the slowest part of the enterprise. This is how it goes:
+
+```{r, cache=TRUE}
+x_compiled=stan_model(model_code = model)
+```
+
+The last thing we need is to set up the data. Looking at the `data` section, we see that we need to supply an `n`, a vector called `x` of length `n`, and a prior mean, which we do in a list:
+
+```{r}
+my_data=list(n=50,x=x,prior_mean=5)
+```
+
+and then we can use this to sample from our posterior distribution, thus:
+
+```{r}
+pp1=sampling(x_compiled,data=my_data)
+```
+
+The sampling process is tweakable. I used the default four chains of length 2000, with the first half of each chain being warmup and the second half being actual sampling. ("Warmup" is not the same as "burn-in" that you might be familiar with from Metropolis-Hastings.)
+
+Looking at `pp1` gives us some information about the simulation:
+
+```{r}
+pp1
+```
+
+The first line tells us about the posterior distribution of our parameter `lambda`, with a 95% posterior interval of 2.75 to 3.73 (safely containing the true value of 3). The second line `x_new` is our predictive distribution, that we will shortly compare for shape with our data. (The  last line is the log-posterior density function.)
+
+We should convince ourselves that the sampling has worked, which is done with this plot:
+
+```{r}
+traceplot(pp1,"lambda")
+```
+
+This kind of pattern indicates that the sampled values wander all over the parameter space (positive reals), without getting stuck anywhere, suggesting that we have a faithful representation of the posterior distribution. 
+
+### Extracting from the posterior and predictive distribution
+
+The output from `pp1` summarizes the posterior distribution (and posterior predictive distribution), but if we want to draw pictures of them, we need the actual simulated values. These are obtained by "extracting" from the sampling object:
+
+```{r}
+ppp1=extract(pp1)
+str(ppp1)
+```
+
+Thus the simulated posterior distribution of `lambda` and the posterior predictive distribution of `x` are elements of the list `ppp1`. There are 4000 elements of each, $4 \times 1000$ non-warm-up sampled values. The way the predictive distribution is obtained is, for each value of `lambda`, a randomly-sampled Poisson with that mean is drawn. Several realizations of the posterior predictive distribution could be obtained by making `x_new` into an array. 
+
+What does the posterior distribution of `lambda` look like?
+
+```{r rasiya}
+tibble(lambda=ppp1$lambda) %>% 
+  ggplot(aes(x=lambda))+
+  geom_histogram(bins=10)
+```
+
+This looks very much bell-shaped, as was suggested by the largish sample size and population mean that was evidently not too close to zero. (The theory says that the sample total will have a Poisson distribution with a mean of $50 \times 3=150$, which should be acceptably normal in shape.)
+
+Let's go back and look at the distribution of the data, for which we should use a bar plot rather than a histogram since the data are discrete:
+
+```{r dixino}
+tibble(x=x) %>% 
+  ggplot(aes(x=x))+
+  geom_bar()
+```
+
+This is skewed to the right, but it should resemble the posterior predictive distribution, which we can also plot:
+
+```{r capogi}
+tibble(x_new=ppp1$x_new) %>% 
+  ggplot(aes(x=x_new))+
+  geom_bar()
+```
+
+The actual data has an observed value of 11, which is unlikely but still just possible according to the posterior predictive distribution, and the shapes of the distributions are otherwise similar, so I would call this acceptably good.
+
+## Real data: English soccer scores
+
+I mentioned earlier that a smart way to develop a model in Stan is to fit to data of a known distribution before checking that it behaves itself before letting it loose on real data. The model seems to work, so let's take some real data now. I've chosen soccer scores from England for the 2017-2018 season up to the current date (Febrary 28, 2018) which are available from [here](http://www.football-data.co.uk/downloadm.php), and I saved on my local machine:
+
+```{r}
+england=read_excel("/home/ken/all-euro-data-2017-2018.xlsx",sheet = "E0")
+england
+```
+
+`r tufte::margin_note("This is where I need to learn about the here package.")`
+
+Let's model the home team's goals as Poisson with a mean we'll estimate, which are in the column `FTHG`. We've done most of the work already; we just have to set up the data and sample from the model. My considerable experience with watching soccer says that the home team scores about 2 goals on average:
+
+```{r}
+my_data_2=list(n=279,x=england$FTHG,prior_mean=2)
+pp2=sampling(x_compiled,data=my_data_2)
+pp2
+```
+
+Two goals was a bit of an overestimate: the posterior mean is 1.55, with a 95% posterior interval going from 1.41 to 1.70.
+
+Again, we should check that the data distribution and the posterior predictive distribution match up reasonably well:
+
+```{r mewumu}
+tibble(x=my_data_2$x) %>% 
+  ggplot(aes(x=x))+
+  geom_bar()
+```
+
+and
+
+```{r pituvo}
+ppp2=extract(pp2)
+tibble(x=ppp2$x_new) %>% 
+  ggplot(aes(x=x))+
+  geom_bar()
+```
+
+This is not quite so good: there are in actuality more teams scoring 4 goals (and, to some extent, 5) and fewer scoring 3 than the posterior predictive distribution suggests. One explanation for this is that the home scores are not all Poisson with the same mean, because the likely number of goals depends on the strengths of the home and away teams; the true distribution is probably not Poisson at all, but might be some kind of mixture of Poissons of varying means - that is to say, we would expect overdispersion relative to a Poisson model.
+
+## Conclusion
+
+I was planning to add something to this post about Bayesian Poisson regression, but I'll save that for another post. Most of the ideas are similar, but there is some elaboration needed. 
+
+A better way to handle the soccer data is as Poisson, but with a mean that depends on the attacking and defensive capabilities of the teams playing. That too will have to wait for another time.
+
+
+
+## References
+
+<http://m-clark.github.io/workshops/bayesian/03_stan.html> reminded me of a lot of what I'd forgotten.
+
+<http://mc-stan.org/events/stancon2017-notebooks/stancon2017-kharratzadeh-epl.pdf> is a cool piece of modelling that I want to borrow from in the future.
+
+<https://github.com/stan-dev/stan/releases/download/v2.17.0/stan-reference-2.17.0.pdf> is the bible of Stan. If you want it, it's in here somewhere.

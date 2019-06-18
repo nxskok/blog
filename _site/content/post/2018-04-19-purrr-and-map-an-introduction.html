@@ -1,0 +1,364 @@
+---
+title: 'Purrr and map: an introduction'
+author: Ken
+date: '2018-04-19'
+slug: purrr-and-map-an-introduction
+categories:
+  - R
+tags:
+  - tidyverse
+---
+
+
+
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<p>The usual, plus <code>broom</code> for later:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(broom)</code></pre>
+</div>
+<div id="for-each" class="section level2">
+<h2>“For each”</h2>
+<p>One of the commonest programming tasks is to do something “for each” of something else. For example, suppose you have a vector of values <code>x</code> like this:</p>
+<pre class="r"><code>x=2:6
+x</code></pre>
+<pre><code>## [1] 2 3 4 5 6</code></pre>
+<p>and you want to produce a new vector <code>y</code> whose values are twice the corresponding ones in <code>x</code>. The obvious way to think of doing that is something that most programming languages have, R included: a “for loop”.</p>
+<p>The way that goes is that you first initialize a vector to hold the results, and then you fill that vector one element at a time:</p>
+<pre class="r"><code>y=numeric(5)
+for (i in 1:5) {
+  y[i]=2*x[i]
+}
+y</code></pre>
+<pre><code>## [1]  4  6  8 10 12</code></pre>
+<p>This works, but it has a lot of overhead: we have to initialize <code>y</code>, then we have to create a looping variable <code>i</code>, which we have to note goes from 1 to 5, and then we have the mechanism of the for loop. The actual doubling-<code>x</code> part is one of our four lines of code, and what we are actually doing gets rather hidden.</p>
+<p>If you are an R veteran, you’ve probably heard that “for loops are slow” (less true than it was), or that you should use one of the <code>apply</code> functions (which I am here arguing against, since the <code>map</code> functions are easier and more uniform). A lot of R functions are “vectorized”, meaning that you can feed them a vector and they will return you a vector consisting of whatever you ask for, elementwise:</p>
+<pre class="r"><code>y=2*x
+y</code></pre>
+<pre><code>## [1]  4  6  8 10 12</code></pre>
+<p>with nary a loop in sight. Below, I show you another way of “hiding” the loop mechanism, one that I think is very useful.</p>
+<p>But, sometimes, a loop is a good way to solve a problem. For example, the first two Fibonacci numbers are 1, and each one after that is the sum of the previous two. Referring to other elements of a vector by number is a prime reason to use a for loop:</p>
+<pre class="r"><code>fib=numeric(10)
+fib[1]=1
+fib[2]=1
+for (i in 3:10) {
+  fib[i]=fib[i-1]+fib[i-2]
+}
+fib</code></pre>
+<pre><code>##  [1]  1  1  2  3  5  8 13 21 34 55</code></pre>
+</div>
+<div id="map" class="section level2">
+<h2>Map</h2>
+<p>Here’s another way to do “for each”. I’ll use the same example, doubling each of a list of numbers:</p>
+<pre class="r"><code>double_it=function(w) {
+  2*w
+}
+y=map_dbl(x,double_it)
+y</code></pre>
+<pre><code>## [1]  4  6  8 10 12</code></pre>
+<p>How does this work? I first write a little function that does “one”: in this case, it takes <em>one</em> number and doubles it. Then, the <code>map_dbl</code> line says “for each of the things in <code>x</code>, run the function <code>double_it</code> on that thing”.</p>
+<p>The idea is not that you would actually use this idea for <em>this</em> problem, since multiplication is vectorized, but that you use the idea when what you are doing is <em>not</em> vectorized, so that you have to use some kind of for-each mechanism yourself.</p>
+<p>To decide what kind of <code>map</code> function to use (there are several), look at what your function <em>outputs</em>, here something that could be a decimal number.
+There are <code>map_dbl</code>, <code>map_int</code>, <code>map_lgl</code> (logical, ie. true/false), <code>map_chr</code> (and possibly others) to choose from.</p>
+<p>Here’s (yet) another way to do it:</p>
+<pre class="r"><code>y=map_dbl(x,~2*.)
+y</code></pre>
+<pre><code>## [1]  4  6  8 10 12</code></pre>
+<p>This is a way to avoid writing a function: “for each thing in <code>x</code>, times it by 2”. When you do it this way, start with a squiggle, and what follows is a calculation containing a dot, where the dot represents the value that is being for-eached. (I didn’t say that very well; I mean each of the values of <code>x</code>, in turn, here.)</p>
+<p>Personally, I find the squiggle way more confusing than the write-a-little-function way. Perhaps this is because I have used the <code>apply</code> functions, and this is how they work. I’m aware that this is a matter of taste.</p>
+<p>As Jenny Bryan says, the <code>map</code> variants are not a way of avoiding writing a loop; rather, they are a way of having someone else write the loop for you, so that it is happening in the background and you can concentrate on what you want the loop to <em>do</em>, rather than how to make it work. Note how much clearer the code with the <code>map</code> is, compared to the code with the <code>for</code>.</p>
+<p>There’s one more thing: the function <code>map</code>. That’s used when the for-each part returns more than one value. A rather silly example is this:</p>
+<pre class="r"><code>up_down=function(w) {
+  c(w-2,w+1)
+}
+up_down(3)</code></pre>
+<pre><code>## [1] 1 4</code></pre>
+<p>This goes in a <code>map</code> like this:</p>
+<pre class="r"><code>map(x,up_down)</code></pre>
+<pre><code>## [[1]]
+## [1] 0 3
+## 
+## [[2]]
+## [1] 1 4
+## 
+## [[3]]
+## [1] 2 5
+## 
+## [[4]]
+## [1] 3 6
+## 
+## [[5]]
+## [1] 4 7</code></pre>
+<p>What comes out of <code>map</code> is a <code>list</code>, one list element for each value of <code>x</code>. In this case, each list element is a vector of two numbers, the first value two less than the input, the second one more. The numbers in square brackets say which element in the list we are looking at, <em>not</em> the value of <code>x</code>. (The first value of <code>x</code> is 2, so the values going with <code>[[1]]</code> are two less than 2 and one more than 2.)</p>
+<p>Or, if you prefer it without defining a function:</p>
+<pre class="r"><code>map(x,~c(.-2,.+1))</code></pre>
+<pre><code>## [[1]]
+## [1] 0 3
+## 
+## [[2]]
+## [1] 1 4
+## 
+## [[3]]
+## [1] 2 5
+## 
+## [[4]]
+## [1] 3 6
+## 
+## [[5]]
+## [1] 4 7</code></pre>
+<p>Gotta say, as I write this, I’m coming around to the functionless way of doing it. When I was writing the above, I read it as “for each <code>x</code>, calculate it minus 2 and it plus 1”.</p>
+</div>
+<div id="map-functions-and-data-frames" class="section level2">
+<h2>Map functions and data frames</h2>
+<p>The foregoing is not “tidy”, in the sense that we are used to working within data frames. I didn’t do that before, because I wanted to show you the <code>map</code> mechanism first. But the same idea works within a <code>mutate</code> in a data frame, with a twist that we see at the end.</p>
+<p>Let’s make a data frame <code>d</code> that contains our numbers 2 through 6:</p>
+<pre class="r"><code>d=tibble(x=2:6)
+d</code></pre>
+<pre><code>## # A tibble: 5 x 1
+##       x
+##   &lt;int&gt;
+## 1     2
+## 2     3
+## 3     4
+## 4     5
+## 5     6</code></pre>
+<p>and then make a column <code>y</code> that is double the <code>x</code>. There is the obvious way:</p>
+<pre class="r"><code>d %&gt;% mutate(y=2*x)</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##       x     y
+##   &lt;int&gt; &lt;dbl&gt;
+## 1     2  4.00
+## 2     3  6.00
+## 3     4  8.00
+## 4     5 10.0 
+## 5     6 12.0</code></pre>
+<p>and then there is the <code>map_dbl</code> way:</p>
+<pre class="r"><code>d %&gt;% mutate(y=map_dbl(x,~2*.))</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##       x     y
+##   &lt;int&gt; &lt;dbl&gt;
+## 1     2  4.00
+## 2     3  6.00
+## 3     4  8.00
+## 4     5 10.0 
+## 5     6 12.0</code></pre>
+<p>or with the function we wrote before:</p>
+<pre class="r"><code>d %&gt;% mutate(y=map_dbl(x,double_it))</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##       x     y
+##   &lt;int&gt; &lt;dbl&gt;
+## 1     2  4.00
+## 2     3  6.00
+## 3     4  8.00
+## 4     5 10.0 
+## 5     6 12.0</code></pre>
+<p>The idea is that the second thing inside <code>map_dbl</code> is either the <em>name</em> of a function, or a <em>definition</em> of a function, starting with a squiggle.</p>
+<p>All right, back to that last one above that uses <code>map</code>. What happens there?</p>
+<pre class="r"><code>d %&gt;% mutate(y=map(x,up_down))</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##       x y        
+##   &lt;int&gt; &lt;list&gt;   
+## 1     2 &lt;dbl [2]&gt;
+## 2     3 &lt;dbl [2]&gt;
+## 3     4 &lt;dbl [2]&gt;
+## 4     5 &lt;dbl [2]&gt;
+## 5     6 &lt;dbl [2]&gt;</code></pre>
+<p><code>y</code> is a thing called a list-column. We are used to data frame cells containing single numbers or single pieces of text, like a cell in a spreadsheet would, but <code>tibble</code>-type data frame cells can contain <em>anything</em>: vectors of numbers, as here, vectors of text, or even <em>data frames</em>.</p>
+<p>To get at the things inside the list-column, we use <code>unnest</code>:</p>
+<pre class="r"><code>d %&gt;% mutate(y=map(x,up_down)) %&gt;% 
+  unnest(y)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##        x     y
+##    &lt;int&gt; &lt;dbl&gt;
+##  1     2  0   
+##  2     2  3.00
+##  3     3  1.00
+##  4     3  4.00
+##  5     4  2.00
+##  6     4  5.00
+##  7     5  3.00
+##  8     5  6.00
+##  9     6  4.00
+## 10     6  7.00</code></pre>
+<p>Now the individual values in <code>y</code> show up, with everything else (<code>x</code>, here) repeated as necessary.</p>
+</div>
+<div id="for-each-group" class="section level2">
+<h2>“For each group”</h2>
+<p>Sometimes we want to do something “for each group” of observations in a data frame. If it’s simple, <code>group_by</code> and <code>summarize</code> will do the job. Let’s use the <code>mtcars</code> data set to illustrate, here getting the mean and SD of gas mileage for cars of each number of cylinders:</p>
+<pre class="r"><code>mtcars %&gt;% group_by(cyl) %&gt;% 
+  summarize(xbar=mean(mpg), s=sd(mpg))</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##     cyl  xbar     s
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1  4.00  26.7  4.51
+## 2  6.00  19.7  1.45
+## 3  8.00  15.1  2.56</code></pre>
+<p>But what if we wanted something more complicated, for example the R-squared from the regression of gas mileage on horsepower for each number of cylinders? A graph first would give us an idea of what to expect:</p>
+<pre class="r"><code>ggplot(mtcars,aes(x=hp,y=mpg,colour=factor(cyl)))+geom_point()+geom_smooth(method=&quot;lm&quot;)</code></pre>
+<p><img src="/rmarkdown-libs/figure-html4/mtcars-hp-mpg-1.png" width="672" /></p>
+<p>A somewhat negative relationship for the 4-cylinder cars, and weak, slightly negative, relationships for the rest. A good way to tackle this is to deliberately create a list-column of data frames containing everything but <code>cyl</code>, one for each number of cylinders:</p>
+<pre class="r"><code>mtcars %&gt;% group_by(cyl) %&gt;% nest()</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##     cyl data              
+##   &lt;dbl&gt; &lt;list&gt;            
+## 1  6.00 &lt;tibble [7 × 10]&gt; 
+## 2  4.00 &lt;tibble [11 × 10]&gt;
+## 3  8.00 &lt;tibble [14 × 10]&gt;</code></pre>
+<p>The things in the <code>data</code> column are data frames containing everything except <code>cyl</code>.</p>
+<p>Next, we can take advantage of the fact that list-columns can contain <em>anything</em>, in this case fitted models:</p>
+<pre class="r"><code>mtcars %&gt;% group_by(cyl) %&gt;% nest() %&gt;% 
+  mutate(model=map(data,~lm(mpg~hp,data=.)))</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##     cyl data               model   
+##   &lt;dbl&gt; &lt;list&gt;             &lt;list&gt;  
+## 1  6.00 &lt;tibble [7 × 10]&gt;  &lt;S3: lm&gt;
+## 2  4.00 &lt;tibble [11 × 10]&gt; &lt;S3: lm&gt;
+## 3  8.00 &lt;tibble [14 × 10]&gt; &lt;S3: lm&gt;</code></pre>
+<p>To my mind, the easiest way of getting the R-squared value out of each model is to use <code>glance</code> from <code>broom</code>:</p>
+<pre class="r"><code>mtcars %&gt;% group_by(cyl) %&gt;% nest() %&gt;% 
+  mutate(model=map(data,~lm(mpg~hp,data=.))) %&gt;% 
+  mutate(gl=map(model,glance))</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##     cyl data               model    gl                   
+##   &lt;dbl&gt; &lt;list&gt;             &lt;list&gt;   &lt;list&gt;               
+## 1  6.00 &lt;tibble [7 × 10]&gt;  &lt;S3: lm&gt; &lt;data.frame [1 × 11]&gt;
+## 2  4.00 &lt;tibble [11 × 10]&gt; &lt;S3: lm&gt; &lt;data.frame [1 × 11]&gt;
+## 3  8.00 &lt;tibble [14 × 10]&gt; &lt;S3: lm&gt; &lt;data.frame [1 × 11]&gt;</code></pre>
+<p>and the final step is to pull our R-squared value out as <code>r.squared</code>. To extract something by name, use the name as a piece of <em>text</em> in a <code>map</code>:</p>
+<pre class="r"><code>mtcars %&gt;% group_by(cyl) %&gt;% nest() %&gt;% 
+  mutate(models=map(data,~lm(mpg~hp,data=.))) %&gt;% 
+  mutate(model_glance=map(models,glance)) %&gt;% 
+  mutate(rsq=map_dbl(model_glance,&quot;r.squared&quot;))</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##     cyl data               models   model_glance             rsq
+##   &lt;dbl&gt; &lt;list&gt;             &lt;list&gt;   &lt;list&gt;                 &lt;dbl&gt;
+## 1  6.00 &lt;tibble [7 × 10]&gt;  &lt;S3: lm&gt; &lt;data.frame [1 × 11]&gt; 0.0161
+## 2  4.00 &lt;tibble [11 × 10]&gt; &lt;S3: lm&gt; &lt;data.frame [1 × 11]&gt; 0.274 
+## 3  8.00 &lt;tibble [14 × 10]&gt; &lt;S3: lm&gt; &lt;data.frame [1 × 11]&gt; 0.0804</code></pre>
+<p>R-squared is close to zero for the 6-cylinder and 8-cylinder cars, and somewhat larger for the 4-cylinder cars. This is in line with what we would guess from the graph.</p>
+</div>
+<div id="the-map2-family" class="section level2">
+<h2>The <code>map2</code> family</h2>
+<p>Sometimes the for-each contains two things. For example, suppose we have this data frame:</p>
+<pre class="r"><code>d=tribble(
+  ~p, ~q,
+  10, 3,
+  11, 6,
+  12, 4,
+  13, 1
+)
+d</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##       p     q
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  10.0  3.00
+## 2  11.0  6.00
+## 3  12.0  4.00
+## 4  13.0  1.00</code></pre>
+<p>and for some reason we want to calculate 3 times <code>p</code> minus <code>q</code> all the way down. The obvious way is this one:</p>
+<pre class="r"><code>d %&gt;% mutate(z=3*p-q)</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##       p     q     z
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1  10.0  3.00  27.0
+## 2  11.0  6.00  27.0
+## 3  12.0  4.00  32.0
+## 4  13.0  1.00  38.0</code></pre>
+<p>and for this kind of vectorized problem there is no need to look further. But, how would we do this using <code>map</code> ideas? Let’s write a little function first:</p>
+<pre class="r"><code>my_minus=function(u,v) {
+  3*u-v
+}</code></pre>
+<p>Now, how are we going to use <code>map_dbl</code>? Our function takes two inputs, but there is only one slot for a “for each” in <code>map_dbl</code>. The answer is to instead use <code>map2_dbl</code>; it and its cousins take <em>two</em> inputs to for-each over, and then the name of a function, thus:</p>
+<pre class="r"><code>d %&gt;% mutate(z=map2_dbl(p,q,my_minus))</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##       p     q     z
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1  10.0  3.00  27.0
+## 2  11.0  6.00  27.0
+## 3  12.0  4.00  32.0
+## 4  13.0  1.00  38.0</code></pre>
+<p>How to do this without defining a function first? We can’t use <code>.</code> to represent “it” any more, since we have two “it”s. We have to call the first input <code>.x</code> and the second one <code>.y</code>:</p>
+<pre class="r"><code>d %&gt;% mutate(z=map2_dbl(p,q,~3*.x-.y))</code></pre>
+<pre><code>## # A tibble: 4 x 3
+##       p     q     z
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1  10.0  3.00  27.0
+## 2  11.0  6.00  27.0
+## 3  12.0  4.00  32.0
+## 4  13.0  1.00  38.0</code></pre>
+<p>read as “for each <code>p</code> and <code>q</code> (in parallel), calculate three times the first one minus the second one”.</p>
+<p>The <code>map2</code> functions always work in parallel: one thing from the first column combined with the corresponding thing from the second column. But sometimes we want all combinations of something in the first column with something in the second. For example, we might be making a multiplication table. The for-loop way of handling that is to use <em>nested</em> loops, one inside the other, eg:</p>
+<pre class="r"><code>for (i in 1:3) {
+  for (j in 1:4) {
+    z=i*j
+    print(str_c(i,&quot; times &quot;,j,&quot; is &quot;,z))
+  }
+}</code></pre>
+<pre><code>## [1] &quot;1 times 1 is 1&quot;
+## [1] &quot;1 times 2 is 2&quot;
+## [1] &quot;1 times 3 is 3&quot;
+## [1] &quot;1 times 4 is 4&quot;
+## [1] &quot;2 times 1 is 2&quot;
+## [1] &quot;2 times 2 is 4&quot;
+## [1] &quot;2 times 3 is 6&quot;
+## [1] &quot;2 times 4 is 8&quot;
+## [1] &quot;3 times 1 is 3&quot;
+## [1] &quot;3 times 2 is 6&quot;
+## [1] &quot;3 times 3 is 9&quot;
+## [1] &quot;3 times 4 is 12&quot;</code></pre>
+<p>If you’ve learned Python or a similar language, you have probably done a lot of exercises like this. But <code>map2</code> only works in parallel, as above.</p>
+<p>The trick is to <em>make</em> something that <code>map2</code> can use in parallel, and a handy tool for that is <code>crossing</code> from <code>tidyr</code>. For example:</p>
+<pre class="r"><code>crossing(x=1:3,y=1:4)</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##        x     y
+##    &lt;int&gt; &lt;int&gt;
+##  1     1     1
+##  2     1     2
+##  3     1     3
+##  4     1     4
+##  5     2     1
+##  6     2     2
+##  7     2     3
+##  8     2     4
+##  9     3     1
+## 10     3     2
+## 11     3     3
+## 12     3     4</code></pre>
+<p>and then you can say</p>
+<pre class="r"><code>crossing(p=1:3,q=1:4) %&gt;% 
+  mutate(z=map2_dbl(p,q,~.x*.y))</code></pre>
+<pre><code>## # A tibble: 12 x 3
+##        p     q     z
+##    &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+##  1     1     1  1.00
+##  2     1     2  2.00
+##  3     1     3  3.00
+##  4     1     4  4.00
+##  5     2     1  2.00
+##  6     2     2  4.00
+##  7     2     3  6.00
+##  8     2     4  8.00
+##  9     3     1  3.00
+## 10     3     2  6.00
+## 11     3     3  9.00
+## 12     3     4 12.0</code></pre>
+<p>This is tidy, but usually multiplication tables have one variable in the rows and other in the columns, so we have to untidy it:</p>
+<pre class="r"><code>crossing(p=1:3,q=1:4) %&gt;% 
+  mutate(z=map2_dbl(p,q,~.x*.y)) %&gt;% 
+  spread(q,z)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##       p   `1`   `2`   `3`   `4`
+##   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1  1.00  2.00  3.00  4.00
+## 2     2  2.00  4.00  6.00  8.00
+## 3     3  3.00  6.00  9.00 12.0</code></pre>
+<p>Of course, when I were a lad, multiplication tables went up to <span class="math inline">\(12 \times 12\)</span>, and we had to like it.</p>
+</div>

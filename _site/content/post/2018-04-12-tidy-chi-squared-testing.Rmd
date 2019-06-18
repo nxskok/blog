@@ -1,0 +1,263 @@
+---
+title: Tidy chi-squared testing
+author: Ken
+date: '2018-04-12'
+slug: tidy-chi-squared-testing
+categories:
+  - R
+  - statistics
+tags:
+  - rstats
+  - tidyverse
+---
+
+## Introduction
+
+R has the creaky old functions `table` and `chisq.test` for counting up frequencies and doing chi-squared tests for association. They work, but there is nothing very `tidyverse` or elegant about them. Nonetheless, if we organize things right, we can use them in a tidy way, with everything working with data frames and pipelines.
+
+## Packages
+
+I use `broom` later for tidy output:
+
+```{r}
+library(tidyverse)
+library(broom)
+```
+
+
+## Example 1
+
+[Here](http://psychstat3.missouristate.edu/Documents/IntroBook3/sbk22.htm) we find an example of HIV status and 
+sexual preference for 30 males. These are both categorical variables, with categories `y` (yes) and `n` (no) for the first, and `b` (both), `f` (females) and `m` (males) for the second. I decided to enter the data manually:
+
+```{r}
+males = tribble(
+  ~HIV, ~SexPref,
+  "y", "b",
+  "n", "f",
+  "n", "f",
+  "n", "b",
+  "y", "f",
+  "n", "f",
+  "n", "f",
+  "n", "m",
+  "y", "f",
+  "n", "f",
+  "n", "f",
+  "n", "f",
+  "y", "b",
+  "n", "f",
+  "n", "f",
+  "n", "b",
+  "n", "f",
+  "n", "m",
+  "n", "f",
+  "n", "f",
+  "y", "m",
+  "n", "f",
+  "y", "b",
+  "y", "m",
+  "n", "f",
+  "y", "m",
+  "n", "f",
+  "y", "m",
+  "n", "f",
+  "n", "m"
+)
+```
+
+To determine whether there is an association between these two categorical variables, we first need to count how many observations we have in each combination of HIV status and sexual preference. This goes (or, you might say, "went") using `table`:
+
+```{r}
+tab=with(males,table(HIV,SexPref))
+tab
+```
+
+It looks as if the males who did not have HIV mostly preferred females, whereas for the ones who did have HIV, the picture is a lot less clear.
+
+To test whether there is an association between `HIV` and `SexPref`, the standard procedure is a chi-squared test. This takes a table such as the one that came out of `table`:
+
+```{r}
+chisq.test(tab)
+```
+
+The P-value is less than 0.05, so we reject the null hypothesis of no association and conclude that there is an association; for example, knowing a man's HIV status tells you something about the kind of sexual partner he prefers.
+
+## Example 2
+
+I found [these data](http://www.utsc.utoronto.ca/~butler/d29/eyewear.txt) somewhere, but have long since forgotten where. It's from a study about association between gender and preferred eyewear. Rather than being one line per person, the data file is in contingency-table format:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/eyewear.txt"
+eyewear=read_delim(my_url," ")
+eyewear
+```
+
+I discovered that you can feed a data frame directly into `chisq.test`:
+
+```{r}
+eyewear2 = eyewear %>% select(-gender)
+chisq.test(eyewear2)
+```
+
+Here, there is very strong evidence of an association, probably because fewer females (as a proportion) than males wear glasses. I'll come back to that in a moment.
+
+You might have noticed that `eyewear` is not tidy. It is in "wide" format, with the numbers all being frequencies, and the names of the columns of frequencies being *levels* of a categorical variable that might be called `eyewear`. As ever, this can be tidied using my favourite function in the entire `tidyverse`, `gather`:
+
+```{r}
+eyewear_tidy = eyewear %>% gather(eyewear, frequency, -gender)
+eyewear_tidy
+```
+
+I mentioned proportions earlier. It seems logical here to think of `gender` as explanatory and `eyewear` as response, so we should divide by totals for `gender`. This will enable us to ask things like "given that a person is female, how likely are they to wear contacts?"
+
+```{r}
+eyewear_tidy %>% 
+  group_by(gender) %>% 
+  mutate(proportion=frequency/sum(frequency))
+```
+
+Something clever is happening here: the totals are being computed *for each group (gender)*. We can even do this (I come back to `spread` below):
+
+```{r}
+eyewear_tidy %>% 
+  group_by(gender) %>% 
+  mutate(proportion=frequency/sum(frequency)) %>% 
+  select(-frequency) %>% 
+  spread(eyewear,proportion)
+```
+
+This makes it clearer that a lot more of the females wear contacts and a lot more of the males wear glasses. That's the reason for the association. 
+
+## A tidy chi-squared test
+
+Let's go back to example 1 and show that we can we can do the whole chi-squared test, starting from the data, in a tidy fashion.
+
+First, the `tidyverse` version of `table` is to use `count`. If you feed this *all* the categorical columns, you get counts of all the category combinations:
+
+```{r}
+males %>% count(HIV,SexPref)
+```
+
+This is the "long" or "tidy" version of what `table` produced above. It has acquired a column called `n` which are the frequencies. 
+
+However, `chisq.test` wants one categorical variable as rows and the other as columns: that is, wide format. To get that, we have to deliberately "untidy" this data frame, using `spread`, which is the opposite of `gather`. In the table we made with `table`, we had `SexPref` in the columns, so we'll "spread" that. `spread` needs two things: a column whose values will make the column headings, and a second column whose values will fill the new columns. Here, that is `SexPref`, "carrying along `n`":
+
+`r tufte::margin_note("Some of the category combinations may not appear in the output from \"count\". In that case, NA values will appear in the \"spread\" output, which you can avoid by adding \"fill=0\" to the \"spread\" command.")`
+
+```{r}
+males %>% count(HIV,SexPref) %>% 
+  spread(SexPref,n)
+```
+
+Then, we pull off the first column and pass this on to `chisq.test`, which we know will accept a data frame:
+
+```{r}
+males %>% count(HIV,SexPref) %>% 
+  spread(SexPref,n) %>% 
+  select(-HIV) %>% 
+  chisq.test()
+```
+
+`r tufte::margin_note("The warning is that some of the expected frequencies are small, casting doubt on the accuracy of the chi-squared approximation that produced the P-value.")`
+
+This, though, is the made-for-looking-at output. If you want to grab the P-value for further processing, though, this is doable but not easy. A better alternative is to use `broom`, specifically `glance`, which gives a one-line summary of any of the tests it knows about, and outputs the result as a one-row data frame:
+
+```{r}
+males %>% count(HIV,SexPref) %>% 
+  spread(SexPref,n) %>% 
+  select(-HIV) %>% 
+  chisq.test() %>% 
+  glance()
+```
+
+In `broom`, the P-value is always called `p.value`, so if that's all you want, you can extract it thus:
+
+```{r}
+males %>% count(HIV,SexPref) %>% 
+  spread(SexPref,n) %>% 
+  select(-HIV) %>% 
+  chisq.test() %>% 
+  glance() %>%
+  pull(p.value)
+```
+
+## Fisher's Exact Test
+
+This test is also for associations between categorical variables, but it applies only in the special case that *all the marginal totals are fixed by design*. In our examples, we knew how many males of each HIV status, or males and females in the eyewear example, we had, but the frequencies of the other variable's categories could have been anything (there is no reason, for example, that there would have been exactly 69 people wearing glasses: that was just how it happened to come out). 
+
+The classic example of Fisher's exact test is Fisher's original ["lady tasting tea"](https://en.wikipedia.org/wiki/Lady_tasting_tea) experiment. There, 8 cups of tea were prepared, four with milk first and four with milk last. The taster knew that four of the eight cups had milk first, and her job was to identify *which* four. The data might have looked like this, with the entries in `actual` and `guessed` indicating what went into the cup first:
+
+```{r}
+tea = tribble(
+  ~cup, ~actual, ~guessed,
+  1,    "milk",  "milk",
+  2,    "tea",   "tea",
+  3,    "milk",  "tea",
+  4,    "tea",   "tea",
+  5,    "tea",   "tea",
+  6,    "milk",  "milk",
+  7,    "tea",   "milk",
+  8,    "milk",  "milk"
+)
+```
+
+If we make this into a table and "spread" it:
+
+```{r}
+tea %>% count(actual, guessed) %>% 
+  spread(guessed,n)
+```
+
+we see that the lady got two of the cups wrong. There actually *are* four cups of each type, and the lady is always going to pick exactly four cups of each type (even if she is wrong about which ones), so both rows and columns here are going to add up to 4.
+There is no way to only get one cup wrong, so this is a good performance.
+
+Is this evidence that the lady can tell the difference, better than guessing? We use `fisher.test`:
+
+```{r}
+tea %>% count(actual, guessed) %>% 
+  spread(guessed,n) %>% 
+  select(-actual) %>% 
+  fisher.test(alternative="greater") %>% 
+  glance()
+```
+
+This is not at all unlikely if the lady were just guessing, so we would conclude (if this were the actual data) that the lady *was* just guessing. `r tufte::margin_note("If she got all four right, that would be enough to infer an ability to tell the difference. A one-sided test is appropriate here since we are trying to find out if the lady can do *better* than guessing.")`
+
+## Log-linear modelling
+
+Another way to test for association is to fit a so-called log-linear model. This starts from the long-format tidy data frame that contains each categorical variable as a column, along with a column of frequencies, such as the output from `count`. The idea is to model the *frequency* in terms of the categorical variables, including interaction, using a generalized linear model with a Poisson "family". This comes by default with a log link, hence the name "log-linear". 
+
+To illustrate on our example 1, we make the "long" table of counts first:
+
+```{r}
+males %>% count(HIV,SexPref) %>% 
+  glm(n~HIV*SexPref,data=.,family="poisson") -> males.1
+```
+
+The two-way interaction `HIV:SexPref` is what we need to look at to test association. If it is not significant, then `HIV` and `SexPref` have independent effects and there is no association between them. The easiest way to test this interaction is to use `drop1`:
+
+```{r}
+drop1(males.1,test="Chisq")
+```
+
+This shows that the interaction cannot be dropped (the model will fit worse if it is removed), and confirms that there is an association.
+
+For our example 2, the long format version of the data set is what we called `eyewear_tidy`:
+
+```{r}
+glm(frequency~gender*eyewear,data=eyewear_tidy,family="poisson") %>% drop1(test="Chisq")
+```
+
+and again we see the significant association between gender and eyewear.
+
+If you compare the test statistic from `chisq.test` and `glm` in each example, you will see that they are almost the same but not equal. They are using different test statistics: both functions are comparing the observed $O$ and expected $E$ in each cell and adding up the results, but `chisq.test` is using the Pearson statistic $(O-E)^2/E$, while `glm` is using the likelihood ratio statistic $O \ln(O/E)$. These look very different, but often come out very similar, as they do here.
+
+
+## References
+
+[This tweet](https://twitter.com/londonaesthetik/status/984481301876150272) by @londonaesthetik that kicked this all off.
+
+[The first example here](http://psychstat3.missouristate.edu/Documents/IntroBook3/sbk22.htm)
+
+[Lady tasting tea](https://en.wikipedia.org/wiki/Lady_tasting_tea)

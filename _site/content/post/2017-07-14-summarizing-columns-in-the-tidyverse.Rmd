@@ -1,0 +1,126 @@
+---
+title: Summarizing columns in the tidyverse
+author: Ken
+date: '2017-07-14'
+slug: summarizing-columns-in-the-tidyverse
+categories: []
+tags: []
+---
+
+## Introduction
+
+I thought summarizing columns in the `tidyverse` was kind of clunky, at least until a couple of days ago. Let's read in some data to illustrate what I thought I had to do. This data comes from the Australian Institute for Sport; it's body measurements from male and female athletes who play ten different sports.
+
+```{r}
+library(tidyverse)
+options(width=50)
+my_url="http://www.utsc.utoronto.ca/~butler/c32/ais.txt"
+athletes=read_tsv(my_url)
+athletes
+```
+
+## What I thought I had to do
+
+Let's suppose I want the mean and standard deviation of height and weight. It looked as if I had to do $2 \times 2=4$ different summarizations, like this:
+
+```{r}
+athletes %>% summarize(ht_mean=mean(Ht),
+                       ht_sd=sd(Ht),
+                       wt_mean=mean(Wt),
+                       wt_sd=sd(Wt))
+```
+
+That seemed like a lot work, and rather repetitious. Couldn't I do better? Well, it turned out that I could, but I had some steps to go through first.
+
+## Selecting columns
+
+If you want to just display some columns of a data frame, `select` is very flexible. You can select columns by number:
+
+```{r}
+athletes %>% select(c(2,3))
+```
+
+or by names, *without* quotes:
+
+```{r}
+athletes %>% select(Sport:WCC)
+```
+
+But there is more. There's a whole family of [select helpers](http://dplyr.tidyverse.org/reference/select_helpers.html) that let you choose columns whose names start with something:
+
+```{r}
+athletes %>% select(starts_with("s"))
+```
+
+or end with something: `r tufte::margin_note("These are by default *not* case sensitive, but there is an option to make them so if you wish.")`
+
+```{r}
+athletes %>% select(ends_with("cc"))
+```
+
+or that contain something:
+
+```{r}
+athletes %>% select(contains("er"))
+```
+
+or that match a regular expression: `r tufte::margin_note("In this case, are exactly two characters long with the first one being H.")`
+
+```{r}
+athletes %>% select(matches("^H.$"))
+```
+
+You can also do things like selecting some or all of  variables with names like `x1`, `x2`, `x3`. There are many possibilities.
+
+## Summarizing the columns you selected
+
+So the selection is the first part of the story. The next question is, is there a nice way to summarize, in various different ways, those columns you have selected? There is, and it's called `summarize_at`. To go back to our original wish to get mean and SD of height and weight, note that `Ht` and `Wt` are the only two two-letter column names that end in T, so a regular expression will get them, and then this: `r tufte::margin_note("Inside summarize_at go two things, a vars inside which is something that will select the columns you want, and a funs inside which go the names of the summaries you want. These have to return single numbers.")`
+
+```{r}
+athletes %>% summarize_at(vars(matches("^.t$")),
+                          funs(mean,sd))
+```
+
+And, as you see, we have the two means and the two SDs, without repeating ourselves.
+
+The only restriction I see here is that if your summary returns more than one number, like a five-number summary:
+
+```{r}
+quantile(athletes$Ht)
+```
+
+then you have to resort to something like `map` and put the pieces together again:`r tufte::margin_note("Like Humpty Dumpty.")`
+
+```{r}
+athletes %>% select(matches("^.t$")) %>% 
+  map(quantile) %>% 
+  bind_rows()
+```
+
+This selects the height and weight columns, and for each of those, works out the five-number summary, and turns the assembled results back from a list into a data frame. The downside to this is that the "names" attribute of the five-number-summary vectors gets lost, and you have to see that the first row is the minimum, the second row is the first quartile, and so on. 
+
+## Summarizing columns that have a certain property
+
+You might want to summarize all the columns that are numeric, or are dates, or something like that. For example, it only makes sense to calculate the mean of a column that is numeric. This kind of thing is done by `summarize_if`, which is like `summarize_at` except that the `vars` slot is replaced by something that will be true for all the columns you want, like this:
+
+```{r}
+athletes %>% summarize_if(is.numeric,funs(mean))
+```
+
+This finds the means of all the numeric columns. You'll need to pipe this into `print` to display the means that don't show here.
+
+## By groups
+
+The above summaries work for groups as well. `r tufte::margin_note("Except for the map one. That uses rows of the output data frame for the quantiles, so that rows are not available to use for the groups.")`
+To do that, insert a `group_by` before the `summarize_at`. For example, the mean and SD of height and weight for male and female athletes separately goes like this:
+
+```{r}
+athletes %>% group_by(Sex) %>% 
+  summarize_at(vars(matches("^.t$")),
+                    funs(mean,sd))
+```
+
+
+## Looking further
+
+There are also `mutate_at` and `mutate_if`. These do calculations for columns whose names have something in common, or which have a certain property. This can be an efficient way to do "batch" transformations of variables, such as taking the logs of several variables, without the repetitiousness of transforming them one at a time.

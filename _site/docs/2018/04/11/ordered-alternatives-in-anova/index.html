@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Ordered alternatives in ANOVA</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2018/04/11/ordered-alternatives-in-anova/">Ordered alternatives in ANOVA</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Apr 11, 2018
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;5 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    <a  href="../../../../categories/nonparametrics">nonparametrics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Standard analysis of variance, and nonparametric alternatives to it such as the Kruskal-Wallis test, test a null hypothesis of “all the groups have the same mean” against a vague alternative of “two or more of the groups have different means”. We typically carry out ANOVA in two stages: do the <span class="math inline">\(F\)</span>-test or Kruskal-Wallis, and, having rejected the null that all the groups are the same, then carry out a multiple-comparisons method such as Tukey’s to determine which groups differ from which.</p>
+<p>This is something of a scatter-gun approach, and at times we want to be more focused. For example, we might have specific comparisons that we want to test (ones that we can name ahead of time), in which case we could set up <a href="http://www.utsc.utoronto.ca/~butler/d29/20180228.Rmd">contrasts (R Notebook)</a> and test only those contrasts of interest to us. Or we might have an a priori idea of the <em>order</em> in which the means will come out, if they are not all the same. It is this latter that we concern ourselves with here.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<p>Two:</p>
+<pre class="r"><code>library(clinfun)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div id="the-terpstra-jonckheere-test" class="section level2">
+<h2>The Terpstra-Jonckheere test</h2>
+<p>Let’s start with an example. This one is stolen from <a href="https://www.amazon.com/Distribution-free-Tests-Henry-R-Neave/dp/0045190208/ref=sr_1_1?ie=UTF8&amp;qid=1523471770&amp;sr=8-1&amp;keywords=neave+worthington">Neave &amp; Worthington</a>. The authors bought six store-brand light bulbs from each of three different stores: A, a national low-priced supermarket, B, an international general store, and C, a high-class department store. It seems likely that, if there is any difference in the lifetimes of the lightbulbs, they will be in order A&lt;B&lt;C.</p>
+<p>The data (lifetimes in hours) as presented were:</p>
+<pre><code>   A    B    C
+ 619  343 3670
+  35 2437 2860
+ 126  409  502
+2031  267 2008
+ 215 1953 5004
+  NA 1804 4782</code></pre>
+<p>Unfortunately, “one of brand A’s bulbs was broken”, so one of the values is missing.</p>
+<p>To get a test statistic, we take each pair of groups, and obtain the Mann-Whitney test statistic for that pair of groups. Under the alternative, the values in group B should be bigger than the values in group A, so we count what we expect to be <em>small</em>, namely the number of A that are bigger than a B. 619 is bigger than 3 of the values in B, and 2031 is bigger than 5 of the values in B. All the other values in A are smaller than all the values in B, so the contribution to the test statistic from groups A and B is <span class="math inline">\(3+5=8\)</span>. In similar fashion, there are three As bigger than a C (2031 bigger than 502 and 2008; 619 bigger than 502) and 4 Bs bigger than a C, so the test statistic is <span class="math inline">\(8+3+4=15\)</span>. Referring this to tables in the back of the book, the P-value is less than 0.01. <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Gosh, how retro this process feels.</span> The null hypothesis of equal locations is rejected, and we conclude that light bulbs do have longer lifetimes if they come from a higher-quality store.</p>
+<p>With this test, we no longer have to worry about multiple comparisons, because our alternative hypothesis tells us exactly what order the groups should be arranged in.</p>
+<p>R has a <code>jonckheere.test</code> that lives in package <code>clinfun</code>. I saved the data in the above format in the file with URL shown below:</p>
+<pre class="r"><code>my_url=&quot;http://www.utsc.utoronto.ca/~butler/d29/lightbulbs.txt&quot;
+lightbulbs0=read_table(my_url)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   A = col_integer(),
+##   B = col_integer(),
+##   C = col_integer()
+## )</code></pre>
+<pre class="r"><code>lightbulbs0</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##       A     B     C
+##   &lt;int&gt; &lt;int&gt; &lt;int&gt;
+## 1   619   343  3670
+## 2    35  2437  2860
+## 3   126   409   502
+## 4  2031   267  2008
+## 5   215  1953  5004
+## 6    NA  1804  4782</code></pre>
+<p>The function running the test requires a column of lifetimes and a column of groups, which we don’t have because the data as read in are untidy, so we fix that first: <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">That’s a right-arrow assignment at the end, read as “and save it in lightbulbs”.</span></p>
+<pre class="r"><code>lightbulbs0 %&gt;% 
+  gather(brand,lifetime,everything(),na.rm=T) -&gt; lightbulbs
+lightbulbs</code></pre>
+<pre><code>## # A tibble: 17 x 2
+##    brand lifetime
+##  * &lt;chr&gt;    &lt;int&gt;
+##  1 A          619
+##  2 A           35
+##  3 A          126
+##  4 A         2031
+##  5 A          215
+##  6 B          343
+##  7 B         2437
+##  8 B          409
+##  9 B          267
+## 10 B         1953
+## 11 B         1804
+## 12 C         3670
+## 13 C         2860
+## 14 C          502
+## 15 C         2008
+## 16 C         5004
+## 17 C         4782</code></pre>
+<p><code>jonckheere.test</code> requires two inputs: quantitative variable and groups, in that order. In addition, there is an argument <code>alternative</code> which can be <code>increasing</code>, <code>decreasing</code> or <code>two.sided</code>, defaulting to the latter. The user needs to make sure that the order of levels in the categorical variable is an ordered factor that represents the desired alternative-hypothesis in either increasing or decreasing order. <code>brand</code> is text, so we need to arrange that first:</p>
+<pre class="r"><code>my_levels=c(&quot;A&quot;,&quot;B&quot;,&quot;C&quot;)
+lightbulbs %&gt;% mutate(brand=ordered(brand,levels=my_levels)) %&gt;% 
+  with(.,jonckheere.test(lifetime,brand,alternative = &quot;increasing&quot;))</code></pre>
+<pre><code>## 
+##  Jonckheere-Terpstra test
+## 
+## data:  
+## JT = 81, p-value = 0.001391
+## alternative hypothesis: increasing</code></pre>
+<p>The P-value is indeed less than 0.01.</p>
+<p><code>jonckheere.test</code> has no <code>data=</code> argument, so the pipe version needs to work this way.</p>
+<p>It looks as if this function has counted the number of As less than a B, Bs less than a C and so on (expecting a large value if the alternative is true), since there are <span class="math inline">\((5)(6)+(5)(6)+(6)(6)=96\)</span> inter-group comparisons altogether and no ties, and <span class="math inline">\(96-15=81\)</span>.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Olivia Rennie, for discussion that led to this post.</p>
+<p><a href="https://www.amazon.com/Distribution-free-Tests-Henry-R-Neave/dp/0045190208/ref=sr_1_1?ie=UTF8&amp;qid=1523471770&amp;sr=8-1&amp;keywords=neave+worthington">Neave &amp; Worthington, “Distribution-Free Tests”</a></p>
+<p><a href="https://rud.is/b/2015/02/04/a-step-to-the-right-in-r-assignments/">Bob Rudis on right-arrow assignment</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

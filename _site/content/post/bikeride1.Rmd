@@ -1,0 +1,14 @@
+---
+title: Bike Ride
+author: ~
+date: '2017-05-07'
+slug: ''
+categories: []
+tags: ["cycling"]
+---
+
+It was finally good enough weather for a bike ride today:
+
+![](/bike.jpg)
+
+Not a very long ride, but enough to get the legs going again (with some huffing and puffing into the wind).

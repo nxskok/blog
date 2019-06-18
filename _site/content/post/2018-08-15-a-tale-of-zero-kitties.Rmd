@@ -1,0 +1,180 @@
+---
+title: A tale of zero kitties
+author: Ken
+date: '2018-08-15'
+slug: a-tale-of-zero-kitties
+categories:
+  - statistics
+tags:
+  - rstats
+  - tidyverse
+---
+
+## Introduction
+
+I was reading [this](https://sastoudt.github.io/blog/2018/08/15/adventures-in-tidyverse-purrr) by Sara Stoudt and Kellie Ottoboni, and, looking at Kellie's analysis, I wondered "how would *I* do it", realizing that there are many ways to do things in the Tidyverse world. Kellie was kind enough to share her data, so I could go right ahead and experiment.
+
+Let's load the `tidyverse` and read in the data: `r tufte::margin_note('I used "read_csv" from "readr" which avoids having to do the "stringsAsFactors" thing.')`
+
+```{r}
+library(tidyverse)
+my_url="https://raw.githubusercontent.com/kellieotto/ancova-permutations/master/data/clinical_cleaned.csv"
+(clinical=read_csv(my_url))
+```
+
+272 measurements on 15 variables.
+
+## Preliminary processing and looking ahead
+
+We only want some of those columns, namely the first four, and the outcome variables that begin with `daily` or that end with `freq` (we don't want those `sev` variables that you probably see above). Also, each subject was measured at two time points, and we want to have a column for each of those, so that each subject is on only one line. (This last is the opposite of the usual situation where you have multiple response variables at different times for the same person and you want to have them one per row.)
+
+This means that  we have to do a `select` and a `spread`, for each of our seven outcome variables. For `heart-sev`, for example, it would look like this:
+
+```{r}
+clinical %>% 
+  select(VISITNUM, SUBJID, tr, SITEID, heart_sev) %>% 
+  spread(VISITNUM, heart_sev) 
+```
+
+What has happened is that the values in `VISITNUM` have been used as column names for the new columns. This isn't very meaningful , so we'll call them "baseline" and "outcome" instead:
+
+```{r}
+clinical %>% 
+  select(VISITNUM, SUBJID, tr, SITEID, heart_sev) %>% 
+  spread(VISITNUM, heart_sev) %>% 
+  rename("baseline"=`1`, "outcome"=`2`)
+```
+
+I always get `rename` confused: it turns out to be "new name equals old name".
+
+Except that we want to use all the outcome variables at once.
+
+This is where some forward thinking is called for. In due course we want to make a graph of outcome, or outcome against baseline, for each of the outcome variables. The slick way to do this is via `facet_wrap`, which means that we need to have *all* the outcome variables in *one* column, and a second column with the names of the outcome variables, which will be used to label the facets. This is `gather`, which we do *first*, because it makes everything else easier. Well, not quite first: first we have to grab the outcome variables we want:
+
+```{r}
+clinical %>% 
+  select(1:4,starts_with("daily"),ends_with("freq")) %>% 
+  gather(xname,x,-(1:4))
+```
+
+`x` is the *value* of the variable whose *name* is in `xname`.
+
+Now we can do our `spread` to get baseline and outcome in separate columns:
+
+```{r}
+(clinical %>% 
+  select(1:4,starts_with("daily"),ends_with("freq")) %>% 
+  gather(xname,x,-(1:4)) %>% 
+  spread(VISITNUM,x) %>% 
+  rename("baseline"=`1`, "outcome"=`2`) -> clinical_long)
+```
+
+The value of doing the `gather` first is that this gets *all* the outcome variables divided up into "baseline" and "outcome", all at once, without needing a loop or map.
+
+## Making some plots
+
+Now we can assess the effect of treatment `tr` on each of our outcome variables. In the blog post, Kellie plotted outcome value against treatment (for each outcome variable). I tell my students to look at the types of variables being plotted: outcome is quantitative and treatment is categorical, which (according to the chart in my lecture notes) means boxplots:
+
+```{r}
+ggplot(clinical_long,aes(x=tr, y=outcome))+
+  geom_boxplot()+
+  facet_wrap(~xname,scales="free")
+```
+
+The facetting idea is to pretend that you were plotting outcome variable against treatment for all the data combined, and at the end, say that you want it done separately for each variable named in `xname`. When you have very disparate $x$-variables combined into one column, the scales for all the facets will be different, so it is usually best to allow `ggplot` to choose them independently.
+
+All the distributions are right-skewed, and the upper-end outliers make it difficult to compare the distributions (you have to look at the medians crushed into the bottom of the plots and compare those). Kellie had a better idea, which was to make a density plot of each distribution for each treatment, and overlay the ones for the different treatments:
+
+```{r}
+ggplot(clinical_long, aes(x=outcome, fill=tr))+
+  geom_density(alpha=0.3)+
+  facet_wrap(~xname, scales="free")
+```
+
+I chose a smaller `alpha` than Kellie did, to make the front graph more transparent. The story here, clearer than on the boxplots, is that treatment A is more likely to produce a smaller value than treatment B is (treatment B is a bit more likely to produce any value except for the very small ones.)
+
+The reason for measuring the subjects at two time points was to see if the second one depended on the first one (which we 
+called `baseline` above). This uses the same kind of idea to make scatterplots for each outcome variable:
+
+```{r}
+ggplot(clinical_long, aes(x=baseline, y=outcome))+
+  geom_point()+geom_smooth(se=F)+
+  facet_wrap(~xname, scales="free")
+```
+
+I put a smooth trend on each plot.
+
+It looks as if there is an upward trend on all of these that would be pretty well described by a line. That is, a larger baseline tends to go with a larger outcome, for all seven variables.
+
+## Doing those regressions in one swoop
+
+Can we do each of those seven regressions, and get out the intercepts and slopes? This is what our "long" data frame looked like:
+
+```{r}
+clinical_long
+```
+
+When you're doing something for each of several subsets of a data frame, the `nest` and "list-column" ideas come into play. Let's look at `nest` first. If you `nest` everything except the facetting variable, you get this:
+
+```{r}
+clinical_long %>% nest(-xname)
+```
+
+These are our seven outcome variables, and the `data` column contains *all the rest of the data*, including columns called `outcome` and `baseline`. So for each of those seven $136 \times 5$ data frames, we want to do a regression of outcome on baseline. Here, finally, we get to use something from `purrr` (which now means that my clever title doesn't work any more, boo hoo):
+
+```{r}
+clinical_long %>% nest(-xname) %>% 
+  mutate(reg=map(data,~lm(outcome~baseline, data=.)))
+```
+
+The column `reg` now contains *all* the output from each regression, including coefficients, R-squared, F-test and all. From each of those regressions we can use `coef` to extract the intercept and slopes:
+
+```{r}
+clinical_long %>% nest(-xname) %>% 
+  mutate(reg=map(data,~lm(outcome~baseline, data=.))) %>% 
+  mutate(coeffs=map(reg,~coef(.)))
+```
+
+and now we extract those two things for each regression:
+
+```{r}
+clinical_long %>% nest(-xname) %>% 
+  mutate(reg=map(data,~lm(outcome~baseline, data=.))) %>% 
+  mutate(coeffs=map(reg,~coef(.))) %>% 
+  mutate(intcpt=map_dbl(coeffs,~pluck(.,1)),
+         slope=map_dbl(coeffs,~pluck(.,2)))
+```
+
+## Concluding remarks
+
+There are two ways to use `map` functions. You can write a function (or use a pre-written one) that takes the "for-each" as its *first* input. This is rather a silly example:
+
+```{r}
+triple_plus_one=function(x) {
+  3*x+1
+}
+```
+
+So, if you have a data frame of numbers to triple-plus-one, the obvious way is this:
+
+```{r}
+tibble(x=1:10) %>% mutate(y=triple_plus_one(x))
+```
+
+but you can use `map` thus:
+
+```{r}
+tibble(x=1:10) %>% mutate(y=map_dbl(x,triple_plus_one))
+```
+
+("for each `x`, run `triple_plus_one`").
+
+A more flexible way of running the `map` functions is the squiggle-plus-dot way, which in this case would look like this:
+
+```{r}
+tibble(x=1:10) %>% mutate(y=map_dbl(x,~triple_plus_one(.)))
+```
+
+This last in English might be "for each `x`, run `triple_plus_one` on *it*". This is more flexible because the for-each input to the function doesn't have to be first; it can be anywhere, and wherever it is, you use the dot to represent it. 
+`r tufte::margin_note("The dot plays the same role as the i or j does in a for loop.")`
+I used this idea above to run regressions, where the for-each input was the data frame of outcome and baseline values for each outcome variable, and this needed to go into `lm` as the `data=` input. I started out with `purrr` the function way, by writing functions for everything, including silly little helper functions to switch the inputs around, but I've rather gone over to the squiggle-plus-dot way even in cases where I don't really need it.

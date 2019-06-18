@@ -1,0 +1,146 @@
+station
+Skipton
+Cononley
+Steeton & Silsden
+Keighley
+Crossflatts
+Bingley
+Saltaire
+Shipley
+Frizinghall
+Bradford
+NA
+Shipley
+Apperley Bridge
+Kirkstall Forge
+Leeds
+NA
+Ilkley
+Ben Rhydding
+Burley-in-Wharfedale
+Menston
+Guiseley
+Baildon
+Shipley
+NA
+Guiseley
+Kirkstall Forge
+NA
+Leeds
+Burley Park
+Headingley
+Horsforth
+Weeton
+Pannal
+Hornbeam Park
+Harrogate
+Starbeck
+Knaresborough
+Cattal
+Hammerton
+Poppleton
+York
+NA
+Leeds
+Cross Gates
+Garforth
+East Garforth
+Micklefield
+Church Fenton
+Ulleskelf
+York
+NA
+Leeds
+Woodlesford
+Castleford
+Glasshoughton
+Pontefract
+Knottingley
+NA
+Castleford
+Normanton
+Wakefield
+Darton
+Barnsley
+Wombwell
+Elsecar
+Chapeltown
+Meadowhall
+NA
+Pontefract
+Featherstone
+Streethouse
+Wakefield
+NA
+Church Fenton
+Sherburn-in-Elmet
+Pontefract
+Moorthorpe
+NA
+Leeds
+Outwood
+Wakefield
+Sandal & Agbrigg
+Fitzwilliam
+South Elmsall
+Adwick
+Bentley
+Doncaster
+NA
+Fitzwilliam
+Moorthorpe
+Thurnscoe
+Goldthorpe
+Bolton-upon-Dearne
+Swinton
+Rotherham
+Meadowhall
+Sheffield
+NA
+Huddersfield
+Lockwood
+Berry Brow
+Honley
+Brockholes
+Stocksmoor
+Shepley
+Denby Dale
+Penistone
+Silkstone Common
+Dodworth
+Barnsley
+NA
+Wakefield
+Mirfield
+Brighouse
+NA
+Leeds
+Cottingley
+Morley
+Batley
+Dewsbury
+Ravensthorpe
+Mirfield
+Deighton
+Huddersfield
+Slaithwaite
+Marsden
+NA
+Sowerby Bridge
+Brighouse
+Huddersfield
+NA
+Halifax
+Brighouse
+NA
+Leeds
+Bramley
+New Pudsey
+Bradford
+Low Moor
+Halifax
+Sowerby Bridge
+Mytholmroyd
+Hebden Bridge
+Todmorden
+Walsden

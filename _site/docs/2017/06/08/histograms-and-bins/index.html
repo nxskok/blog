@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Histograms and bins</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2017/06/08/histograms-and-bins/">Histograms and bins</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jun 8, 2017
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;4 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/statistics">statistics</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><p>Most software, when you ask it to draw you a histogram, will choose a number of intervals (“bins”) for you. Base R is one of those. To illustrate, let’s read in some data:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+## ✔ tibble  1.4.2          ✔ dplyr   0.7.4     
+## ✔ tidyr   0.8.0          ✔ stringr 1.3.0     
+## ✔ readr   1.1.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>myurl=&quot;http://www.utsc.utoronto.ca/~butler/c32/soap.txt&quot;
+soap=read_delim(myurl,&quot; &quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   case = col_integer(),
+##   scrap = col_integer(),
+##   speed = col_integer(),
+##   line = col_character()
+## )</code></pre>
+<pre class="r"><code>soap</code></pre>
+<pre><code>## # A tibble: 27 x 4
+##     case scrap speed line 
+##    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt;
+##  1     1   218   100 a    
+##  2     2   248   125 a    
+##  3     3   360   220 a    
+##  4     4   351   205 a    
+##  5     5   470   300 a    
+##  6     6   394   255 a    
+##  7     7   332   225 a    
+##  8     8   321   175 a    
+##  9     9   410   270 a    
+## 10    10   260   170 a    
+## # ... with 17 more rows</code></pre>
+<p>This is data from production of soap bars. There are two production lines, run at various different speeds, and the overall interest is in how the amount of scrap produced depends on the speed of the production line, and maybe on the production line itself. For now, though, we’ll focus just on the amount of scrap.</p>
+<p>I’ve almost forgotten how to make a base R histogram, but I think it goes like this:</p>
+<pre class="r"><code>hist(soap$scrap)</code></pre>
+<p><img src="../../../../post/2017-06-08-histograms-and-bins_files/figure-html/base_hist_soap-1.png" width="672" /></p>
+<p>This uses eight bins, with a bin width of 50. (I think the focus in base R was to choose bin boundaries that come in nice places, with the default being to use Sturges’ rule (below) to get the number of bins.)</p>
+<p>In <code>ggplot</code>, you have to specify the number of bins yourself (or the bin width). I was looking in the help for <code>geom_histogram</code> to find out why, and I learned that Hadley Wickham is opposed to automatic selection of number of bins. In <a href="http://ggplot2.tidyverse.org/reference/geom_histogram.html">the help file under <code>binwidth</code></a>, it says:</p>
+<blockquote>
+<p>You should always override this value, exploring multiple widths to find the best to illustrate the stories in your data.</p>
+</blockquote>
+<p>I’m not quite sure where I stand on this. I am feeling that it would be nice to have a default to start from, but I see where Hadley is coming from in that if you provide a default, that’s what people will use without thinking.</p>
+<p>Here’s how you specify a number of bins in <code>ggplot</code>:</p>
+<pre class="r"><code>ggplot(soap,aes(x=scrap))+geom_histogram(bins=8)</code></pre>
+<p><img src="../../../../post/2017-06-08-histograms-and-bins_files/figure-html/soap_eight_bins-1.png" width="672" /></p>
+<p>Even though we used the same number of bins, the histogram looks different because the bin boundaries are in different places.</p>
+<p>The bin width is specified like this:</p>
+<pre class="r"><code>ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=50)</code></pre>
+<p><img src="../../../../post/2017-06-08-histograms-and-bins_files/figure-html/soap_binwidth-1.png" width="672" /></p>
+<p>This again looks very different, with a clear “hole” in the middle. There are some other options in <code>geom_histogram</code>, of which one is <code>breaks</code>, a vector of bin boundaries. So I can mimic the base R histogram this way:</p>
+<pre class="r"><code>b=seq(100,500,50)
+b</code></pre>
+<pre><code>## [1] 100 150 200 250 300 350 400 450 500</code></pre>
+<pre class="r"><code>ggplot(soap,aes(x=scrap))+geom_histogram(breaks=b)</code></pre>
+<p><img src="../../../../post/2017-06-08-histograms-and-bins_files/figure-html/base_alike-1.png" width="672" /></p>
+<p>which has the same “Battersea Power Station” look as the base R histogram:</p>
+<p><img src="https://cdn.londonandpartners.com/asset/a0362f0f5fc8f1b638d790c4d2fd542d.jpg" /></p>
+<p>The <a href="https://en.wikipedia.org/wiki/Histogram">Wikipedia page on the histogram</a> mentions a number of “rules” for determining the number of bins or the bin width of a histogram. Two of these are due to Sturges and to Freedman-Diaconis. Let <span class="math inline">\(n\)</span> be the number of data values, <span class="math inline">\(r\)</span> be the inter-quartile range of the data, <span class="math inline">\(k\)</span> be the number of bins, and <span class="math inline">\(h\)</span> be the bin width. Then Sturges says</p>
+<p><span class="math display">\[ k = \lceil \log_2 n \rceil + 1\]</span>
+with the “ceiling” function meaning “round up to the next integer”. For our data, we have</p>
+<pre class="r"><code>n=length(soap$scrap)
+ceiling(log(n,2))+1</code></pre>
+<pre><code>## [1] 6</code></pre>
+<p>Freedman-Diaconis gives you a bin width instead:</p>
+<p><span class="math display">\[ h = 2r/n^{1/3} \]</span></p>
+<p>which we can calculate for our data using the <code>n</code> we got above:</p>
+<pre class="r"><code>r=IQR(soap$scrap)
+2*r/n^(1/3)</code></pre>
+<pre><code>## [1] 79.66667</code></pre>
+<p>These calculations are easily encapsulated in functions:</p>
+<pre class="r"><code>sturges=function(x) {
+  n=length(x)
+  ceiling(log(n,2))+1
+}
+
+sturges(soap$scrap)</code></pre>
+<pre><code>## [1] 6</code></pre>
+<p>and</p>
+<pre class="r"><code>fd=function(x) {
+  n=length(x)
+  r=IQR(x)
+  2*r/n^(1/3)
+}
+
+fd(soap$scrap)</code></pre>
+<pre><code>## [1] 79.66667</code></pre>
+<p>What <code>geom_histogram</code> claims to let you do is to supply a <em>function</em> to <code>binwidth</code> (though not <code>bins</code>, far as I can tell). I couldn’t get this to work before, but I seem to be able to now:</p>
+<pre class="r"><code>ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=fd)</code></pre>
+<p><img src="../../../../post/2017-06-08-histograms-and-bins_files/figure-html/binwidth_by_function-1.png" width="672" /></p>
+<p>To use Sturges or Freedman-Diaconis as a default, you can do something like this:</p>
+<pre class="r"><code>k=sturges(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(bins=k)</code></pre>
+<p><img src="../../../../post/2017-06-08-histograms-and-bins_files/figure-html/hist_sturges-1.png" width="672" /></p>
+<p>or</p>
+<pre class="r"><code>h=fd(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=h)</code></pre>
+<p><img src="../../../../post/2017-06-08-histograms-and-bins_files/figure-html/hist_fd-1.png" width="672" /></p>
+<p>You don’t even have to write the functions yourself, because these can be found in R (from looking at the help for <code>hist</code>):</p>
+<pre class="r"><code>nclass.Sturges(soap$scrap)</code></pre>
+<pre><code>## [1] 6</code></pre>
+<pre class="r"><code>nclass.FD(soap$scrap)</code></pre>
+<pre><code>## [1] 5</code></pre>
+<p>Note that this version of Freedman-Diaconis gives you a number of bins rather than a bin width.</p>
+<p>Perhaps the moral of this story is that the look of a histogram can be very different depending on the number of bins or the bin width that you choose. So maybe Hadley Wickham was right after all. But I still think it’s good to have a place to start from, and <code>nclass.Sturges</code> or <code>nclass.FD</code> will do that.</p>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

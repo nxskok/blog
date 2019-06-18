@@ -1,0 +1,16 @@
+---
+title: Add-in
+author: Ken
+date: '2017-05-22'
+slug: add-in
+categories:
+  - statistics
+tags:
+  - R
+---
+
+I just discovered a couple of things:
+
+1. an R Studio add-in called `CRANsearcher` that, when you run it, prompts you for search terms and searches the whole of CRAN for anything that matches those search terms. (Thanks to @juliasilge on Twitter for this.)
+
+2. This inspired me to see what else was on my AddIns menu in R Studio. I also found options for creating a new blog post and "serving the site" so I can preview it. I should look there more often.

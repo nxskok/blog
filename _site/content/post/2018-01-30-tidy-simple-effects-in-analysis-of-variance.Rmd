@@ -1,0 +1,195 @@
+---
+title: Tidy simple effects in analysis of variance
+author: Ken
+date: '2018-01-30'
+slug: tidy-simple-effects-in-analysis-of-variance
+categories:
+  - R
+tags:
+  - 'rstats'
+  - 'tidyverse'
+---
+
+## Introduction
+
+In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about "the effect of factor A", but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an **interaction**. Understanding interactions can be difficult. One way to do it is via "simple effects", where you look at the levels of one factor individually and assess the effect of the other factor at each level of the first.
+
+Let's think about an example. In an experiment, monkeys were asked to solve "oddity problems", in which they were presented with sets of three objects, one of which was different from the others. If they correctly identified the odd object, they were rewarded with food. Some of the monkeys had been food-deprived before the experiment; they were believed to be "highly motivated" to find the odd object (and get fed). In addition, each monkey received a drug, one of X, Y and a placebo (labelled "control"). Four monkeys were in each combination of motivation (high or low) and the three drugs. The response variable was a `score` based on the number of problems a monkey got wrong, so that a lower score is better. Our question is what effects the drugs have on the score, and is that effect different depending how motivated a monkey is?
+
+## Packages
+
+We need these two. `broom` will be used later to produce some easy-to-handle output:
+
+```{r}
+library(tidyverse)
+library(broom)
+```
+
+## Exploratory analysis
+
+Let's read in and check the data:
+
+```{r}
+my_url="http://www.utsc.utoronto.ca/~butler/d29/oddity.csv"
+monkeys=read_csv(my_url)
+monkeys
+```
+
+24 monkeys, for each a motivation level, a drug and a score, in tidy format.
+
+An appropriate visual is a grouped boxplot. One of the explanatory variables is the `x` of the boxplot, and the other one is entered as `fill`, thus:
+
+```{r}
+ggplot(monkeys,aes(y=score,x=motivation,fill=drug))+geom_boxplot()
+```
+
+The `fill` fills the boxes with the different colours; using `colour` instead outlines the boxes in different colours. 
+
+The story to get from this is that for the high-motivation monkeys, there isn't much difference between the drugs, but for low-motivation monkeys, there is a big difference; the score is a lot better (lower) for the placebo than for either of the genuine drugs, and drug Y is worse than X. This suggests that the effect of drug depends on how motivated the monkey is: an interaction.
+
+Another way of visualizing this is to use an "interaction plot": a plot of mean response by group combination, as below. First we find means by group combination, and then we plot them:
+
+```{r}
+monkeys %>% 
+  group_by(motivation,drug) %>% 
+  summarize(s_mean=mean(score)) %>% 
+  ggplot(aes(y=s_mean,x=motivation,colour=drug,group=drug))+
+    geom_point()+geom_line()
+```
+
+This is like a stripped-down version of the grouped boxplot. The idea is that you look at the lines, and ask whether they are (at least approximately) parallel. Here it seems that they are not, which would imply an interaction. (The interaction plot shows means, but doesn't tell you anything about variability, so it is possible to be deceived).
+
+## The analysis of variance
+
+With the previous pictures in mind, we should run an analysis of variance with interaction, expecting it to be significant:
+
+```{r}
+score.1=aov(score~motivation*drug,data=monkeys)
+summary(score.1)
+```
+
+At $\alpha=0.05$, the interaction is indeed significant. We need to understand what kind of interaction we have , and not go to interpreting the main effects `motivation` and `drug`, because those do not have a consistent effect that we will be able to understand.
+
+## Simple effects
+
+One way of understanding a significant interaction is to condition on the level of one variable and look for the effect of the other. Here we will condition on motivation, and look separately for an effect of drug. (The conditioning that makes sense will depend on the application.)
+
+The way to assess the simple effects is to pull out just the data for just the motivation level you're looking at (say `low`), and then do a one-way ANOVA of score on drug for just those observations. Then you repeat for the other motivation level. The obvious way to do this is something like
+
+```{r}
+monkeys %>% filter(motivation=="low") %>% 
+  aov(score~drug,data=.) %>% 
+  summary()
+```
+
+and then repeat for the other motivation level. But there is a lot of repetitiveness here. Is it possible to automate the implied loop over motivation levels?
+
+## Simple effects, the tidy way
+
+There is a way to do both simple-effects ANOVAs at once. It requires `map`, list-columns and a couple of helper functions. Let's take it a step at a time:
+
+```{r}
+monkeys %>% 
+  nest(-motivation)
+```
+
+This condenses the data frame into two parts: one is the data for the low-motivation monkeys, and one for the high. The thing in the `data` column is the entire rest of the data (for each level of motivation), so each nested data-frame-within-a-data-frame contains a score column and a drug column, but not a `motivation` column (since we excluded that from the `nest`: "everything but `motivation`"). So for each of *these* data frames, we need to run a one-way ANOVA of score on drug, which will test for the presence of simple effects of drug.
+
+To do that, I like to write a helper function. Here that will do the ANOVA of score on drug for any input data frame that happens to have columns by those names:
+
+```{r}
+anova_pval=function(x) {
+  x.1=aov(score~drug,data=x)
+  summary(x.1)
+}
+anova_pval(monkeys)
+```
+
+This appears to be correct, but it's not the most helpful output, because we want the P-value and the `summary` output doesn't provide an easy way to get at that. This is where `broom` comes in: it provides the `glance` function to give a one-line summary of a model, and a `tidy` function to give "tidy" output of a model, in both cases the output being a data frame, so it's easy to do other things with. 
+
+In this case, we want just the P-value, so `glance` seems like the thing:
+
+```{r}
+anova_pval=function(x) {
+  x.1=aov(score~drug,data=x)
+  glance(x.1)
+}
+anova_pval(monkeys)
+```
+
+The thing we want is `p.value`, so:
+
+```{r}
+anova_pval=function(x) {
+  x.1=aov(score~drug,data=x)
+  glance(x.1)$p.value
+}
+anova_pval(monkeys)
+```
+
+That's what we want.
+
+Now, to do that for each motivation level, we calculate a new column `pval` that calculates the P-value for each of our nested data frames, using `map`. This function returns a decimal number, so `map_dbl` is the thing. Adding that to the end of our pipeline, recognizing that the data frames we want P-values for are the ones hidden in the `data` column ("for each data frame in `data`, run `anova_pval` on it"):
+
+```{r}
+monkeys %>% 
+  nest(-motivation) %>% 
+  mutate(pval=map_dbl(data,anova_pval))
+```
+
+And there we have the two simple-effects ANOVAs. For the low-motivation monkeys, there is a significant difference in scores between the drugs, and for the high-motivation monkeys, there is not.
+
+## Tidy simple-effects Tukey
+
+For the high-motivation monkeys, that's the end of the story: there are no differences in mean score among the different drugs. But for the low-motivation monkeys, there is more to say, because we don't know which drugs differ from which.
+
+A modification of what we did for the two ANOVA P-values will also get the two Tukey Honestly Significant Difference tables. We don't really need the one for high-motivation monkeys, but I wanted to illustrate the procedure, so we'll see what it produces.
+
+The first thing is a helper function to get the (tidy) Tukey output for a data frame `x` that happens to have a `score` and  `drug` column in it:
+
+```{r}
+tukey_table=function(x) {
+  x.1=aov(score~drug,data=x)
+  TukeyHSD(x.1)
+}
+tukey_table(monkeys)
+```
+
+That is almost it, but not quite; what we want is the table at the bottom. It looks as if `tidy` should produce that:
+
+```{r}
+tukey_table=function(x) {
+  x.1=aov(score~drug,data=x)
+  tidy(TukeyHSD(x.1))
+}
+tukey_table(monkeys)
+```
+
+That's exactly what we need, with the column `adj.p.value` containing the Tukey-adjusted P-values for each pair of means. So now we put this into our pipeline in place of `anova_pval`, using `map` instead of `map_dbl` because `tukey_table` returns a data frame rather than a number:
+
+```{r}
+monkeys %>% 
+  nest(-motivation) %>% 
+  mutate(tukey=map(data,tukey_table))
+```
+
+The column `tukey` contains the two Tukey tables, but unfortunately we can't see them, because they are wrapped up in a list-column. The way to "explode out" a list-column so that you can see it is to `unnest` it, which lends the pipeline a pleasing symmetry:
+
+```{r}
+monkeys %>% 
+  nest(-motivation) %>% 
+  mutate(tukey=map(data,tukey_table)) %>% 
+  unnest(tukey)
+```
+
+There are three pairs of means to compare for each `motivation` level, so that the motivations `low` and `high` are repeated three times each.
+
+The three P-values for high motivation are all above 0.8, which is confirming that there were no significant differences among the drugs for the high-motivation monkeys (this is what we found before). There *were* differences in drugs for the low-motivation monkeys; this Tukey tells us that this is because drug Y and control showed a significant difference in score (with drug Y producing a higher score on average), but neither of the differences involving drug X did.
+
+## Conclusion
+
+The `nest-mutate-unnest` combination is a powerful `tidyverse` way to repeat an analysis on subsets of a data set without implicitly or explicitly writing a loop. Simple effects in analysis of variance provides a nice example of this, where, by writing helper functions, we are able to get the P-values and the Tukey multiple-comparison tables for each of the simple analyses.
+
+## Thanks
+
+to Julia Silge, @juliasilge (see for example [this tweet](https://twitter.com/juliasilge/status/845324411993501699)) for planting the idea of `tidy` in my head in this context (I hadn't realized that `tidy(quantile)` works, which is where it all started: [see this Stack Overflow answer](https://stackoverflow.com/questions/30488389/%20%C2%B7%20using-dplyr-window-functions-to-calculate-percentiles.)), and for pushing my thinking in this direction generally. I had been grappling with `split`, which is a much uglier way of solving this kind of problem (in my humble opinion).

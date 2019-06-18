@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.20.6" />
+
+
+<title>Carter and Guthrie - Ken&#39;s Blog</title>
+<meta property="og:title" content="Carter and Guthrie - Ken&#39;s Blog">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.10.0/styles/github.min.css' rel='stylesheet' type='text/css'>
+
+
+
+<link rel="stylesheet" href="../../../../css/fonts.css" media="all">
+<link rel="stylesheet" href="../../../../css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="../../../../" class="nav-logo">
+    <img src="../../../../images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="https://github.com/nxskok">GitHub</a></li>
+    
+    <li><a href="../../../../about/">Ken Butler</a></li>
+    
+    <li><a href="https://twitter.com/kenbutler12">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">11 min read</span>
+    
+
+    <h1 class="article-title">Carter and Guthrie</h1>
+
+    
+    <span class="article-date">2017/05/31</span>
+    
+
+    <div class="article-content">
+      <div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Carter and Guthrie, in 2004, proposed a method of modelling cricket matches. Their aim was to provide an alternative method of deciding interrupted matches, in the manner of Duckworth and Lewis. What was interesting to me is that they estimate a <em>probability</em> of winning (which is then held fixed over interruptions), and it seemed to me that one could estimate and update the probability of winning as the game progresses, which would be a useful adjunct for spectators.</p>
+<p>Data for the update come from <code>yorkrdata</code>, by the author of the R package <code>yorkr</code>.</p>
+</div>
+<div id="gathering-and-arranging-data" class="section level1">
+<h1>Gathering and arranging data</h1>
+<div id="getting-a-match-file" class="section level2">
+<h2>Getting a match file</h2>
+<p>Start with the <code>tidyverse</code>:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<p>The data in <code>yorkrdata</code> are in the form of <code>.RData</code> files (saved dataframes), which were downloaded as a <code>.zip</code> file and extracted to the working directory. One such file is <code>Afghanistan-Bangladesh-2015-02-18.RData</code>. It will be convenient to write a function for reading in files of this kind:</p>
+<pre class="r"><code>readMatch=function(fname) {
+  load(fname)
+  overs
+}</code></pre>
+<p>The data frame for each match was originally called <code>overs</code>, so when it is <code>load</code>ed, it acquires the name it had when it was <code>save</code>d. This is inconvenient, so I abstract it into a function.</p>
+<p>What does one of these data frames contain?</p>
+<pre class="r"><code>fname=&quot;Afghanistan-Bangladesh-2015-02-18.RData&quot;
+d=readMatch(fname)
+glimpse(d)</code></pre>
+<pre><code>## Observations: 565
+## Variables: 25
+## $ ball            &lt;chr&gt; &quot;1st.0.1&quot;, &quot;1st.0.2&quot;, &quot;1st.0.3&quot;, &quot;1st.0.4&quot;, &quot;1...
+## $ team            &lt;fctr&gt; Bangladesh, Bangladesh, Bangladesh, Banglades...
+## $ batsman         &lt;fctr&gt; Anamul Haque, Anamul Haque, Anamul Haque, Ana...
+## $ bowler          &lt;fctr&gt; Hamid Hassan, Hamid Hassan, Hamid Hassan, Ham...
+## $ nonStriker      &lt;fctr&gt; Tamim Iqbal, Tamim Iqbal, Tamim Iqbal, Tamim ...
+## $ byes            &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+## $ legbyes         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0...
+## $ noballs         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+## $ wides           &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+## $ nonBoundary     &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+## $ penalty         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+## $ runs            &lt;dbl&gt; 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0...
+## $ extras          &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0...
+## $ totalRuns       &lt;dbl&gt; 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0...
+## $ wicketFielder   &lt;chr&gt; &quot;nobody&quot;, &quot;nobody&quot;, &quot;nobody&quot;, &quot;nobody&quot;, &quot;nobod...
+## $ wicketKind      &lt;chr&gt; &quot;not-out&quot;, &quot;not-out&quot;, &quot;not-out&quot;, &quot;not-out&quot;, &quot;n...
+## $ wicketPlayerOut &lt;chr&gt; &quot;nobody&quot;, &quot;nobody&quot;, &quot;nobody&quot;, &quot;nobody&quot;, &quot;nobod...
+## $ date            &lt;date&gt; 2015-02-18, 2015-02-18, 2015-02-18, 2015-02-1...
+## $ matchType       &lt;fctr&gt; ODI, ODI, ODI, ODI, ODI, ODI, ODI, ODI, ODI, ...
+## $ overs           &lt;dbl&gt; 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50...
+## $ venue           &lt;fctr&gt; Manuka Oval, Manuka Oval, Manuka Oval, Manuka...
+## $ team1           &lt;fctr&gt; Afghanistan, Afghanistan, Afghanistan, Afghan...
+## $ team2           &lt;fctr&gt; Bangladesh, Bangladesh, Bangladesh, Banglades...
+## $ winner          &lt;fctr&gt; Bangladesh, Bangladesh, Bangladesh, Banglades...
+## $ result          &lt;chr&gt; &quot;NA&quot;, &quot;NA&quot;, &quot;NA&quot;, &quot;NA&quot;, &quot;NA&quot;, &quot;NA&quot;, &quot;NA&quot;, &quot;NA&quot;...</code></pre>
+<p>The data frame contains one row for each ball. The columns include a coded representation of innings (team batting first or second), over and ball within over, the name of the batsman and bowler, the number of runs from that ball (regular <code>runs</code> and the various types of extras), the kind of wicket from that ball (if any), and at the end, some information about the match: the date, the type of match, the number of overs per side, the venue, the names of the teams, the winner and the result. These last are the same thing repeated on every line.</p>
+<p>It will be convenient to have a function that returns some information about the match from its filename:</p>
+<pre class="r"><code>matchInfo=function(fname) {
+  d=readMatch(fname)
+  data.frame(fname=fname,date=d$date[1],type=d$matchType[1])
+}</code></pre>
+<p>and to test it:</p>
+<pre class="r"><code>matchInfo(fname)</code></pre>
+<pre><code>##                                     fname       date type
+## 1 Afghanistan-Bangladesh-2015-02-18.RData 2015-02-18  ODI</code></pre>
+</div>
+<div id="data-frame-of-what-we-want" class="section level2">
+<h2>Data frame of what we want</h2>
+<p>We don’t need all the information in the match data frame, and we do need to re-process some of what there is. Specifically:</p>
+<ul>
+<li>grab the ball code and the scoring info</li>
+<li>separate out the ball code into the inns, over and ball within that innings</li>
+<li>create new variables, making sure that numeric things are numeric and that we know whether each ball contains a wicket or is a extra, defined here as a no ball or a wide that will result in another ball. (I should be more careful about counting these, since the number of balls left as calculated later will be slightly wrong.) Other extras, such as leg byes, are treated as regular runs.</li>
+<li>the total number of balls so far in the innings</li>
+<li>treat each innings separately. The Carter-Guthrie analysis uses only the first innings.</li>
+<li>grab only the variables we want.</li>
+</ul>
+<pre class="r"><code>processMatch=function(fname) {
+  readMatch(fname) %&gt;% select(ball,noballs,wides,totalRuns,wicketKind) %&gt;% 
+    separate(ball,into=c(&quot;inns&quot;,&quot;over&quot;,&quot;ball&quot;)) %&gt;% 
+    group_by(inns) %&gt;% 
+    mutate(over=as.numeric(over),
+           ball=as.numeric(ball),
+           isWkt=(wicketKind!=&quot;not-out&quot;),
+           wktDown=cumsum(isWkt),
+           isExtra=(noballs+wides&gt;0),
+           totalBalls=6*over+ball) %&gt;%
+    select(inns,totalBalls,isExtra,isWkt,wktDown,totalRuns)
+}</code></pre>
+<p>Testing:</p>
+<pre class="r"><code>d=processMatch(fname)
+d</code></pre>
+<pre><code>## Source: local data frame [565 x 6]
+## Groups: inns [2]
+## 
+## # A tibble: 565 x 6
+##     inns totalBalls isExtra isWkt wktDown totalRuns
+##    &lt;chr&gt;      &lt;dbl&gt;   &lt;lgl&gt; &lt;lgl&gt;   &lt;int&gt;     &lt;dbl&gt;
+##  1   1st          1    TRUE FALSE       0         1
+##  2   1st          2   FALSE FALSE       0         0
+##  3   1st          3   FALSE FALSE       0         0
+##  4   1st          4   FALSE FALSE       0         0
+##  5   1st          5   FALSE FALSE       0         1
+##  6   1st          6   FALSE FALSE       0         0
+##  7   1st          7   FALSE FALSE       0         0
+##  8   1st          7   FALSE FALSE       0         0
+##  9   1st          8   FALSE FALSE       0         1
+## 10   1st          9   FALSE FALSE       0         0
+## # ... with 555 more rows</code></pre>
+<p>It is also useful to summarize a match, as done by the function below</p>
+<pre class="r"><code>summarizeMatch=function(fname) {
+  processMatch(fname) %&gt;% summarize(
+                                 runTotal=max(cumsum(totalRuns)),
+                                 wktTotal=max(wktDown),
+                                 ballTotal=max(totalBalls)
+                                 ) 
+}</code></pre>
+<p>and to test:</p>
+<pre class="r"><code>summarizeMatch(fname)</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##    inns runTotal wktTotal ballTotal
+##   &lt;chr&gt;    &lt;dbl&gt;    &lt;int&gt;     &lt;dbl&gt;
+## 1   1st      267       10       300
+## 2   2nd      162       10       257</code></pre>
+<p>The team batting first scored 267 and were all out on the last ball of their 50 overs (300 balls); the team batting second were all out for 162 in the 43rd over, and thus lost by 105 runs.</p>
+<p>It will also be necessary to determine whether the innings of the team batting first was “complete” (that is, either the team was all out or batted out the full 50 overs). This could fail to happen because the match is interrupted, and for the estimation, we want to ignore these matches:</p>
+<pre class="r"><code>firstComplete=function(fname) {
+  summarizeMatch(fname) %&gt;% 
+    mutate(complete=ifelse(wktTotal[1]==10,T,ifelse(ballTotal[1]&gt;=300,T,F))) %&gt;% 
+    mutate(fname=fname) %&gt;% 
+    select(c(fname,complete)) %&gt;% 
+    slice(1)
+}
+firstComplete(fname)</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##                                     fname complete
+##                                     &lt;chr&gt;    &lt;lgl&gt;
+## 1 Afghanistan-Bangladesh-2015-02-18.RData     TRUE</code></pre>
+</div>
+<div id="getting-all-the-files" class="section level2">
+<h2>Getting all the files</h2>
+<p>The files we want to consider are <code>.RData</code> files <em>with a dash and two numbers before the dot</em> (the tail end of the match date). There are some other <code>.RData</code> files that were in the <code>.zip</code>, but we don’t want to consider those:</p>
+<pre class="r"><code>files=list.files(pattern = &quot;-[0-9][0-9].RData$&quot;)
+head(files)</code></pre>
+<pre><code>## [1] &quot;Afghanistan-Australia-2012-08-25.RData&quot; 
+## [2] &quot;Afghanistan-Bangladesh-2015-02-18.RData&quot;
+## [3] &quot;Afghanistan-Canada-2012-03-18.RData&quot;    
+## [4] &quot;Afghanistan-England-2012-09-21.RData&quot;   
+## [5] &quot;Afghanistan-England-2015-03-13.RData&quot;   
+## [6] &quot;Afghanistan-Hong Kong-2014-03-18.RData&quot;</code></pre>
+<pre class="r"><code>length(files)</code></pre>
+<pre><code>## [1] 2099</code></pre>
+<p>We are going to apply our functions to a list of filenames (since they all take filenames as input: that was a design decision). Here, each function returns a data frame, so we use <code>map</code> from <code>purrr</code> to produce a <strong>list</strong> of data frames, which we then run through <code>bind_rows</code> to produce a big data frame with these rows stacked atop each other. This is something we’ll be doing a lot, so let’s make a function to do it all. <code>v</code> is a vector (of eg. file names) and <code>f</code> is a function that returns a data frame, so that my <code>xx</code> is a list of data frames:</p>
+<pre class="r"><code>atop=function(v,f) {
+  xx=map(v,f)
+  bind_rows(xx)
+}</code></pre>
+<p>Since it doesn’t have a data frame as a first argument (I couldn’t make that work), it won’t work in a pipe.</p>
+<p>We need to test this, so let’s check whether each of our match files has a complete first innings (which we’ll need to check anyway):</p>
+<pre class="r"><code>isComplete=atop(files,firstComplete)
+isComplete</code></pre>
+<pre><code>## # A tibble: 2,099 x 2
+##                                      fname complete
+##                                      &lt;chr&gt;    &lt;lgl&gt;
+##  1  Afghanistan-Australia-2012-08-25.RData     TRUE
+##  2 Afghanistan-Bangladesh-2015-02-18.RData     TRUE
+##  3     Afghanistan-Canada-2012-03-18.RData    FALSE
+##  4    Afghanistan-England-2012-09-21.RData    FALSE
+##  5    Afghanistan-England-2015-03-13.RData    FALSE
+##  6  Afghanistan-Hong Kong-2014-03-18.RData    FALSE
+##  7  Afghanistan-Hong Kong-2015-07-21.RData    FALSE
+##  8      Afghanistan-India-2010-05-01.RData    FALSE
+##  9      Afghanistan-India-2012-09-19.RData    FALSE
+## 10      Afghanistan-India-2014-03-05.RData     TRUE
+## # ... with 2,089 more rows</code></pre>
+<p>The second line is the match we’ve been using to test. What is up with the lines here that are <code>FALSE</code>?</p>
+<pre class="r"><code>isComplete %&gt;% slice(3:9) -&gt; tmp
+atop(tmp$fname,summarizeMatch)</code></pre>
+<pre><code>## # A tibble: 14 x 4
+##     inns runTotal wktTotal ballTotal
+##    &lt;chr&gt;    &lt;dbl&gt;    &lt;int&gt;     &lt;dbl&gt;
+##  1   1st      174        8       123
+##  2   2nd      133        9       121
+##  3   1st      196        5       120
+##  4   2nd       80       10       104
+##  5   1st      111        7       218
+##  6   2nd      101        1       109
+##  7   1st      153        8       120
+##  8   2nd      154        3       108
+##  9   1st      161        7       120
+## 10   2nd      162        5       121
+## 11   1st      115        8       120
+## 12   2nd      116        3        89
+## 13   1st      159        5       121
+## 14   2nd      136       10       117</code></pre>
+<p>In each case, a match takes up two lines; we only need the line starting with “1st”. You see that each first innings is not done yet (less than 10 wickets) but the allotted 300 balls have not been used. I guess that these matches were interrupted, with a revised number of overs for at least the team batting second. In any case, we don’t want to include these in our analysis.</p>
+<p>In addition, we need to check whether each match is a ODI (which we want to assess) or something else. That’s another application of <code>atop</code>:</p>
+<pre class="r"><code>v=atop(files,matchInfo)</code></pre>
+<pre><code>## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character
+
+## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character</code></pre>
+<pre class="r"><code>head(v)</code></pre>
+<pre><code>##                                     fname       date type
+## 1  Afghanistan-Australia-2012-08-25.RData 2012-08-25  ODI
+## 2 Afghanistan-Bangladesh-2015-02-18.RData 2015-02-18  ODI
+## 3     Afghanistan-Canada-2012-03-18.RData 2012-03-18  T20
+## 4    Afghanistan-England-2012-09-21.RData 2012-09-21  T20
+## 5    Afghanistan-England-2015-03-13.RData 2015-03-13  ODI
+## 6  Afghanistan-Hong Kong-2014-03-18.RData 2014-03-18  T20</code></pre>
+<pre class="r"><code>tab=table(v$type)
+tab</code></pre>
+<pre><code>## 
+##  ODI  T20 
+## 1139  960</code></pre>
+<p>There are 1139 one-day internationals, and 960 Twenty-20 matches, which are a mixture of internationals and Indian Premier League.</p>
+</div>
+<div id="getting-all-the-matches-we-want" class="section level2">
+<h2>Getting all the matches we want</h2>
+<p>To get just the matches we want, we do this:</p>
+<ul>
+<li>read all the matches’ info</li>
+<li>select only the ones whose type is ODI</li>
+<li>of those, select the ones that have complete first innings</li>
+<li>construct the desired (big) data for these (just first innings)</li>
+</ul>
+<p>Since <code>atop</code> returns a data frame, we can use it as the <em>start</em> of a pipe:</p>
+<pre class="r"><code>atop(files,matchInfo) %&gt;% filter(type==&quot;ODI&quot;) -&gt; odis</code></pre>
+<pre><code>## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character
+
+## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character</code></pre>
+<pre class="r"><code>atop(odis$fname,firstComplete) %&gt;% filter(complete) -&gt; complete.odis
+complete.odis</code></pre>
+<pre><code>## # A tibble: 1,040 x 2
+##                                       fname complete
+##                                       &lt;chr&gt;    &lt;lgl&gt;
+##  1   Afghanistan-Australia-2012-08-25.RData     TRUE
+##  2  Afghanistan-Bangladesh-2015-02-18.RData     TRUE
+##  3       Afghanistan-India-2014-03-05.RData     TRUE
+##  4     Afghanistan-Ireland-2015-01-17.RData     TRUE
+##  5 Afghanistan-Netherlands-2012-03-29.RData     TRUE
+##  6    Afghanistan-Pakistan-2012-02-10.RData     TRUE
+##  7    Afghanistan-Pakistan-2014-02-27.RData     TRUE
+##  8    Afghanistan-Scotland-2009-04-19.RData     TRUE
+##  9    Afghanistan-Scotland-2015-01-14.RData     TRUE
+## 10    Afghanistan-Scotland-2015-02-26.RData     TRUE
+## # ... with 1,030 more rows</code></pre>
+<p>There are 1040 complete ODIs. Now to get the actual information, which we can expect to be slow:</p>
+<pre class="r"><code>atop(complete.odis$fname,processMatch) %&gt;% 
+  filter(inns==&quot;1st&quot;) -&gt; d
+d</code></pre>
+<pre><code>## Source: local data frame [307,956 x 6]
+## Groups: inns [1]
+## 
+## # A tibble: 307,956 x 6
+##     inns totalBalls isExtra isWkt wktDown totalRuns
+##    &lt;chr&gt;      &lt;dbl&gt;   &lt;lgl&gt; &lt;lgl&gt;   &lt;int&gt;     &lt;dbl&gt;
+##  1   1st          1   FALSE FALSE       0         0
+##  2   1st          2   FALSE FALSE       0         0
+##  3   1st          3   FALSE FALSE       0         0
+##  4   1st          4   FALSE FALSE       0         1
+##  5   1st          5   FALSE FALSE       0         0
+##  6   1st          6   FALSE FALSE       0         0
+##  7   1st          7   FALSE FALSE       0         0
+##  8   1st          8   FALSE FALSE       0         0
+##  9   1st          9   FALSE FALSE       0         0
+## 10   1st         10   FALSE FALSE       0         0
+## # ... with 307,946 more rows</code></pre>
+<p>307956 rows! But that’s what we need.</p>
+<p>So that we can use this in the next post, we need to save it:</p>
+<pre class="r"><code>save(&quot;d&quot;,file=&quot;d.RData&quot;)</code></pre>
+</div>
+</div>
+
+    </div>
+  </article>
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://kens-blog-2.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="../../../../index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="../../../../images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.10.0/highlight.min.js"></script>
+
+<script src="//cdn.bootcss.com/highlight.js/9.10.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.10.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="../../../../js/math-code.js"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+  }
+});
+</script>
+<script async type="text/javascript"
+  src="https://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+    
+  </body>
+</html>
+

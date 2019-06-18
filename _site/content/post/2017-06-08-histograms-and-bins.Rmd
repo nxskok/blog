@@ -1,0 +1,138 @@
+---
+title: Histograms and bins
+author: Ken
+date: '2017-06-08'
+slug: histograms-and-bins
+categories:
+  - statistics
+tags:
+  - R
+---
+
+Most software, when you ask it to draw you a histogram, will choose a number of intervals ("bins") for you. Base R is one of those. To illustrate, let's read in some data:
+
+```{r}
+library(tidyverse)
+myurl="http://www.utsc.utoronto.ca/~butler/c32/soap.txt"
+soap=read_delim(myurl," ")
+soap
+```
+
+This is data from production of soap bars. There are two production lines, run at various different speeds, and the overall interest is in how the amount of scrap produced depends on the speed of the production line, and maybe on the production line itself. For now, though, we'll focus just on the amount of scrap.
+
+I've almost forgotten how to make a base R histogram, but I think it goes like this:
+
+```{r base_hist_soap}
+hist(soap$scrap)
+```
+
+This uses eight bins, with a bin width of 50. (I think the focus in base R was to choose bin boundaries that come in nice places, with the default being to use Sturges' rule (below) to get the number of bins.)
+
+In `ggplot`, you have to specify the number of bins yourself (or the bin width). I was looking in the help for `geom_histogram` to find out why, and I learned that Hadley Wickham is opposed to automatic selection of number of bins. In [the help file under `binwidth`](http://ggplot2.tidyverse.org/reference/geom_histogram.html), it says:
+
+>  You should always override this value, exploring multiple widths to find the best to illustrate the stories in your data.
+
+I'm not quite sure where I stand on this. I am feeling that it would be nice to have a default to start from, but I see where Hadley is coming from in that if you provide a default, that's what people will use without thinking.
+
+Here's how you specify a number of bins in `ggplot`:
+
+```{r soap_eight_bins}
+ggplot(soap,aes(x=scrap))+geom_histogram(bins=8)
+```
+
+Even though we used the same number of bins, the histogram looks different because the bin boundaries are in different places. 
+
+The bin width is specified like this:
+
+```{r soap_binwidth}
+ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=50)
+```
+
+This again looks very different, with a clear "hole" in the middle. There are some other options in `geom_histogram`, of which one is `breaks`, a vector of bin boundaries. So I can mimic the base R histogram this way:
+
+```{r base_alike}
+b=seq(100,500,50)
+b
+ggplot(soap,aes(x=scrap))+geom_histogram(breaks=b)
+```
+
+which has the same "Battersea Power Station" look as the base R histogram:
+
+![](https://cdn.londonandpartners.com/asset/a0362f0f5fc8f1b638d790c4d2fd542d.jpg)
+
+The [Wikipedia page on the histogram](https://en.wikipedia.org/wiki/Histogram) mentions a number of "rules" for determining the number of bins or the bin width of a histogram. Two of these are due to Sturges and to Freedman-Diaconis. Let $n$ be the number of data values, $r$ be the inter-quartile range of the data, $k$ be the number of bins, and $h$ be the bin width. Then Sturges says
+
+$$ k = \lceil \log_2 n \rceil + 1$$
+with the "ceiling" function meaning "round up to the next integer". For our data, we have
+
+```{r}
+n=length(soap$scrap)
+ceiling(log(n,2))+1
+```
+
+Freedman-Diaconis gives you a bin width instead:
+
+
+$$ h = 2r/n^{1/3} $$
+
+which we can calculate for our data using the `n` we got above:
+
+```{r}
+r=IQR(soap$scrap)
+2*r/n^(1/3)
+```
+
+These calculations are easily encapsulated in functions:
+
+```{r}
+sturges=function(x) {
+  n=length(x)
+  ceiling(log(n,2))+1
+}
+
+sturges(soap$scrap)
+```
+
+and
+
+```{r}
+fd=function(x) {
+  n=length(x)
+  r=IQR(x)
+  2*r/n^(1/3)
+}
+
+fd(soap$scrap)
+```
+
+What `geom_histogram` claims to let you do is to supply a *function* to `binwidth` (though not `bins`, far as I can tell). I couldn't get this to work before, but I seem to be able to now:
+
+```{r binwidth_by_function}
+ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=fd)
+```
+
+
+To use Sturges or Freedman-Diaconis as a default, you can do something like this:
+
+```{r hist_sturges}
+k=sturges(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(bins=k)
+```
+
+or
+
+```{r hist_fd}
+h=fd(soap$scrap)
+ggplot(soap,aes(x=scrap))+geom_histogram(binwidth=h)
+```
+
+You don't even have to write the functions yourself, because these can be found in R (from looking at the help for `hist`):
+
+```{r}
+nclass.Sturges(soap$scrap)
+nclass.FD(soap$scrap)
+```
+
+Note that this version of Freedman-Diaconis gives you a number of bins rather than a bin width.
+
+Perhaps the moral of this story is that the look of a histogram can be very different depending on the number of bins or the bin width that you choose. So maybe Hadley Wickham was right after all. But I still think it's good to have a place to start from, and `nclass.Sturges` or `nclass.FD` will do that.
