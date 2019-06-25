@@ -277,9 +277,9 @@ then obtain the Bayes factor:
 ```{r}
 bf(ha_bridge, h0_bridge)
 ```
-This is, according to [this talk](http://statmath.wu.ac.at/research/talks/resources/talkheld.pdf), "barely worth mentioning". 
+This is, according to [this talk](http://statmath.wu.ac.at/research/talks/resources/talkheld.pdf), at the very bottom of "substantial", so not really worth getting excited about.
 
-The moral of this seems to be that the model with `mu` estimated fits better than the one with it set to zero, but there is no substantial difference between the fit of the two models. At this point, you wave your hands around a bit and decide what to do.
+The moral of this seems to be that the model with `mu` estimated fits better than the one with it set to zero, but there is no important difference between the fit of the two models. At this point, you wave your hands around a bit and decide what to do.
 
 ## The $t$-test
 
