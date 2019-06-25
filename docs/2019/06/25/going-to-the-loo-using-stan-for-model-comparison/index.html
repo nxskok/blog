@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Going to the loo: using Stan for model comparison</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2019/06/25/going-to-the-loo-using-stan-for-model-comparison/">Going to the loo: using Stan for model comparison</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Jun 25, 2019
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;31 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/stats">stats</a>
+    
+    <a  href="../../../../categories/bayesian">Bayesian</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.1.1          ✔ purrr   0.3.2     
+## ✔ tibble  2.1.1          ✔ dplyr   0.8.0.1   
+## ✔ tidyr   0.8.3.9000     ✔ stringr 1.4.0     
+## ✔ readr   1.3.1          ✔ forcats 0.3.0</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;tibble&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;readr&#39; was built under R version 3.5.2</code></pre>
+<pre><code>## Warning: package &#39;purrr&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Warning: package &#39;dplyr&#39; was built under R version 3.5.2</code></pre>
+<pre><code>## Warning: package &#39;stringr&#39; was built under R version 3.5.2</code></pre>
+<pre><code>## Warning: package &#39;forcats&#39; was built under R version 3.5.1</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(rstan)</code></pre>
+<pre><code>## Warning: package &#39;rstan&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## Loading required package: StanHeaders</code></pre>
+<pre><code>## Warning: package &#39;StanHeaders&#39; was built under R version 3.5.1</code></pre>
+<pre><code>## rstan (Version 2.18.2, GitRev: 2e1f913d3ca3)</code></pre>
+<pre><code>## For execution on a local, multicore CPU with excess RAM we recommend calling
+## options(mc.cores = parallel::detectCores()).
+## To avoid recompilation of unchanged Stan programs, we recommend calling
+## rstan_options(auto_write = TRUE)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rstan&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:tidyr&#39;:
+## 
+##     extract</code></pre>
+<pre class="r"><code>library(loo)</code></pre>
+<pre><code>## This is loo version 2.1.0.
+## **NOTE: As of version 2.0.0 loo defaults to 1 core but we recommend using as many as possible. Use the &#39;cores&#39; argument or set options(mc.cores = NUM_CORES) for an entire session. Visit mc-stan.org/loo/news for details on other changes.</code></pre>
+<pre><code>## 
+## Attaching package: &#39;loo&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:rstan&#39;:
+## 
+##     loo</code></pre>
+<pre class="r"><code>library(bridgesampling)
+set.seed(457299)</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Stan is really good at estimation: that is, obtaining a posterior distribution of a parameter. But what if you want to do a test, or compare two models to see which one fits better?</p>
+<p>One way to go is a Bayes factor: the ratio of the likelihoods under the null and alternative hypotheses. This can be multiplied by your personal prior odds on the alternative being true (vs. the alternative being true) to produce your posterior odds on the alternative being true. There are a number of reasons why one should not (or might prefer not to) use a Bayes factor. The best discussion of this I have seen is <a href="https://djnavarro.net/post/a-personal-essay-on-bayes-factors/">Danielle Navarro’s post</a>.</p>
+<p>Another way to go is something AIC-like, such as WAIC or LOOIC. This gets at how well a model fits, allowing for how complex it is, so you can fit two models and prefer the model with the better one. See the <a href="http://www.stat.columbia.edu/~gelman/research/unpublished/loo_stan.pdf">Vehtari, Gelman and Gabry paper</a>.</p>
+<p>I assume here that you know how to use Stan to obtain at least a simple posterior distribution. If not, you might like to read <a href="http://ritsokiguess.site/docs/2018/02/28/working-my-way-back-to-you-a-re-investigation-of-rstan/">this post</a>.</p>
+</div>
+<div id="the-problem" class="section level2">
+<h2>The problem</h2>
+<p>Both of the above ideas can be made to work with Stan (or, in general, a simulated posterior distribution), but the process is not entirely straightforward. As I learned it (supply a Uruguayan accent here) posterior is proportional to likelihood times prior, with a proportionality “constant”
+that is the denominator of Bayes’ rule. I say “constant” because it does not depend on the parameter(s) you’re estimating (and is thus irrelevant to the posterior distribution), but as soon as you are comparing two models, the thing on the bottom matters, and the fact that Stan ignores it suddenly matters as well.</p>
+</div>
+<div id="getting-around-the-problem" class="section level2">
+<h2>Getting around the problem</h2>
+<p>The difficulty is that when you specify the model in Stan, you cannot now just specify the model; you have to include enough information to calculate the marginal likelihood as well. This means that instead of saying, for example, <code>y ~ normal(mu, sigma)</code> you have to explicitly say what has to be included in the likelihood as well.</p>
+<p>To handle the AIC-type way, there is a package <code>loo</code> that does the hard work for you. The Stan code you need starts off the same, but to allow for getting the actual likelihood what you do is to repeat the likelihood calculation in a <code>generated quantities</code> block.</p>
+<p>To handle Bayes factors, we need to have Stan calculate the complete likelihood in the <code>model</code> section. This is no longer as simple as something with a squiggle in it; we have to build the log-posterior up out of the prior(s) and likelihood. Then we go the rest of the way with something called “bridge sampling”. I find this way involves more thinking, quite aside from whether we should be doing it anyway.</p>
+</div>
+<div id="an-example" class="section level2">
+<h2>An example</h2>
+<p>I wanted to come up with the simplest example I could, to convince myself that I could make it work. I seem to need a two-parameter model, so that I can test a hypothesis about one of them while estimating the other. (I don’t think Stan likes “estimating” models with zero parameters, but I might be wrong about that.) The obvious thing is a normal model for the mean, with SD to be estimated as well. Since this is a practice example, we’ll make up some data:</p>
+<pre class="r"><code>set.seed(457299)
+z=rnorm(10, 2, 3)
+z </code></pre>
+<pre><code>##  [1]  6.86560206 -0.23904209  1.19320761 -0.09860527  2.63971379
+##  [6]  4.12690561 -1.23498713  4.37393124  2.01214088  5.28763871</code></pre>
+<p>and we’ll test the null hypothesis that the mean is zero, against the alternative that it is not. (If you prefer, we compare the fit of a model where the mean is zero vs. one where the mean is estimated). The way I generated these data (true mean of 2), the null hypothesis is actually wrong, so we should prefer estimating the mean rather than acting as if it is zero.</p>
+<p>We will need some priors. For the mean, normal with mean 0 and SD 5 (slightly favouring the null, with an SD largish but not too large). For the SD, a chi-squared distribution with 5 df (giving the SD a prior mean of 5 and variance 10). I chose these more or less arbitrarily.</p>
+<p>So now, for the <code>loo</code> approach, we need two pieces of Stan code, one where we estimate the mean (and the SD as well), and one where we set mean equal to the hypothesized value of zero. Here’s the one where we estimate both parameters. I am using code-as-text here (rather than my preferred approach of putting the code in a file) because of how <code>blogdown</code> likes to work:</p>
+<pre class="r"><code>loo1=&quot;
+data {
+  vector[10] y;
+}
+
+parameters {
+  real mu;
+  real&lt;lower=0&gt; sigma;
+}
+
+model {
+  mu ~ normal(0, 10); // prior for mu
+  sigma ~ chi_square(5); // prior for sigma
+  y ~ normal(mu, sigma); // likelihood
+}
+
+generated quantities {
+  vector[10] log_lik;
+  for (i in 1:10) {
+    log_lik[i] = normal_lpdf(y[i] | mu, sigma);
+  }
+}
+&quot;</code></pre>
+<p>There’s not too much surprising here, not if you’ve seen Stan before anyway. There’s a <code>model</code> section with the likelihood and priors for the parameters; the parameters <code>mu</code> and <code>sigma</code> are declared in the <code>parameters</code> section, the latter constrained to be non-negative; above that there is a <code>data</code> section, with the only data here being the observations <code>y</code>. I have hard-coded the number of observations, which I realize is a bad idea, especially since the number of observations comes in again at the bottom, but hey, it’s a toy problem anyway.</p>
+<p>The one new thing here is the <code>generated quantities</code> section at the bottom. In order to use <code>loo</code> to compare the null and alternative models, it needs to have access to the observation-by-observation terms in the log-likelihood. This means digging in the Stan function reference to find out how the log of the normal density is coded. The log-likelihood has to be called <code>log_lik</code>.</p>
+<p>All right, let’s compile that:</p>
+<pre class="r"><code>loo1_compiled=stan_model(model_code=loo1)</code></pre>
+<p>Now I need a null model. I will test that the mean is zero, which means copying the code in <code>loo1</code> and deleting all references to <code>mu</code> as a variable, replacing with zero (if a value is needed):</p>
+<pre class="r"><code>loo2=&quot;
+data {
+  vector[10] y;
+}
+
+parameters {
+  real&lt;lower=0&gt; sigma;
+}
+
+model {
+  sigma ~ chi_square(5);
+  y ~ normal(0, sigma); // likelihood
+}
+
+generated quantities {
+  vector[10] log_lik;
+  for (i in 1:10) {
+    log_lik[i] = normal_lpdf(y[i] | 0, sigma);
+  }
+}
+&quot;</code></pre>
+<p>Compile it as well:</p>
+<pre class="r"><code>loo2_compiled=stan_model(model_code=loo2)</code></pre>
+<p>and then sample from each of these:</p>
+<pre class="r"><code>data_list=list(y=z)
+loo1_sample=sampling(loo1_compiled, data=data_list)</code></pre>
+<pre><code>## 
+## SAMPLING FOR MODEL &#39;620ebcb85b423c3484b7104d163ad904&#39; NOW (CHAIN 1).
+## Chain 1: 
+## Chain 1: Gradient evaluation took 9e-06 seconds
+## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.09 seconds.
+## Chain 1: Adjust your expectations accordingly!
+## Chain 1: 
+## Chain 1: 
+## Chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 1: 
+## Chain 1:  Elapsed Time: 0.011036 seconds (Warm-up)
+## Chain 1:                0.009703 seconds (Sampling)
+## Chain 1:                0.020739 seconds (Total)
+## Chain 1: 
+## 
+## SAMPLING FOR MODEL &#39;620ebcb85b423c3484b7104d163ad904&#39; NOW (CHAIN 2).
+## Chain 2: 
+## Chain 2: Gradient evaluation took 6e-06 seconds
+## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.06 seconds.
+## Chain 2: Adjust your expectations accordingly!
+## Chain 2: 
+## Chain 2: 
+## Chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 2: 
+## Chain 2:  Elapsed Time: 0.011962 seconds (Warm-up)
+## Chain 2:                0.013882 seconds (Sampling)
+## Chain 2:                0.025844 seconds (Total)
+## Chain 2: 
+## 
+## SAMPLING FOR MODEL &#39;620ebcb85b423c3484b7104d163ad904&#39; NOW (CHAIN 3).
+## Chain 3: 
+## Chain 3: Gradient evaluation took 3e-06 seconds
+## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.03 seconds.
+## Chain 3: Adjust your expectations accordingly!
+## Chain 3: 
+## Chain 3: 
+## Chain 3: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 3: 
+## Chain 3:  Elapsed Time: 0.012111 seconds (Warm-up)
+## Chain 3:                0.011865 seconds (Sampling)
+## Chain 3:                0.023976 seconds (Total)
+## Chain 3: 
+## 
+## SAMPLING FOR MODEL &#39;620ebcb85b423c3484b7104d163ad904&#39; NOW (CHAIN 4).
+## Chain 4: 
+## Chain 4: Gradient evaluation took 4e-06 seconds
+## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.04 seconds.
+## Chain 4: Adjust your expectations accordingly!
+## Chain 4: 
+## Chain 4: 
+## Chain 4: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 4: 
+## Chain 4:  Elapsed Time: 0.011719 seconds (Warm-up)
+## Chain 4:                0.0175 seconds (Sampling)
+## Chain 4:                0.029219 seconds (Total)
+## Chain 4:</code></pre>
+<pre class="r"><code>loo2_sample=sampling(loo2_compiled, data=data_list)</code></pre>
+<pre><code>## 
+## SAMPLING FOR MODEL &#39;dbef9f10fcc14516cfd9aa722c33aaa3&#39; NOW (CHAIN 1).
+## Chain 1: 
+## Chain 1: Gradient evaluation took 5e-06 seconds
+## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
+## Chain 1: Adjust your expectations accordingly!
+## Chain 1: 
+## Chain 1: 
+## Chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 1: 
+## Chain 1:  Elapsed Time: 0.008005 seconds (Warm-up)
+## Chain 1:                0.006833 seconds (Sampling)
+## Chain 1:                0.014838 seconds (Total)
+## Chain 1: 
+## 
+## SAMPLING FOR MODEL &#39;dbef9f10fcc14516cfd9aa722c33aaa3&#39; NOW (CHAIN 2).
+## Chain 2: 
+## Chain 2: Gradient evaluation took 4e-06 seconds
+## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.04 seconds.
+## Chain 2: Adjust your expectations accordingly!
+## Chain 2: 
+## Chain 2: 
+## Chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 2: 
+## Chain 2:  Elapsed Time: 0.008015 seconds (Warm-up)
+## Chain 2:                0.006914 seconds (Sampling)
+## Chain 2:                0.014929 seconds (Total)
+## Chain 2: 
+## 
+## SAMPLING FOR MODEL &#39;dbef9f10fcc14516cfd9aa722c33aaa3&#39; NOW (CHAIN 3).
+## Chain 3: 
+## Chain 3: Gradient evaluation took 4e-06 seconds
+## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.04 seconds.
+## Chain 3: Adjust your expectations accordingly!
+## Chain 3: 
+## Chain 3: 
+## Chain 3: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 3: 
+## Chain 3:  Elapsed Time: 0.007657 seconds (Warm-up)
+## Chain 3:                0.006846 seconds (Sampling)
+## Chain 3:                0.014503 seconds (Total)
+## Chain 3: 
+## 
+## SAMPLING FOR MODEL &#39;dbef9f10fcc14516cfd9aa722c33aaa3&#39; NOW (CHAIN 4).
+## Chain 4: 
+## Chain 4: Gradient evaluation took 4e-06 seconds
+## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.04 seconds.
+## Chain 4: Adjust your expectations accordingly!
+## Chain 4: 
+## Chain 4: 
+## Chain 4: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 4: 
+## Chain 4:  Elapsed Time: 0.007712 seconds (Warm-up)
+## Chain 4:                0.006897 seconds (Sampling)
+## Chain 4:                0.014609 seconds (Total)
+## Chain 4:</code></pre>
+<p>Did that work reasonably?</p>
+<pre class="r"><code>loo1_sample</code></pre>
+<pre><code>## Inference for Stan model: 620ebcb85b423c3484b7104d163ad904.
+## 4 chains, each with iter=2000; warmup=1000; thin=1; 
+## post-warmup draws per chain=1000, total post-warmup draws=4000.
+## 
+##               mean se_mean   sd   2.5%    25%    50%    75%  97.5% n_eff
+## mu            2.47    0.02 1.00   0.50   1.82   2.47   3.09   4.49  1759
+## sigma         3.10    0.02 0.82   1.96   2.53   2.93   3.50   5.11  2139
+## log_lik[1]   -3.27    0.01 0.61  -4.73  -3.59  -3.16  -2.84  -2.42  2801
+## log_lik[2]   -2.52    0.01 0.32  -3.22  -2.71  -2.49  -2.29  -2.01  2428
+## log_lik[3]   -2.17    0.01 0.26  -2.73  -2.32  -2.15  -1.99  -1.72  1982
+## log_lik[4]   -2.47    0.01 0.30  -3.15  -2.66  -2.45  -2.26  -1.98  2378
+## log_lik[5]   -2.07    0.01 0.25  -2.62  -2.23  -2.05  -1.89  -1.63  1842
+## log_lik[6]   -2.24    0.01 0.26  -2.79  -2.40  -2.22  -2.05  -1.79  1984
+## log_lik[7]   -2.92    0.01 0.45  -3.97  -3.17  -2.84  -2.59  -2.25  2703
+## log_lik[8]   -2.30    0.01 0.27  -2.87  -2.46  -2.28  -2.10  -1.85  2041
+## log_lik[9]   -2.08    0.01 0.25  -2.65  -2.24  -2.06  -1.90  -1.64  1883
+## log_lik[10]  -2.56    0.01 0.33  -3.32  -2.75  -2.52  -2.33  -2.04  2378
+## lp__        -14.25    0.03 1.07 -17.30 -14.66 -13.92 -13.48 -13.19  1232
+##             Rhat
+## mu             1
+## sigma          1
+## log_lik[1]     1
+## log_lik[2]     1
+## log_lik[3]     1
+## log_lik[4]     1
+## log_lik[5]     1
+## log_lik[6]     1
+## log_lik[7]     1
+## log_lik[8]     1
+## log_lik[9]     1
+## log_lik[10]    1
+## lp__           1
+## 
+## Samples were drawn using NUTS(diag_e) at Tue Jun 25 17:26:52 2019.
+## For each parameter, n_eff is a crude measure of effective sample size,
+## and Rhat is the potential scale reduction factor on split chains (at 
+## convergence, Rhat=1).</code></pre>
+<pre class="r"><code>loo2_sample</code></pre>
+<pre><code>## Inference for Stan model: dbef9f10fcc14516cfd9aa722c33aaa3.
+## 4 chains, each with iter=2000; warmup=1000; thin=1; 
+## post-warmup draws per chain=1000, total post-warmup draws=4000.
+## 
+##               mean se_mean   sd   2.5%    25%    50%    75%  97.5% n_eff
+## sigma         3.97    0.03 0.99   2.55   3.32   3.80   4.45   6.41   954
+## log_lik[1]   -4.02    0.02 0.57  -5.47  -4.26  -3.88  -3.60  -3.36  1371
+## log_lik[2]   -2.27    0.01 0.23  -2.78  -2.41  -2.26  -2.12  -1.86  1029
+## log_lik[3]   -2.32    0.01 0.21  -2.79  -2.45  -2.30  -2.18  -1.97  1014
+## log_lik[4]   -2.27    0.01 0.23  -2.78  -2.41  -2.25  -2.12  -1.86  1030
+## log_lik[5]   -2.53    0.00 0.13  -2.86  -2.59  -2.50  -2.44  -2.39   939
+## log_lik[6]   -2.90    0.00 0.10  -3.17  -2.92  -2.87  -2.84  -2.84  1980
+## log_lik[7]   -2.33    0.01 0.21  -2.80  -2.45  -2.31  -2.19  -1.97  1013
+## log_lik[8]   -2.98    0.00 0.12  -3.32  -3.00  -2.93  -2.90  -2.89  1914
+## log_lik[9]   -2.42    0.01 0.17  -2.83  -2.51  -2.39  -2.30  -2.17   980
+## log_lik[10]  -3.31    0.01 0.26  -4.00  -3.39  -3.22  -3.12  -3.08  1550
+## lp__        -16.77    0.02 0.78 -18.99 -16.96 -16.46 -16.29 -16.24  1239
+##             Rhat
+## sigma          1
+## log_lik[1]     1
+## log_lik[2]     1
+## log_lik[3]     1
+## log_lik[4]     1
+## log_lik[5]     1
+## log_lik[6]     1
+## log_lik[7]     1
+## log_lik[8]     1
+## log_lik[9]     1
+## log_lik[10]    1
+## lp__           1
+## 
+## Samples were drawn using NUTS(diag_e) at Tue Jun 25 17:26:52 2019.
+## For each parameter, n_eff is a crude measure of effective sample size,
+## and Rhat is the potential scale reduction factor on split chains (at 
+## convergence, Rhat=1).</code></pre>
+<p>In the first case, we have posterior distributions for <code>mu</code> and <code>sigma</code>, with a 95% posterior interval for <code>mu</code> not including zero (which means that we would expect to prefer a model in which <code>mu</code> is estimated rather than set to zero). In each case, we also have the log-likelihood terms, one for each of the ten observations. The output from the second model has no term for <code>mu</code> (since it was set equal to zero), and the posterior mean for <code>sigma</code> is a bit bigger than for the first model (suggesting that the observations are on average noticeably further away from zero than the sample mean).</p>
+<p>Now, what we came here to do: what the <code>loo</code> package calls “the efficient PSIS-LOO approximation to exact LOO-CV”. I’m copying from the vignette here. First, we have to extract those log-likelihood terms that we so carefully had Stan calculate for us:</p>
+<pre class="r"><code>log_lik_1=extract_log_lik(loo1_sample, merge_chains = F)
+log_lik_2=extract_log_lik(loo2_sample, merge_chains = F)
+r_eff_1=relative_eff(log_lik_1)
+r_eff_2=relative_eff(log_lik_2)</code></pre>
+<p>Next, look at the results for each model, first the one with <code>mu</code> estimated:</p>
+<pre class="r"><code>loo_1 &lt;- loo(log_lik_1, r_eff=r_eff_1)</code></pre>
+<pre><code>## Warning: Some Pareto k diagnostic values are slightly high. See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
+<pre class="r"><code>loo_1</code></pre>
+<pre><code>## 
+## Computed from 4000 by 10 log-likelihood matrix
+## 
+##          Estimate  SE
+## elpd_loo    -25.3 1.4
+## p_loo         1.3 0.3
+## looic        50.6 2.9
+## ------
+## Monte Carlo SE of elpd_loo is 0.0.
+## 
+## Pareto k diagnostic values:
+##                          Count Pct.    Min. n_eff
+## (-Inf, 0.5]   (good)     9     90.0%   1714      
+##  (0.5, 0.7]   (ok)       1     10.0%   779       
+##    (0.7, 1]   (bad)      0      0.0%   &lt;NA&gt;      
+##    (1, Inf)   (very bad) 0      0.0%   &lt;NA&gt;      
+## 
+## All Pareto k estimates are ok (k &lt; 0.7).
+## See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
+<p>Perhaps the easiest one of these to look at is the last one, <code>looic</code>. This is minus twice the expected log posterior density, and so is on the same scale as a deviance (that is to say, a smaller <code>looic</code> is better).</p>
+<pre class="r"><code>loo_2 &lt;- loo(log_lik_2, r_eff=r_eff_2)</code></pre>
+<pre><code>## Warning: Some Pareto k diagnostic values are slightly high. See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
+<pre class="r"><code>loo_2</code></pre>
+<pre><code>## 
+## Computed from 4000 by 10 log-likelihood matrix
+## 
+##          Estimate  SE
+## elpd_loo    -27.8 2.0
+## p_loo         0.7 0.3
+## looic        55.5 4.0
+## ------
+## Monte Carlo SE of elpd_loo is 0.0.
+## 
+## Pareto k diagnostic values:
+##                          Count Pct.    Min. n_eff
+## (-Inf, 0.5]   (good)     9     90.0%   921       
+##  (0.5, 0.7]   (ok)       1     10.0%   455       
+##    (0.7, 1]   (bad)      0      0.0%   &lt;NA&gt;      
+##    (1, Inf)   (very bad) 0      0.0%   &lt;NA&gt;      
+## 
+## All Pareto k estimates are ok (k &lt; 0.7).
+## See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
+<p>The first model fits better than the second one, since its <code>looic</code> is smaller.
+This is what we suspected (from the 95% posterior interval for <code>mu</code> not including zero). We can go one step further and <em>actually</em> compare the models, thus:</p>
+<pre class="r"><code>compare(loo_1, loo_2)</code></pre>
+<pre><code>## elpd_diff        se 
+##      -2.4       1.6</code></pre>
+<p>The negative difference indicates that the first model (estimating <code>mu</code>) is better, but the difference is only 1.5 standard errors from zero, so the evidence is not as convincing as we might have thought from our posterior distribution for <code>mu</code>.</p>
+</div>
+<div id="comments" class="section level2">
+<h2>Comments</h2>
+<p>This approach is based on an AIC-like idea, so it can be used to compare any models, not just nested ones (as here, where the second model was the first one with a value supplied for one parameter). One of the vignettes in the <code>loo</code> package compares the fits of Poisson and negative binomial models (to the same data).</p>
+<p>(The models being compared are not necessarily generalized linear models, and might not even be nested, so the idea of comparing the difference in “deviance” to a chi-squared distribution makes no sense here.)</p>
+</div>
+<div id="bayes-factors-and-bridge-sampling" class="section level2">
+<h2>Bayes factors and bridge sampling</h2>
+<p>Another approach to hypothesis testing or model comparison in a Bayesian framework is to calculate a Bayes factor. A little symbolism here. Suppose our two hypotheses are called <span class="math inline">\(H_0\)</span> and <span class="math inline">\(H_1\)</span> and our data is denoted <span class="math inline">\(D\)</span>. (These could be two different <em>models</em>, in which case the notation <span class="math inline">\(M_0\)</span> and <span class="math inline">\(M_1\)</span> would be better.) Then Bayes’ theorem says:</p>
+<p><span class="math display">\[
+{ P(H_1 | D) \over P(H_0 | D)}  = {P(D|H_1) \over {P(D|H_0)}} \times {P(H_1) \over P(H_0)}
+\]</span></p>
+<p>On the left is the “posterior odds” of the two hypotheses, given the data. This is what you really care about: “how much do I prefer the alternative over the null once I look at the data?”. On the right, there are two terms. The second is the “prior odds” of the two hypotheses, before you look at any data. This is personal to the analyst; different people will have different prior odds and thus different posterior odds. The first term on the right is known as the Bayes factor; it is the ratio of likelihoods of the data under the two hypotheses. (This idea will be familiar to frequentists as the likelihood ratio, on which an asymptotically chi-squared test is based.) The idea is that you can cite the Bayes factor as the result of your analysis, and then your reader can multiply it by their personal prior odds for the two hypotheses to obtain their personal posterior odds. Or, if you are willing to assume that the prior odds is 1 (indifference, you might say, between the two hypotheses), the posterior odds and the Bayes factor are the same.</p>
+<p>How, then, to obtain a Bayes factor from a simulated posterior distribution such as one sampled by Stan? As with the <code>loo</code> stuff, you need all the bits of the likelihood, including the parts that are constant as far as the posterior distribution of the parameter is concerned. The rest of the details are handled by a technique known as “bridge sampling”, implemented in the package <code>bridgesampling</code>.</p>
+<p>With <code>loo</code> above, we handled the “constant” by re-specifying the likelihood in an additional <code>generated quantities</code> block, so that the <code>model</code> part looked exactly as we would expect. With bridge sampling, we have to write the <em>model</em> so that the calculation of the likelihood includes all the constants that we need. Let’s re-use my <code>loo</code> example to show you what I mean.</p>
+<p>First, the code when I estimate both <code>mu</code> and <code>sigma</code>. I saved this in <code>bf1</code>:</p>
+<pre class="r"><code>bf1=&quot;
+data {
+  vector[10] y;
+}
+
+parameters {
+  real mu;
+  real&lt;lower=0&gt; sigma;
+}
+
+model { // target contains the complete log-posterior, prior, constants and all
+  target+=normal_lpdf(mu | 0, 5); // prior for mu
+  target+=chi_square_lpdf(sigma | 5); // prior for sigma
+  target+=normal_lpdf(y | mu, sigma); // likelihood
+}
+&quot;</code></pre>
+<p>In the <code>model</code> section, I construct a quantity <code>target</code> that is the log-posterior, including all the constants. I do this by first adding the log-priors with constants (the prior for <code>mu</code> being normal and the prior for <code>sigma</code> being chi-squared), and then adding on the log-likelihood with constants. The result seems to need to be called <code>target</code>. This approach could also be used in the usual case where we are obtaining a posterior distribution for a parameter, but the “squiggle” approach is, to my mind, a lot easier and clearer.</p>
+<p>Compile it:</p>
+<pre class="r"><code>bf1_compiled=stan_model(model_code=bf1)</code></pre>
+<p>Then the null model, once again taking out reference to <code>mu</code> and inserting 0 where required:</p>
+<pre class="r"><code>bf2=&quot;
+data {
+  vector[10] y;
+}
+
+parameters {
+  real&lt;lower=0&gt; sigma;
+}
+
+model { // target contains the complete log-posterior, constants and all
+  target+=chi_square_lpdf(sigma | 5); // prior for sigma
+  target+=normal_lpdf(y | 0, sigma); // likelihood
+}
+&quot;</code></pre>
+<p>and compile <em>that</em>:</p>
+<pre class="r"><code>bf2_compiled=stan_model(model_code=bf2)</code></pre>
+<p>The <code>bridgesampling</code> vignette suggests to use a lot more samples than default. We already have our data set up, so</p>
+<pre class="r"><code>bf1_sample=sampling(bf1_compiled, data=data_list, iter=50000, warmup=1000, chains=4)</code></pre>
+<pre><code>## 
+## SAMPLING FOR MODEL &#39;43c2640d13bb9a0bc3ed8a7394385e5c&#39; NOW (CHAIN 1).
+## Chain 1: 
+## Chain 1: Gradient evaluation took 8e-06 seconds
+## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+## Chain 1: Adjust your expectations accordingly!
+## Chain 1: 
+## Chain 1: 
+## Chain 1: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 1: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 1: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 1: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 1: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 1: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 1: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 1: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 1: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 1: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 1: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 1: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 1: 
+## Chain 1:  Elapsed Time: 0.01145 seconds (Warm-up)
+## Chain 1:                0.658347 seconds (Sampling)
+## Chain 1:                0.669797 seconds (Total)
+## Chain 1: 
+## 
+## SAMPLING FOR MODEL &#39;43c2640d13bb9a0bc3ed8a7394385e5c&#39; NOW (CHAIN 2).
+## Chain 2: 
+## Chain 2: Gradient evaluation took 5e-06 seconds
+## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
+## Chain 2: Adjust your expectations accordingly!
+## Chain 2: 
+## Chain 2: 
+## Chain 2: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 2: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 2: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 2: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 2: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 2: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 2: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 2: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 2: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 2: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 2: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 2: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 2: 
+## Chain 2:  Elapsed Time: 0.011869 seconds (Warm-up)
+## Chain 2:                0.707515 seconds (Sampling)
+## Chain 2:                0.719384 seconds (Total)
+## Chain 2: 
+## 
+## SAMPLING FOR MODEL &#39;43c2640d13bb9a0bc3ed8a7394385e5c&#39; NOW (CHAIN 3).
+## Chain 3: 
+## Chain 3: Gradient evaluation took 5e-06 seconds
+## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
+## Chain 3: Adjust your expectations accordingly!
+## Chain 3: 
+## Chain 3: 
+## Chain 3: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 3: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 3: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 3: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 3: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 3: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 3: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 3: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 3: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 3: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 3: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 3: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 3: 
+## Chain 3:  Elapsed Time: 0.012174 seconds (Warm-up)
+## Chain 3:                0.576712 seconds (Sampling)
+## Chain 3:                0.588886 seconds (Total)
+## Chain 3: 
+## 
+## SAMPLING FOR MODEL &#39;43c2640d13bb9a0bc3ed8a7394385e5c&#39; NOW (CHAIN 4).
+## Chain 4: 
+## Chain 4: Gradient evaluation took 7e-06 seconds
+## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+## Chain 4: Adjust your expectations accordingly!
+## Chain 4: 
+## Chain 4: 
+## Chain 4: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 4: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 4: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 4: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 4: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 4: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 4: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 4: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 4: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 4: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 4: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 4: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 4: 
+## Chain 4:  Elapsed Time: 0.012002 seconds (Warm-up)
+## Chain 4:                0.751425 seconds (Sampling)
+## Chain 4:                0.763427 seconds (Total)
+## Chain 4:</code></pre>
+<pre class="r"><code>bf2_sample=sampling(bf2_compiled, data=data_list, iter=50000, warmup=1000, chains=4)</code></pre>
+<pre><code>## 
+## SAMPLING FOR MODEL &#39;a45635a273dbc57221b612b953747291&#39; NOW (CHAIN 1).
+## Chain 1: 
+## Chain 1: Gradient evaluation took 6e-06 seconds
+## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.06 seconds.
+## Chain 1: Adjust your expectations accordingly!
+## Chain 1: 
+## Chain 1: 
+## Chain 1: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 1: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 1: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 1: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 1: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 1: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 1: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 1: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 1: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 1: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 1: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 1: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 1: 
+## Chain 1:  Elapsed Time: 0.007123 seconds (Warm-up)
+## Chain 1:                0.337765 seconds (Sampling)
+## Chain 1:                0.344888 seconds (Total)
+## Chain 1: 
+## 
+## SAMPLING FOR MODEL &#39;a45635a273dbc57221b612b953747291&#39; NOW (CHAIN 2).
+## Chain 2: 
+## Chain 2: Gradient evaluation took 7e-06 seconds
+## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.
+## Chain 2: Adjust your expectations accordingly!
+## Chain 2: 
+## Chain 2: 
+## Chain 2: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 2: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 2: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 2: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 2: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 2: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 2: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 2: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 2: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 2: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 2: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 2: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 2: 
+## Chain 2:  Elapsed Time: 0.007578 seconds (Warm-up)
+## Chain 2:                0.322437 seconds (Sampling)
+## Chain 2:                0.330015 seconds (Total)
+## Chain 2: 
+## 
+## SAMPLING FOR MODEL &#39;a45635a273dbc57221b612b953747291&#39; NOW (CHAIN 3).
+## Chain 3: 
+## Chain 3: Gradient evaluation took 6e-06 seconds
+## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.06 seconds.
+## Chain 3: Adjust your expectations accordingly!
+## Chain 3: 
+## Chain 3: 
+## Chain 3: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 3: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 3: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 3: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 3: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 3: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 3: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 3: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 3: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 3: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 3: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 3: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 3: 
+## Chain 3:  Elapsed Time: 0.007593 seconds (Warm-up)
+## Chain 3:                0.373161 seconds (Sampling)
+## Chain 3:                0.380754 seconds (Total)
+## Chain 3: 
+## 
+## SAMPLING FOR MODEL &#39;a45635a273dbc57221b612b953747291&#39; NOW (CHAIN 4).
+## Chain 4: 
+## Chain 4: Gradient evaluation took 6e-06 seconds
+## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.06 seconds.
+## Chain 4: Adjust your expectations accordingly!
+## Chain 4: 
+## Chain 4: 
+## Chain 4: Iteration:     1 / 50000 [  0%]  (Warmup)
+## Chain 4: Iteration:  1001 / 50000 [  2%]  (Sampling)
+## Chain 4: Iteration:  6000 / 50000 [ 12%]  (Sampling)
+## Chain 4: Iteration: 11000 / 50000 [ 22%]  (Sampling)
+## Chain 4: Iteration: 16000 / 50000 [ 32%]  (Sampling)
+## Chain 4: Iteration: 21000 / 50000 [ 42%]  (Sampling)
+## Chain 4: Iteration: 26000 / 50000 [ 52%]  (Sampling)
+## Chain 4: Iteration: 31000 / 50000 [ 62%]  (Sampling)
+## Chain 4: Iteration: 36000 / 50000 [ 72%]  (Sampling)
+## Chain 4: Iteration: 41000 / 50000 [ 82%]  (Sampling)
+## Chain 4: Iteration: 46000 / 50000 [ 92%]  (Sampling)
+## Chain 4: Iteration: 50000 / 50000 [100%]  (Sampling)
+## Chain 4: 
+## Chain 4:  Elapsed Time: 0.007268 seconds (Warm-up)
+## Chain 4:                0.356224 seconds (Sampling)
+## Chain 4:                0.363492 seconds (Total)
+## Chain 4:</code></pre>
+<p>Now compare the marginal likelihoods. This takes a bit longer than the Stan sampling. The 1 and 2 are apparently the wrong way around because of how I set things up before:</p>
+<pre class="r"><code>h0_bridge=bridge_sampler(bf2_sample, silent=T)</code></pre>
+<pre><code>## Warning: effective sample size cannot be calculated, has been replaced by
+## number of samples.</code></pre>
+<pre class="r"><code>h0_bridge</code></pre>
+<pre><code>## Bridge sampling estimate of the log marginal likelihood: -28.02804
+## Estimate obtained in 4 iteration(s) via method &quot;normal&quot;.</code></pre>
+<pre class="r"><code>ha_bridge=bridge_sampler(bf1_sample, silent=T)
+ha_bridge</code></pre>
+<pre><code>## Bridge sampling estimate of the log marginal likelihood: -26.72215
+## Estimate obtained in 3 iteration(s) via method &quot;normal&quot;.</code></pre>
+<p>then obtain the Bayes factor:</p>
+<pre class="r"><code>bf(ha_bridge, h0_bridge)</code></pre>
+<pre><code>## Estimated Bayes factor in favor of ha_bridge over h0_bridge: 3.69099</code></pre>
+<p>This is, according to <a href="http://statmath.wu.ac.at/research/talks/resources/talkheld.pdf">this talk</a>, “barely worth mentioning”.</p>
+<p>The moral of this seems to be that the model with <code>mu</code> estimated fits better than the one with it set to zero, but there is no substantial difference between the fit of the two models. At this point, you wave your hands around a bit and decide what to do.</p>
+</div>
+<div id="the-t-test" class="section level2">
+<h2>The <span class="math inline">\(t\)</span>-test</h2>
+<p>Of course, you’re wondering how the <span class="math inline">\(t\)</span>-test comes out:</p>
+<pre class="r"><code>t.test(z, mu=0)</code></pre>
+<pre><code>## 
+##  One Sample t-test
+## 
+## data:  z
+## t = 2.9756, df = 9, p-value = 0.01556
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  0.5976256 4.3876755
+## sample estimates:
+## mean of x 
+##  2.492651</code></pre>
+<p>One of those cases where the Bayesian approach is less impressed by the data than the frequentist approach is.</p>
+</div>
+<div id="addendum" class="section level2">
+<h2>Addendum</h2>
+<p>Yes, I am British. Why do you ask?</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li><p><a href="https://djnavarro.net/post/a-personal-essay-on-bayes-factors/">Danielle Navarro’s thoughts on Bayes factors</a></p></li>
+<li><p><a href="https://twitter.com/KenButler12/status/1142608053579243520">Twitter conversation with Dan Simpson and others</a></p></li>
+<li><p><a href="http://www.stat.columbia.edu/~gelman/research/unpublished/loo_stan.pdf">Vehtari, Gelman and Gabry paper</a></p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/bridgesampling/vignettes/bridgesampling_stan_ttest.html">Bridge sampling vignette</a></p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/loo/vignettes/loo2-with-rstan.html">Loo vignette</a></p></li>
+<li><p><a href="http://statmath.wu.ac.at/research/talks/resources/talkheld.pdf">Talk by Leonhard Held</a></p></li>
+</ul>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
