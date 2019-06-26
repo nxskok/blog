@@ -56,7 +56,7 @@ z
 
 and we'll test the null hypothesis that the mean is zero, against the alternative that it is not. (If you prefer, we compare the fit of a model where the mean is zero vs. one where the mean is estimated). The way I generated these data (true mean of 2), the null hypothesis is actually wrong, so we should prefer estimating the mean rather than acting as if it is zero.
 
-We will need some priors. For the mean, normal with mean 0 and SD 5 (slightly favouring the null, with an SD largish but not too large). For the SD, a chi-squared distribution with 5 df (giving the SD a prior mean of 5 and variance 10). I chose these more or less arbitrarily.
+We will need some priors. For the mean, normal with mean 0 and SD 10 (slightly favouring the null, with an SD largish but not too large). For the SD, a chi-squared distribution with 5 df (giving the SD a prior mean of 5 and variance 10). I chose these more or less arbitrarily.
 
 So now, for the `loo` approach, we need two pieces of Stan code, one where we estimate the mean (and the SD as well), and one where we set mean equal to the hypothesized value of zero. Here's the one where we estimate both parameters. I am using code-as-text here (rather than my preferred approach of putting the code in a file) because of how `blogdown` likes to work:
 
