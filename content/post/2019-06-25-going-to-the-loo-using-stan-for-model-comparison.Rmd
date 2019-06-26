@@ -17,7 +17,6 @@ library(tidyverse)
 library(rstan)
 library(loo)
 library(bridgesampling)
-set.seed(457299)
 ```
 
 ## Introduction
