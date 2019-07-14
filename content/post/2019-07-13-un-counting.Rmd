@@ -1,0 +1,88 @@
+---
+title: Un-counting
+author: Ken
+date: '2019-07-13'
+slug: un-counting
+categories:
+  - stats
+tags:
+  - '#rstats'
+  - '#tidyverse'
+---
+
+## Packages
+
+```{r}
+library(tidyverse)
+```
+
+## Introduction
+
+You probably know about `count`, which tells you how many observations you have in each group:
+
+```{r}
+d <- tribble(
+  ~g, ~y,
+  "a", 10,
+  "a", 13,
+  "a", 14, 
+  "a", 14,
+  "b", 6,
+  "b", 7,
+  "b", 9
+)
+```
+
+There are four observations in group `a` and three in group `b`:
+
+```{r}
+d %>% count(g) -> counts
+counts
+```
+
+I didn't know about this until fairly recently. Until then, I thought you had to do this:
+
+```{r}
+d %>% group_by(g) %>% 
+  summarize(count=n()) 
+```
+
+which works, but is a lot more typing.
+
+## Going the other way
+
+The other day, I had the opposite problem. I had a table of frequencies, and I wanted to get it back to one row per observation (I was fitting a model in Stan, and I didn't know how to deal with frequencies). I had no idea how you might do that (without something ugly like loops), and I was almost embarrassed to stumble upon this:
+
+```{r}
+counts %>% uncount(n)
+```
+
+My situation was a bit less trivial than that. I had disease category counts of coal miners with different exposures to coal dust:
+
+```{r}
+my_url="https://www.utsc.utoronto.ca/~butler/d29/miners-tab.txt"
+miners0 <- read_table(my_url)
+miners0
+```
+
+This needs tidying to get the frequencies all into one column:
+
+```{r}
+miners0 %>% 
+  gather(disease, freq, -Exposure) -> miners
+miners
+```
+
+So I wanted to fit an ordered logistic regression in Stan, predicting disease category from exposure, but I didn't know how to handle the frequencies. If I had one row per miner, I thought...
+
+```{r}
+miners %>% uncount(freq) 
+```
+
+... and so I do. (I scrolled down to check, and *eventually* got past the 98 miners with 5.8 years of exposure and no disease).
+
+From there, you can use [this](https://mc-stan.org/docs/2_19/stan-users-guide/ordered-logistic-section.html) to fit the model, though I would rather have weakly informative priors for their `beta` and `c`. `c` is tricky, since it is ordered, but I used the idea [here](https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations) (near the bottom) and it worked smoothly.
+
+## An apology
+
+I know `utteranc.es` appears down below, but I haven't been able to make it work yet. If you want to comment, find my announcement of this post on twitter and comment there, if you would be so kind.

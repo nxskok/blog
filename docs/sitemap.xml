@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/2019/07/13/un-counting/</loc>
+    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2019/06/25/going-to-the-loo-using-stan-for-model-comparison/</loc>
     <lastmod>2019-06-25T00:00:00+00:00</lastmod>
   </url>
@@ -411,13 +416,13 @@
   
   <url>
     <loc>/tags/#rstats/</loc>
-    <lastmod>2019-06-25T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/#tidyverse/</loc>
-    <lastmod>2019-05-22T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -507,7 +512,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2019-06-25T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -531,7 +536,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2019-06-25T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -597,13 +602,13 @@
   
   <url>
     <loc>/categories/stats/</loc>
-    <lastmod>2019-06-25T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/tags/</loc>
-    <lastmod>2019-06-25T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
