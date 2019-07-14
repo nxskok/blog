@@ -85,4 +85,4 @@ From there, you can use [this](https://mc-stan.org/docs/2_19/stan-users-guide/or
 
 ## An apology
 
-I know `utteranc.es` appears down below, but I haven't been able to make it work yet. If you want to comment, find my announcement of this post on twitter and comment there, if you would be so kind.
+I know `utteranc.es` appears down below, but I haven't been able to make it work yet. If you want to comment, [find my announcement](https://twitter.com/KenButler12/status/1150228575653695488) of this post on Twitter and comment there, if you would be so kind.
