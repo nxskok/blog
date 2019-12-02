@@ -36,7 +36,7 @@ tags:
 <p>The strategy is the same as Alison used (so I’m claiming very little originality here): read the header lines and make column names out of them, then read the rest of the data with the column names that we made.</p>
 <p>Your friend supplied you with a <code>.csv</code> file (they do have <em>some</em> training, after all):
 <label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The data file is on the github repo somewhere. I have to organize things so you can get at it.</span></p>
-<pre class="r"><code>my_file &lt;- &quot;/home/ken/teaching/blog/detergent.csv&quot;
+<pre class="r"><code>my_file &lt;- &quot;https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/static/detergent.csv&quot;
 headers &lt;- read_csv(my_file, col_names=F, n_max=2)</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(

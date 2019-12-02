@@ -34,7 +34,7 @@ Your friend supplied you with a `.csv` file (they do have *some* training, after
 `r tufte::margin_note("The data file is on the github repo somewhere. I have to organize things so you can get at it.")`
 
 ```{r}
-my_file <- "/home/ken/teaching/blog/detergent.csv"
+my_file <- "https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/static/detergent.csv"
 headers <- read_csv(my_file, col_names=F, n_max=2)
 headers
 ```
