@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Two header rows and other spreadsheets</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2019/12/01/two-header-rows-and-other-spreadsheets/">Two header rows and other spreadsheets</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Dec 1, 2019
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;9 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/stats">stats</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.2.1     ✔ purrr   0.3.2
+## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
+## ✔ tidyr   1.0.0     ✔ stringr 1.4.0
+## ✔ readr   1.3.1     ✔ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>A friend tells you that they are trying to find out which combination of detergent and temperature gets the most dirt off their laundry. They send you a spreadsheet that looks like this:</p>
+<p><img src="../../../../Screenshot_2019-12-01_17-44-05.png" /></p>
+<p>The first row is the name of the detergent (only named once), and the second row is the washing temperature. Below that is the amount of dirt removed from each of four loads of laundry washed under those conditions. (You know that your friend knows <em>something</em> about statistics and would have been careful to randomize loads of laundry to treatments.)</p>
+<p>This is not going to be very helpful to you because it has <em>two</em> header rows. Fortunately <a href="https://alison.rbind.io/post/2018-02-23-read-multiple-header-rows/">Alison Hill</a> has a blog post on almost this thing, which we can steal. In hers, the first row was variable names and the second was variable descriptions (which she used to make a data dictionary). Here, though, the column names need to be made out of bits of <em>both</em> rows.</p>
+</div>
+<div id="making-column-names" class="section level2">
+<h2>Making column names</h2>
+<p>The strategy is the same as Alison used (so I’m claiming very little originality here): read the header lines and make column names out of them, then read the rest of the data with the column names that we made.</p>
+<p>Your friend supplied you with a <code>.csv</code> file (they do have <em>some</em> training, after all):
+<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The data file is on the github repo somewhere. I have to organize things so you can get at it.</span></p>
+<pre class="r"><code>my_file &lt;- &quot;/home/ken/teaching/blog/detergent.csv&quot;
+headers &lt;- read_csv(my_file, col_names=F, n_max=2)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   X1 = col_character(),
+##   X2 = col_character(),
+##   X3 = col_character(),
+##   X4 = col_character(),
+##   X5 = col_character(),
+##   X6 = col_character()
+## )</code></pre>
+<pre class="r"><code>headers</code></pre>
+<pre><code>## # A tibble: 2 x 6
+##   X1    X2    X3    X4    X5    X6   
+##   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 Super &lt;NA&gt;  &lt;NA&gt;  Best  &lt;NA&gt;  &lt;NA&gt; 
+## 2 Cold  Warm  Hot   Cold  Warm  Hot</code></pre>
+<p>Couple of things here: we want <code>read_csv</code> to supply some dummy column names, and we want to read only two rows.</p>
+<p>To use this, we want to construct some column names, but to do this it will be much easier if we have six rows and a few columns. For me, this is an everything-looks-like-a-nail moment, and I reach for <code>gather</code>, and then stop myself just in time to use <code>pivot_longer</code> instead. To keep things straight, I’m going to make a new column first so that I know what is what, and then use the default column names <code>name</code> and <code>value</code> in <code>pivot_longer</code> until I figure out what I’m doing:</p>
+<pre class="r"><code>headers %&gt;% mutate(what=c(&quot;detergent&quot;, &quot;temperature&quot;)) %&gt;% 
+  pivot_longer(-what)</code></pre>
+<pre><code>## # A tibble: 12 x 3
+##    what        name  value
+##    &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;
+##  1 detergent   X1    Super
+##  2 detergent   X2    &lt;NA&gt; 
+##  3 detergent   X3    &lt;NA&gt; 
+##  4 detergent   X4    Best 
+##  5 detergent   X5    &lt;NA&gt; 
+##  6 detergent   X6    &lt;NA&gt; 
+##  7 temperature X1    Cold 
+##  8 temperature X2    Warm 
+##  9 temperature X3    Hot  
+## 10 temperature X4    Cold 
+## 11 temperature X5    Warm 
+## 12 temperature X6    Hot</code></pre>
+<p>So now it looks as if I want to <code>pivot_wider</code> that column <code>what</code>, getting the values from <code>value</code>. (At this point, I feel a nagging doubt that I can do this with one <code>pivot_longer</code>, but anyway):
+<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I don’t actually think I can here. I was thinking of .value, but that is used when the names of the columns that I’m making longer contain the names of new columns in them.</span></p>
+<pre class="r"><code>headers %&gt;% mutate(what=c(&quot;detergent&quot;, &quot;temperature&quot;)) %&gt;% 
+  pivot_longer(-what) %&gt;% 
+  pivot_wider(names_from=what, values_from=value) -&gt; d1
+d1</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   name  detergent temperature
+##   &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;      
+## 1 X1    Super     Cold       
+## 2 X2    &lt;NA&gt;      Warm       
+## 3 X3    &lt;NA&gt;      Hot        
+## 4 X4    Best      Cold       
+## 5 X5    &lt;NA&gt;      Warm       
+## 6 X6    &lt;NA&gt;      Hot</code></pre>
+<p>Much better. Next, I need to fill those missing values in <code>detergent</code>, and then I glue those two things together to make my column names:</p>
+<pre class="r"><code>d1 %&gt;% fill(detergent) %&gt;% 
+  mutate(mycol=str_c(detergent, temperature, sep=&quot;_&quot;)) -&gt; d2
+d2</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   name  detergent temperature mycol     
+##   &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;     
+## 1 X1    Super     Cold        Super_Cold
+## 2 X2    Super     Warm        Super_Warm
+## 3 X3    Super     Hot         Super_Hot 
+## 4 X4    Best      Cold        Best_Cold 
+## 5 X5    Best      Warm        Best_Warm 
+## 6 X6    Best      Hot         Best_Hot</code></pre>
+<p>and then grab my desired column names as a vector:</p>
+<pre class="r"><code>d2 %&gt;% pull(mycol) -&gt; my_col_names</code></pre>
+</div>
+<div id="constructing-the-data-frame-with-the-rest-of-the-data" class="section level2">
+<h2>Constructing the data frame with the rest of the data</h2>
+<p>Now we need to read the actual data, which means skipping the first <em>two</em> rows, and while doing so, use the column names we made as column names for the data frame (Alison’s idea again):</p>
+<pre class="r"><code>laundry &lt;- read_csv(my_file, skip=2, col_names=my_col_names)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   Super_Cold = col_double(),
+##   Super_Warm = col_double(),
+##   Super_Hot = col_double(),
+##   Best_Cold = col_double(),
+##   Best_Warm = col_double(),
+##   Best_Hot = col_double()
+## )</code></pre>
+<pre class="r"><code>laundry</code></pre>
+<pre><code>## # A tibble: 4 x 6
+##   Super_Cold Super_Warm Super_Hot Best_Cold Best_Warm Best_Hot
+##        &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1          4          7        10         6        13       12
+## 2          5          9        12         6        15       13
+## 3          6          8        11         4        12       10
+## 4          5         12         9         4        12       13</code></pre>
+<p>Looking good so far.</p>
+<p>We need to make this longer to do anything useful with it. Each column name encodes two things: a detergent name and a temperature, and this can be made longer in one shot by using <em>two</em> things in <code>names_to</code> in <code>pivot_longer</code>. This means I also have to say what those two names are separated by (which I forgot the first time, but the error message was helpful):</p>
+<pre class="r"><code>laundry %&gt;% 
+  pivot_longer(everything(), names_to=c(&quot;detergent&quot;, &quot;temperature&quot;), 
+               names_sep=&quot;_&quot;, 
+               values_to=&quot;dirt_removed&quot;) -&gt; laundry_tidy
+laundry_tidy</code></pre>
+<pre><code>## # A tibble: 24 x 3
+##    detergent temperature dirt_removed
+##    &lt;chr&gt;     &lt;chr&gt;              &lt;dbl&gt;
+##  1 Super     Cold                   4
+##  2 Super     Warm                   7
+##  3 Super     Hot                   10
+##  4 Best      Cold                   6
+##  5 Best      Warm                  13
+##  6 Best      Hot                   12
+##  7 Super     Cold                   5
+##  8 Super     Warm                   9
+##  9 Super     Hot                   12
+## 10 Best      Cold                   6
+## # … with 14 more rows</code></pre>
+<p>Success.</p>
+</div>
+<div id="a-plot" class="section level2">
+<h2>A plot</h2>
+<p>There are four observations per combination of detergent and temperature, so that devotees of ANOVA among you will know that we can test for a significant interaction effect between detergent and temperature on the amount of dirt removed. (That is to say, the effect of temperature on dirt removed might be different for each detergent, and we have enough data to see whether that is indeed the case “for all laundry loads”.)</p>
+<p>To see whether this is likely, we can make an <em>interaction plot</em>: plot the mean dirt removed for each temperature, separately for each detergent, and then join the results for each temperature by lines (coloured by detergent). This can be done by first making a data frame of means using <code>group_by</code> and <code>summarize</code>, or like this:</p>
+<pre class="r"><code>ggplot(laundry_tidy, aes(x=fct_inorder(temperature), y=dirt_removed, colour=detergent, group=detergent)) + 
+  stat_summary(fun.y=mean, geom=&quot;point&quot;) +
+  stat_summary(fun.y=mean, geom=&quot;line&quot;)</code></pre>
+<p><img src="../../../../post/2019-12-01-two-header-rows-and-other-spreadsheets_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Code-wise, the last two lines are a kind of funky <code>geom_point</code> and <code>geom_line</code>, except that instead of plotting the actual amounts of dirt removed, we plot the <em>mean</em> dirt removed each time. (The <code>fct_inorder</code> plots the temperatures in the sensible order that they appear in the data, rather than alphabetical order.)</p>
+<p>Statistically, if the two traces are more or less parallel, the two factors detergent and temperature act independently on the amount of dirt removed. But that is not the case here: a warm temperature is the best for Best detergent, while a hot temperature is best for Super detergent.
+<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">There are always two ways to express an interaction effect. The other one here is that the two detergents are pretty similar except at warm water temperatures, where Best is a lot better.</span></p>
+</div>
+<div id="as-in-actual-website" class="section level2">
+<h2>As in actual website</h2>
+<p>So I lied to you (for the purpose of telling a story, but I hope a useful one).</p>
+<p>Here’s how the data <a href="http://statweb.stanford.edu/~susan/courses/s141/exanova.pdf">were actually laid out</a>:</p>
+<pre><code>Detergent    Cold         Warm          Hot
+Super     4,5,6,5     7,9,8,12   10,12,11,9
+Best      6,6,4,4  13,15,12,12  12,13,10,13</code></pre>
+<p>Let’s see whether we can tell a different story by getting these data tidy. (I added the word Detergent to the top left cell to make our lives slightly easier.)</p>
+<p>First, this is column-aligned data, so we need <code>read_table</code>:</p>
+<pre class="r"><code>my_file=&quot;/home/ken/teaching/blog/laundry.txt&quot;
+laundry_2 &lt;- read_table(my_file, col_types=cols(
+  Cold=col_character(),
+  Warm=col_character(),
+  Hot=col_character()
+))
+laundry_2</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   Detergent Cold    Warm        Hot        
+##   &lt;chr&gt;     &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;      
+## 1 Super     4,5,6,5 7,9,8,12    10,12,11,9 
+## 2 Best      6,6,4,4 13,15,12,12 12,13,10,13</code></pre>
+<p>My first go at this treated the comma as a thousands separator (which was then dropped), so the top left cell got read as the number 4565. This use of <code>col_types</code> forces the columns to be character.</p>
+<p>So now, a standard <code>pivot_longer</code> to begin:</p>
+<pre class="r"><code>laundry_2 %&gt;% pivot_longer(-Detergent, names_to=&quot;Temperature&quot;, values_to=&quot;Dirt_removed&quot;)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   Detergent Temperature Dirt_removed
+##   &lt;chr&gt;     &lt;chr&gt;       &lt;chr&gt;       
+## 1 Super     Cold        4,5,6,5     
+## 2 Super     Warm        7,9,8,12    
+## 3 Super     Hot         10,12,11,9  
+## 4 Best      Cold        6,6,4,4     
+## 5 Best      Warm        13,15,12,12 
+## 6 Best      Hot         12,13,10,13</code></pre>
+<p>We have several values for dirt removed, separated by columns. We could use <code>separate</code> to create four new columns and pivot <em>them</em> longer as well. But there is a better way:</p>
+<pre class="r"><code>laundry_2 %&gt;% pivot_longer(-Detergent, names_to=&quot;Temperature&quot;, values_to=&quot;Dirt_removed&quot;) %&gt;% 
+  separate_rows(Dirt_removed, convert=T) </code></pre>
+<pre><code>## # A tibble: 24 x 3
+##    Detergent Temperature Dirt_removed
+##    &lt;chr&gt;     &lt;chr&gt;              &lt;int&gt;
+##  1 Super     Cold                   4
+##  2 Super     Cold                   5
+##  3 Super     Cold                   6
+##  4 Super     Cold                   5
+##  5 Super     Warm                   7
+##  6 Super     Warm                   9
+##  7 Super     Warm                   8
+##  8 Super     Warm                  12
+##  9 Super     Hot                   10
+## 10 Super     Hot                   12
+## # … with 14 more rows</code></pre>
+<p>This brings us back to where we were before. A couple of notes about <code>separate_rows</code>:</p>
+<ul>
+<li>the default separator between values is everything non-alphanumeric except for a dot, which is fine here (comma is one of those)</li>
+<li><code>convert=T</code> says to turn the separated values into whatever they look like (here numbers).</li>
+</ul>
+<p>From here, we can proceed as before with plots, ANOVA or whatever.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li><a href="http://statweb.stanford.edu/~susan/courses/s141/exanova.pdf">Data from here</a></li>
+<li><a href="https://alison.rbind.io/post/2018-02-23-read-multiple-header-rows/">Alison Hill’s blog post</a></li>
+<li><a href="https://readr.tidyverse.org/articles/readr.html">Introduction to <code>readr</code></a></li>
+<li><a href="https://www.rdocumentation.org/packages/tidyr/versions/0.8.3/topics/separate_rows">Documentation for <code>separate_rows</code></a></li>
+</ul>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2019
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
