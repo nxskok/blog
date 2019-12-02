@@ -130,7 +130,7 @@ Let's see whether we can tell a different story by getting these data tidy. (I a
 First, this is column-aligned data, so we need `read_table`:
 
 ```{r}
-my_file="/home/ken/teaching/blog/laundry.txt"
+my_file="https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/static/laundry.txt"
 laundry_2 <- read_table(my_file, col_types=cols(
   Cold=col_character(),
   Warm=col_character(),
