@@ -34,8 +34,7 @@ tags:
 <div id="making-column-names" class="section level2">
 <h2>Making column names</h2>
 <p>The strategy is the same as Alison used (so I’m claiming very little originality here): read the header lines and make column names out of them, then read the rest of the data with the column names that we made.</p>
-<p>Your friend supplied you with a <code>.csv</code> file (they do have <em>some</em> training, after all):
-<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">The data file is on the github repo somewhere. I have to organize things so you can get at it.</span></p>
+<p>Your friend supplied you with a <code>.csv</code> file (they do have <em>some</em> training, after all):</p>
 <pre class="r"><code>my_file &lt;- &quot;https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/static/detergent.csv&quot;
 headers &lt;- read_csv(my_file, col_names=F, n_max=2)</code></pre>
 <pre><code>## Parsed with column specification:
@@ -180,7 +179,7 @@ laundry_2</code></pre>
 ##   &lt;chr&gt;     &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;      
 ## 1 Super     4,5,6,5 7,9,8,12    10,12,11,9 
 ## 2 Best      6,6,4,4 13,15,12,12 12,13,10,13</code></pre>
-<p>My first go at this treated the comma as a thousands separator (which was then dropped), so the top left cell got read as the number 4565. This use of <code>col_types</code> forces the columns to be character.</p>
+<p>My first go at this turned out to treat the comma as a thousands separator (which was then dropped), so the top left cell got read as the number 4565. This use of <code>col_types</code> forces the columns to be text, so they get left alone.</p>
 <p>So now, a standard <code>pivot_longer</code> to begin:</p>
 <pre class="r"><code>laundry_2 %&gt;% pivot_longer(-Detergent, names_to=&quot;Temperature&quot;, values_to=&quot;Dirt_removed&quot;)</code></pre>
 <pre><code>## # A tibble: 6 x 3
@@ -192,7 +191,7 @@ laundry_2</code></pre>
 ## 4 Best      Cold        6,6,4,4     
 ## 5 Best      Warm        13,15,12,12 
 ## 6 Best      Hot         12,13,10,13</code></pre>
-<p>We have several values for dirt removed, separated by columns. We could use <code>separate</code> to create four new columns and pivot <em>them</em> longer as well. But there is a better way:</p>
+<p>We have several values for dirt removed, separated by commas. We could use <code>separate</code> to create four new columns and pivot <em>them</em> longer as well. But there is a better way:</p>
 <pre class="r"><code>laundry_2 %&gt;% pivot_longer(-Detergent, names_to=&quot;Temperature&quot;, values_to=&quot;Dirt_removed&quot;) %&gt;% 
   separate_rows(Dirt_removed, convert=T) </code></pre>
 <pre><code>## # A tibble: 24 x 3
@@ -211,7 +210,8 @@ laundry_2</code></pre>
 ## # … with 14 more rows</code></pre>
 <p>This brings us back to where we were before. A couple of notes about <code>separate_rows</code>:</p>
 <ul>
-<li>the default separator between values is everything non-alphanumeric except for a dot, which is fine here (comma is one of those)</li>
+<li>it puts each separated value on a new row, and so is a combined <code>separate</code> and <code>pivot_longer</code>.</li>
+<li>the default separator between values is everything non-alphanumeric except for a dot. That includes a comma, so we don’t have to do anything special.</li>
 <li><code>convert=T</code> says to turn the separated values into whatever they look like (here numbers).</li>
 </ul>
 <p>From here, we can proceed as before with plots, ANOVA or whatever.</p>

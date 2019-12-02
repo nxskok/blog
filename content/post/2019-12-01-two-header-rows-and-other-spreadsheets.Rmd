@@ -31,7 +31,6 @@ This is not going to be very helpful to you because it has *two* header rows. Fo
 The strategy is the same as Alison used (so I'm claiming very little originality here): read the header lines and make column names out of them, then read the rest of the data with the column names that we made.
 
 Your friend supplied you with a `.csv` file (they do have *some* training, after all):
-`r tufte::margin_note("The data file is on the github repo somewhere. I have to organize things so you can get at it.")`
 
 ```{r}
 my_file <- "https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/static/detergent.csv"
@@ -139,7 +138,7 @@ laundry_2 <- read_table(my_file, col_types=cols(
 laundry_2
 ```
 
-My first go at this treated the comma as a thousands separator (which was then dropped), so the top left cell got read as the number 4565. This use of `col_types` forces the columns to be character. 
+My first go at this turned out to treat the comma as a thousands separator (which was then dropped), so the top left cell got read as the number 4565. This use of `col_types` forces the columns to be text, so they get left alone. 
 
 So now, a standard `pivot_longer` to begin:
 
@@ -147,7 +146,7 @@ So now, a standard `pivot_longer` to begin:
 laundry_2 %>% pivot_longer(-Detergent, names_to="Temperature", values_to="Dirt_removed")
 ```
 
-We have several values for dirt removed, separated by columns. We could use `separate` to create four new columns and pivot *them* longer as well. But there is a better way:
+We have several values for dirt removed, separated by commas. We could use `separate` to create four new columns and pivot *them* longer as well. But there is a better way:
 
 ```{r}
 laundry_2 %>% pivot_longer(-Detergent, names_to="Temperature", values_to="Dirt_removed") %>% 
@@ -156,7 +155,8 @@ laundry_2 %>% pivot_longer(-Detergent, names_to="Temperature", values_to="Dirt_r
 
 This brings us back to where we were before. A couple of notes about `separate_rows`:
 
-- the default separator between values is everything non-alphanumeric except for a dot, which is fine here (comma is one of those)
+- it puts each separated value on a new row, and so is a combined `separate` and `pivot_longer`.
+- the default separator between values is everything non-alphanumeric except for a dot. That includes a comma, so we don't have to do anything special.
 - `convert=T` says to turn the separated values into whatever they look like (here numbers).
 
 From here, we can proceed as before with plots, ANOVA or whatever.
