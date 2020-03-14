@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/2020/03/14/understanding-the-result-of-a-chisquare-test/</loc>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2019/12/01/two-header-rows-and-other-spreadsheets/</loc>
     <lastmod>2019-12-01T00:00:00+00:00</lastmod>
   </url>
@@ -517,7 +522,7 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -529,7 +534,7 @@
   
   <url>
     <loc>/categories/r/</loc>
-    <lastmod>2019-04-23T00:00:00+00:00</lastmod>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -541,7 +546,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -559,7 +564,7 @@
   
   <url>
     <loc>/tags/rstats/</loc>
-    <lastmod>2019-04-23T00:00:00+00:00</lastmod>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

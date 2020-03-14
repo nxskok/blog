@@ -1,0 +1,72 @@
+---
+title: Understanding the result of a chisquare test
+author: Ken
+date: '2020-03-14'
+slug: understanding-the-result-of-a-chisquare-test
+categories:
+  - R
+tags:
+  - rstats
+math: no
+meta: yes
+---
+
+## Introduction
+
+A chisquare test can be used for assessing whether there is association between two categorical variables. The problem it has is that knowing that an association exists is only part of the story; we want to know what is making the association happen. This is the same kind of thing that happens with analysis of variance: a significant $F$-test indicates that the group means are not all the same, but not which ones are different.
+
+Recently I discovered that R's `chisq.test` has something that will help in understanding this.
+
+## Packages
+
+```{r}
+library(tidyverse)
+```
+
+which I always seem to need for something.
+
+## Example
+
+How do males and females differ in their choice of eyewear (glasses, contacts, neither), if at all? Some data (frequencies):
+
+```{r}
+eyewear <- tribble(
+  ~gender, ~contacts, ~glasses, ~none,
+  "female", 121, 32, 129,
+  "male", 42, 37, 85
+)
+eyewear
+```
+
+It is a little difficult to compare since there are fewer males than females here, but we might suspect that males proportionately are more likely to wear glasses and less likely to wear contacts than females.
+
+Does the data support an association at all?
+
+```{r}
+eyewear %>% select(-gender) %>% chisq.test() -> z
+z
+```
+
+There is indeed an association. 
+
+Coding note: normally `chisq.test` accepts as input a matrix (eg. output from `table`), but it also accepts a data frame as long as all the columns are frequencies. So I had to remove the `gender` column first.
+
+`r tufte::margin_note("This behaviour undoubtedly comes from the days when matrices had row names which didn't count as a column.")`
+
+So, what kind of association? `chisq.test` has, as part of its output, `residuals`. Maybe you remember calculating these things by hand, and have, lurking in the back of your mind somewhere, "observed minus expected, squared, divide by expected". There is one of these for each cell, and you add them up to get the test statistic. The "Pearson residuals" in a chi-squared table are the signed square roots of these, where the sign is negative if observed is less than expected:
+
+```{r}
+eyewear
+z$residuals
+```
+
+The largest (in size) residuals make the biggest contribution to the chi-squared test statistic, so these are the ones where observed and expected are farthest apart. Hence, here, fewer males wear contacts and more males wear glasses compared to what you would expect if there were no association between gender and eyewear.
+
+I am not quite being sexist here: the male and female frequencies are equally far away from the expected in absolute terms:
+
+```{r}
+eyewear
+z$expected
+```
+
+but the contribution to the test statistic is more for the males because there are fewer of them altogether.

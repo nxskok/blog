@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Understanding the result of a chisquare test</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.26" />
+
+  
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+        
+          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
+        
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2020/03/14/understanding-the-result-of-a-chisquare-test/">Understanding the result of a chisquare test</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Mar 14, 2020
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;3 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/r">R</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+
+<section><div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>A chisquare test can be used for assessing whether there is association between two categorical variables. The problem it has is that knowing that an association exists is only part of the story; we want to know what is making the association happen. This is the same kind of thing that happens with analysis of variance: a significant <span class="math inline">\(F\)</span>-test indicates that the group means are not all the same, but not which ones are different.</p>
+<p>Recently I discovered that R’s <code>chisq.test</code> has something that will help in understanding this.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.2.1     ✓ purrr   0.3.3
+## ✓ tibble  2.1.3     ✓ dplyr   0.8.3
+## ✓ tidyr   1.0.0     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<p>which I always seem to need for something.</p>
+</div>
+<div id="example" class="section level2">
+<h2>Example</h2>
+<p>How do males and females differ in their choice of eyewear (glasses, contacts, neither), if at all? Some data (frequencies):</p>
+<pre class="r"><code>eyewear &lt;- tribble(
+  ~gender, ~contacts, ~glasses, ~none,
+  &quot;female&quot;, 121, 32, 129,
+  &quot;male&quot;, 42, 37, 85
+)
+eyewear</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   gender contacts glasses  none
+##   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+## 1 female      121      32   129
+## 2 male         42      37    85</code></pre>
+<p>It is a little difficult to compare since there are fewer males than females here, but we might suspect that males proportionately are more likely to wear glasses and less likely to wear contacts than females.</p>
+<p>Does the data support an association at all?</p>
+<pre class="r"><code>eyewear %&gt;% select(-gender) %&gt;% chisq.test() -&gt; z
+z</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  .
+## X-squared = 17.718, df = 2, p-value = 0.0001421</code></pre>
+<p>There is indeed an association.</p>
+<p>Coding note: normally <code>chisq.test</code> accepts as input a matrix (eg. output from <code>table</code>), but it also accepts a data frame as long as all the columns are frequencies. So I had to remove the <code>gender</code> column first.</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">This behaviour undoubtedly comes from the days when matrices had row names which didn’t count as a column.</span></p>
+<p>So, what kind of association? <code>chisq.test</code> has, as part of its output, <code>residuals</code>. Maybe you remember calculating these things by hand, and have, lurking in the back of your mind somewhere, “observed minus expected, squared, divide by expected”. There is one of these for each cell, and you add them up to get the test statistic. The “Pearson residuals” in a chi-squared table are the signed square roots of these, where the sign is negative if observed is less than expected:</p>
+<pre class="r"><code>eyewear</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   gender contacts glasses  none
+##   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+## 1 female      121      32   129
+## 2 male         42      37    85</code></pre>
+<pre class="r"><code>z$residuals</code></pre>
+<pre><code>##       contacts   glasses       none
+## [1,]  1.766868 -1.760419 -0.5424069
+## [2,] -2.316898  2.308440  0.7112591</code></pre>
+<p>The largest (in size) residuals make the biggest contribution to the chi-squared test statistic, so these are the ones where observed and expected are farthest apart. Hence, here, fewer males wear contacts and more males wear glasses compared to what you would expect if there were no association between gender and eyewear.</p>
+<p>I am not quite being sexist here: the male and female frequencies are equally far away from the expected in absolute terms:</p>
+<pre class="r"><code>eyewear</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   gender contacts glasses  none
+##   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+## 1 female      121      32   129
+## 2 male         42      37    85</code></pre>
+<pre class="r"><code>z$expected</code></pre>
+<pre><code>##       contacts glasses      none
+## [1,] 103.06278 43.6278 135.30942
+## [2,]  59.93722 25.3722  78.69058</code></pre>
+<p>but the contribution to the test statistic is more for the males because there are fewer of them altogether.</p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  <script src="https://utteranc.es/client.js"
+        repo="nxskok/comments"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy; 2020
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>
