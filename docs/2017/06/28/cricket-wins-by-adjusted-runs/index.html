@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 
@@ -9,9 +10,11 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="R, it&#39;s OK I guess">
-<meta name="generator" content="Hugo 0.26" />
+<meta name="generator" content="Hugo 0.73.0" />
 
   
+
+
 
 
 
@@ -35,6 +38,21 @@
 
 
 <link rel="stylesheet" href="../../../../css/tuftesque.css">
+<script src="../../../../js/lightbox.js"></script>
+<style>
+body {
+  
+    background-color: #fffff8;
+  
+}
+</style>
+
+
+
+<script>
+
+</script>
+
 
 </head>
 
@@ -45,9 +63,7 @@
   <h1>
     <a href="../../../../">
       <span id = "blog_logo">
-        
-          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
-        
+         <img src="http://www.utsc.utoronto.ca/~butler/156-front.jpg" alt="Blog Logo" style="height: 40px; width:40px">
       </span>
       
     </a>
@@ -96,7 +112,10 @@
     </section>
 
 
-<section><p>In cricket, there are two ways to win a one-day game: by runs, if you bat first and score more runs than the other guys, or by wickets, if you bat second and score more runs than the other guys: at the moment where the second team has more runs, the game ends, and the result is given as “won by 6 wickets with 12 balls remaining”, or similar.</p>
+<section>
+
+
+<p>In cricket, there are two ways to win a one-day game: by runs, if you bat first and score more runs than the other guys, or by wickets, if you bat second and score more runs than the other guys: at the moment where the second team has more runs, the game ends, and the result is given as “won by 6 wickets with 12 balls remaining”, or similar.</p>
 <p>Soccer has a tiebreaker “goal difference”: when two teams have the same number of points, you subtract the goals conceded from the goals scored for each team, and the team with the bigger number is placed higher. Cricket doesn’t have anything like that because wins by runs and wins by wickets are incommensurable, and so cricket has had to resort to ideas like the <a href="https://en.wikipedia.org/wiki/Net_run_rate">net run rate</a>, which is not completely transparent.</p>
 <p>In <a href="https://nxskok.github.io/blog/2017/06/01/carter-and-guthrie/">this post</a> and <a href="https://nxskok.github.io/blog/2017/06/01/carter-and-guthrie-part-2-model-building/">this one</a>, I talked about a cricket modelling procedure due to Carter and Guthrie. This can be used to predict the number of runs that the team batting second would have scored in their remaining overs, had they batted them out, and therefore converts a win by wickets into a win by runs. By converting all results into a win by adjusted runs in this fashion, ties can be broken by the much simpler idea of run difference, which is much easier for spectators to understand.</p>
 <p>How to make this work? In my model-building, I created two data frames, one for 50-over matches and one for Twenty20. These contained the probability of scoring <span class="math inline">\(r\)</span> runs or fewer from <span class="math inline">\(b\)</span> balls with <span class="math inline">\(w\)</span> wickets left. Let’s take a look at them:</p>
@@ -286,7 +305,7 @@ tb_odi %&gt;% head(10)</code></pre>
 	<div class="copyright">
 	<p>
     
-      &copy; 2020
+      &copy;2020
     .
     All rights reserved.
     

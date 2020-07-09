@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 
@@ -9,9 +10,11 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="R, it&#39;s OK I guess">
-<meta name="generator" content="Hugo 0.26" />
+<meta name="generator" content="Hugo 0.73.0" />
 
   
+
+
 
 
 
@@ -35,6 +38,21 @@
 
 
 <link rel="stylesheet" href="../../../../css/tuftesque.css">
+<script src="../../../../js/lightbox.js"></script>
+<style>
+body {
+  
+    background-color: #fffff8;
+  
+}
+</style>
+
+
+
+<script>
+
+</script>
+
 
 </head>
 
@@ -45,9 +63,7 @@
   <h1>
     <a href="../../../../">
       <span id = "blog_logo">
-        
-          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
-        
+         <img src="http://www.utsc.utoronto.ca/~butler/156-front.jpg" alt="Blog Logo" style="height: 40px; width:40px">
       </span>
       
     </a>
@@ -96,7 +112,10 @@
     </section>
 
 
-<section><div id="introduction" class="section level2">
+<section>
+
+
+<div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>In two-way analysis of variance, the (continuous) response variable depends on two explanatory factors, say A and B. These factors might have an additive effect, in which case you can talk unambiguously about “the effect of factor A”, but the effect of factor A might be different depending on what level of factor B you are looking at. In that case, factors A and B are said to have an <strong>interaction</strong>. Understanding interactions can be difficult. One way to do it is via “simple effects”, where you look at the levels of one factor individually and assess the effect of the other factor at each level of the first.</p>
 <p>Let’s think about an example. In an experiment, monkeys were asked to solve “oddity problems”, in which they were presented with sets of three objects, one of which was different from the others. If they correctly identified the odd object, they were rewarded with food. Some of the monkeys had been food-deprived before the experiment; they were believed to be “highly motivated” to find the odd object (and get fed). In addition, each monkey received a drug, one of X, Y and a placebo (labelled “control”). Four monkeys were in each combination of motivation (high or low) and the three drugs. The response variable was a <code>score</code> based on the number of problems a monkey got wrong, so that a lower score is better. Our question is what effects the drugs have on the score, and is that effect different depending how motivated a monkey is?</p>
@@ -318,7 +337,7 @@ tukey_table(monkeys)</code></pre>
 	<div class="copyright">
 	<p>
     
-      &copy; 2020
+      &copy;2020
     .
     All rights reserved.
     

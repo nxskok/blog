@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 
@@ -9,9 +10,11 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="R, it&#39;s OK I guess">
-<meta name="generator" content="Hugo 0.26" />
+<meta name="generator" content="Hugo 0.73.0" />
 
   
+
+
 
 
 
@@ -35,6 +38,21 @@
 
 
 <link rel="stylesheet" href="../../../../css/tuftesque.css">
+<script src="../../../../js/lightbox.js"></script>
+<style>
+body {
+  
+    background-color: #fffff8;
+  
+}
+</style>
+
+
+
+<script>
+
+</script>
+
 
 </head>
 
@@ -45,9 +63,7 @@
   <h1>
     <a href="../../../../">
       <span id = "blog_logo">
-        
-          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
-        
+         <img src="http://www.utsc.utoronto.ca/~butler/156-front.jpg" alt="Blog Logo" style="height: 40px; width:40px">
       </span>
       
     </a>
@@ -98,7 +114,10 @@
     </section>
 
 
-<section><p>Back in 1973, when the American League introduced the Designated Hitter rule, they were worried (among other things) about their league having fewer runs per game than the rival National League. So they introduced a rule whereby the pitcher (or any other nominated player) no longer had to bat, to be replaced by a player, the Designated Hitter, whose <em>only</em> job was to bat. Did that have the desired effect of increasing the total number of runs scored, compared to the National League, which has never had a Designated Hitter?</p>
+<section>
+
+
+<p>Back in 1973, when the American League introduced the Designated Hitter rule, they were worried (among other things) about their league having fewer runs per game than the rival National League. So they introduced a rule whereby the pitcher (or any other nominated player) no longer had to bat, to be replaced by a player, the Designated Hitter, whose <em>only</em> job was to bat. Did that have the desired effect of increasing the total number of runs scored, compared to the National League, which has never had a Designated Hitter?</p>
 <p>I was working on an assignment for my students based on this idea, using data from the 2008 season. The data I had, though, was aggregated by team. Since 1997 or so, Major League Baseball has had “interleague play”, whereby a smallish number of games is played between teams in the American League and teams in the National League. For example, the Toronto Blue Jays (American League) might play a series against the New York Mets (National League). Whether or not there is a Designated Hitter depends on which team is playing at home: if the Jays are at home, there <em>is</em> a Designated Hitter, and if the Mets are at home, there is <em>not</em>. This means that looking only at teams is misleading, because each team will play some games where the Designated Hitter rule is opposite to what that team’s league would indicate: not all the Jays’ games had a Designated Hitter, and some of the Mets’ games <em>did</em> have one.</p>
 <p>So I thought that I should look at this game by game, to get a clearer picture. This post is mostly the story of how I organized the data, with a tiny bit of statistics on the end.</p>
 <p>I found the whole 2008 season’s results <a href="http://www.baseball-reference.com/leagues/MLB/2008-schedule.shtml">here</a>. To extract what I wanted, I would have to handle the HTML, and even when I had the text displayed on that web page, I would have to organize it. This means using <code>rvest</code> to “scrape” the HTML, as well as <code>stringr</code> to handle the text. The latter is installed with the <code>tidyverse</code> but has to be loaded separately.</p>
@@ -418,7 +437,7 @@ byleague</code></pre>
 	<div class="copyright">
 	<p>
     
-      &copy; 2020
+      &copy;2020
     .
     All rights reserved.
     

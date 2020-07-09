@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 
@@ -9,9 +10,11 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="R, it&#39;s OK I guess">
-<meta name="generator" content="Hugo 0.26" />
+<meta name="generator" content="Hugo 0.73.0" />
 
   
+
+
 
 
 
@@ -35,6 +38,21 @@
 
 
 <link rel="stylesheet" href="../../../../css/tuftesque.css">
+<script src="../../../../js/lightbox.js"></script>
+<style>
+body {
+  
+    background-color: #fffff8;
+  
+}
+</style>
+
+
+
+<script>
+
+</script>
+
 
 </head>
 
@@ -45,9 +63,7 @@
   <h1>
     <a href="../../../../">
       <span id = "blog_logo">
-        
-          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
-        
+         <img src="http://www.utsc.utoronto.ca/~butler/156-front.jpg" alt="Blog Logo" style="height: 40px; width:40px">
       </span>
       
     </a>
@@ -96,7 +112,10 @@
     </section>
 
 
-<section><p>While waiting for my coffee at work this morning, I was leafing through a recreational mathematics journal. It said, “the numbers 1–9 are arranged at random in a 3 by 3 matrix. What is the probability that the row sums and column sums are all odd?”</p>
+<section>
+
+
+<p>While waiting for my coffee at work this morning, I was leafing through a recreational mathematics journal. It said, “the numbers 1–9 are arranged at random in a 3 by 3 matrix. What is the probability that the row sums and column sums are all odd?”</p>
 <p>Well, I thought, that ought to be easy enough to simulate. Randomly shuffle the numbers 1–9 using <code>sample</code>, and then insert them into a matrix with three columns. Calculate the row and column sums using <code>apply</code>, glue them together into one long vector, and test whether all of the values have remainder 1 when divided by 2 (a fancy way of saying “odd”). That led to this function:</p>
 <pre class="r"><code>isodd=function(isprint=F) {
   x=sample(1:9)
@@ -175,7 +194,7 @@ table(ans)</code></pre>
 	<div class="copyright">
 	<p>
     
-      &copy; 2020
+      &copy;2020
     .
     All rights reserved.
     

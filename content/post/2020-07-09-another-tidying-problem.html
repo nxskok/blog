@@ -1,0 +1,303 @@
+---
+title: Another tidying problem
+author: Ken
+date: '2020-07-09'
+slug: another-tidying-problem
+categories:
+  - stats
+tags:
+  - '#rstats'
+  - '#tidyverse'
+math: no
+meta: yes
+toc: yes
+---
+
+
+<div id="TOC">
+yes
+</div>
+
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
+## ✓ tibble  3.0.1     ✓ dplyr   1.0.0
+## ✓ tidyr   1.1.0     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Some cars have a computer that records gas mileage since the last time the computer was reset. A driver is concerned that the computer on their car is not as accurate as it might be, so they keep an old-fashioned notebook and record the miles driven since the last fillup, and the amount of gas filled up, and use that to compute the miles per gallon. They also record what the car’s computer says the miles per gallon was.</p>
+<p>Is there a systematic difference between the computer’s values and the driver’s? If so, which way does it go?</p>
+</div>
+<div id="the-data" class="section level2">
+<h2>The data</h2>
+<p>The driver’s notebook has small pages, so the data look like this:</p>
+<pre><code>Fillup     1    2    3    4    5
+Computer 41.5 50.7 36.6 37.3 34.2
+Driver   36.5 44.2 37.2 35.6 30.5
+Fillup     6    7    8    9   10
+Computer 45.0 48.0 43.2 47.7 42.2
+Driver   40.5 40.0 41.0 42.8 39.2
+Fillup    11   12   13   14   15
+Computer 43.2 44.6 48.4 46.4 46.8
+Driver   38.8 44.5 45.4 45.3 45.7
+Fillup    16   17   18   19   20
+Computer 39.2 37.3 43.5 44.3 43.3
+Driver   34.2 35.2 39.8 44.9 47.5</code></pre>
+<p>This is not very close to tidy. There are three variables: the fillup number (identification), the computer’s miles-per-gallon value, and the driver’s. These should be in <em>columns</em>, not rows. Also, there are really four sets of rows, because of the way the data was recorded. How are we going to make this tidy?</p>
+</div>
+<div id="making-it-tidy" class="section level2">
+<h2>Making it tidy</h2>
+<p>As ever, we take this one step at a time, building a pipeline as we go: we see what each step produces before figuring out what to do next.</p>
+<p>The first thing is to read the data in; these are aligned columns, so <code>read_table</code> is the thing. Also, there are no column headers, so we have to say that as well:</p>
+<pre class="r"><code>gas &lt;- read_table(&quot;gas-mileage.txt&quot;, col_names = FALSE)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   X1 = col_character(),
+##   X2 = col_double(),
+##   X3 = col_double(),
+##   X4 = col_double(),
+##   X5 = col_double(),
+##   X6 = col_double()
+## )</code></pre>
+<pre class="r"><code>gas</code></pre>
+<pre><code>## # A tibble: 12 x 6
+##    X1          X2    X3    X4    X5    X6
+##    &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 Fillup     1     2     3     4     5  
+##  2 Computer  41.5  50.7  36.6  37.3  34.2
+##  3 Driver    36.5  44.2  37.2  35.6  30.5
+##  4 Fillup     6     7     8     9    10  
+##  5 Computer  45    48    43.2  47.7  42.2
+##  6 Driver    40.5  40    41    42.8  39.2
+##  7 Fillup    11    12    13    14    15  
+##  8 Computer  43.2  44.6  48.4  46.4  46.8
+##  9 Driver    38.8  44.5  45.4  45.3  45.7
+## 10 Fillup    16    17    18    19    20  
+## 11 Computer  39.2  37.3  43.5  44.3  43.3
+## 12 Driver    34.2  35.2  39.8  44.9  47.5</code></pre>
+<div id="longer-first" class="section level3">
+<h3>Longer first</h3>
+<p>I usually find it easier to make the dataframe longer first, and then figure out what to do next. Here, that means putting all the data values in one column, and having a column of variable names indicating what each variable is a value of, thus:</p>
+<pre class="r"><code>gas %&gt;% pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;)</code></pre>
+<pre><code>## # A tibble: 60 x 3
+##    X1       var_name var_value
+##    &lt;chr&gt;    &lt;chr&gt;        &lt;dbl&gt;
+##  1 Fillup   X2             1  
+##  2 Fillup   X3             2  
+##  3 Fillup   X4             3  
+##  4 Fillup   X5             4  
+##  5 Fillup   X6             5  
+##  6 Computer X2            41.5
+##  7 Computer X3            50.7
+##  8 Computer X4            36.6
+##  9 Computer X5            37.3
+## 10 Computer X6            34.2
+## # … with 50 more rows</code></pre>
+<p>The things in <code>X1</code> are our column-names-to-be, and the values that go with them are in <code>var_value</code>. <code>var_name</code> has served its purpose; these are the original columns in the data file, which we don’t need any more. So now, we make this wider, right?</p>
+<pre class="r"><code>gas %&gt;% pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;) %&gt;% 
+  pivot_wider(names_from = X1, values_from = var_value)  </code></pre>
+<pre><code>## Warning: Values are not uniquely identified; output will contain list-cols.
+## * Use `values_fn = list` to suppress this warning.
+## * Use `values_fn = length` to identify where the duplicates arise
+## * Use `values_fn = {summary_fun}` to summarise duplicates</code></pre>
+<pre><code>## # A tibble: 5 x 4
+##   var_name Fillup    Computer  Driver   
+##   &lt;chr&gt;    &lt;list&gt;    &lt;list&gt;    &lt;list&gt;   
+## 1 X2       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 2 X3       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 3 X4       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 4 X5       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 5 X6       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;</code></pre>
+<p>Oh. How did we get list-columns?</p>
+<p>The answer is that <code>pivot_wider</code> needs to know which <em>column</em> each <code>var_value</code> is going to, but also which <em>row</em>. The way it decides about rows is to look at all combinations of things in the <em>other</em> columns, the ones not involved in the <code>pivot_wider</code>. The only one of those here is <code>var_name</code>, so each value goes in the column according to its value in <code>X1</code>, and the row according to its value in <code>var_name</code>. For example, the value 41.5 in row 6 of the longer dataframe goes into the column labelled <code>Computer</code> and the row labelled <code>X2</code>. But if you scroll down the longer dataframe, you’ll find there are four data values with the <code>Computer</code>-<code>X2</code> combination, so <code>pivot_wider</code> collects them together into one cell of the output dataframe.</p>
+<p><code>spread</code> handled this much less gracefully:</p>
+<pre class="r"><code>gas %&gt;% pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;) %&gt;% 
+  spread(X1, var_value)  </code></pre>
+<pre><code>## Error: Each row of output must be identified by a unique combination of keys.
+## Keys are shared for 60 rows:
+## * 6, 21, 36, 51
+## * 7, 22, 37, 52
+## * 8, 23, 38, 53
+## * 9, 24, 39, 54
+## * 10, 25, 40, 55
+## * 11, 26, 41, 56
+## * 12, 27, 42, 57
+## * 13, 28, 43, 58
+## * 14, 29, 44, 59
+## * 15, 30, 45, 60
+## * 1, 16, 31, 46
+## * 2, 17, 32, 47
+## * 3, 18, 33, 48
+## * 4, 19, 34, 49
+## * 5, 20, 35, 50</code></pre>
+<p>It required a unique combination of values for the other variables in the dataframe, <a href="http://www.solearabiantree.net/namingofparts/namingofparts.php">which in our case we have not got</a>.</p>
+<p>All right, back to this:</p>
+<pre class="r"><code>gas %&gt;% pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;) %&gt;% 
+  pivot_wider(names_from = X1, values_from = var_value)  </code></pre>
+<pre><code>## Warning: Values are not uniquely identified; output will contain list-cols.
+## * Use `values_fn = list` to suppress this warning.
+## * Use `values_fn = length` to identify where the duplicates arise
+## * Use `values_fn = {summary_fun}` to summarise duplicates</code></pre>
+<pre><code>## # A tibble: 5 x 4
+##   var_name Fillup    Computer  Driver   
+##   &lt;chr&gt;    &lt;list&gt;    &lt;list&gt;    &lt;list&gt;   
+## 1 X2       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 2 X3       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 3 X4       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 4 X5       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;
+## 5 X6       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;</code></pre>
+<p>There is a mindless way to go on from here, and a thoughtful way.</p>
+<p>The mindless way to handle unwanted list-columns is to throw an <code>unnest</code> at the problem and see what happens:</p>
+<pre class="r"><code>gas %&gt;% pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;) %&gt;% 
+  pivot_wider(names_from = X1, values_from = var_value)  %&gt;% 
+  unnest()</code></pre>
+<pre><code>## Warning: Values are not uniquely identified; output will contain list-cols.
+## * Use `values_fn = list` to suppress this warning.
+## * Use `values_fn = length` to identify where the duplicates arise
+## * Use `values_fn = {summary_fun}` to summarise duplicates</code></pre>
+<pre><code>## Warning: `cols` is now required when using unnest().
+## Please use `cols = c(Fillup, Computer, Driver)`</code></pre>
+<pre><code>## # A tibble: 20 x 4
+##    var_name Fillup Computer Driver
+##    &lt;chr&gt;     &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+##  1 X2            1     41.5   36.5
+##  2 X2            6     45     40.5
+##  3 X2           11     43.2   38.8
+##  4 X2           16     39.2   34.2
+##  5 X3            2     50.7   44.2
+##  6 X3            7     48     40  
+##  7 X3           12     44.6   44.5
+##  8 X3           17     37.3   35.2
+##  9 X4            3     36.6   37.2
+## 10 X4            8     43.2   41  
+## 11 X4           13     48.4   45.4
+## 12 X4           18     43.5   39.8
+## 13 X5            4     37.3   35.6
+## 14 X5            9     47.7   42.8
+## 15 X5           14     46.4   45.3
+## 16 X5           19     44.3   44.9
+## 17 X6            5     34.2   30.5
+## 18 X6           10     42.2   39.2
+## 19 X6           15     46.8   45.7
+## 20 X6           20     43.3   47.5</code></pre>
+<p>This has worked. The fillup numbers have come out in the wrong order, but that’s probably not a problem. It would also work if you had a different number of observations on each row of the original data file, as long as you had a fillup number, a computer value and a driver value for each one.</p>
+<p>The thoughtful way to go is to organize it so that each row will have a unique combination of columns that are left. A way to do that is to note that the original data file has four “blocks” of five observations each:</p>
+<pre class="r"><code>gas</code></pre>
+<pre><code>## # A tibble: 12 x 6
+##    X1          X2    X3    X4    X5    X6
+##    &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 Fillup     1     2     3     4     5  
+##  2 Computer  41.5  50.7  36.6  37.3  34.2
+##  3 Driver    36.5  44.2  37.2  35.6  30.5
+##  4 Fillup     6     7     8     9    10  
+##  5 Computer  45    48    43.2  47.7  42.2
+##  6 Driver    40.5  40    41    42.8  39.2
+##  7 Fillup    11    12    13    14    15  
+##  8 Computer  43.2  44.6  48.4  46.4  46.8
+##  9 Driver    38.8  44.5  45.4  45.3  45.7
+## 10 Fillup    16    17    18    19    20  
+## 11 Computer  39.2  37.3  43.5  44.3  43.3
+## 12 Driver    34.2  35.2  39.8  44.9  47.5</code></pre>
+<p>Each set of three rows is one block. So if we number the blocks, each observation of <code>Fillup</code>, <code>Computer</code>, and <code>Driver</code> will have an X-something column that it comes from and a block, and this combination will be unique.</p>
+<p>You could create the block column by hand easily enough, or note that each block starts with a row called <code>Fillup</code> and use <a href="https://tidyr.tidyverse.org/articles/pivot.html#contact-list-1">this idea</a>:</p>
+<pre class="r"><code>gas %&gt;% mutate(block = cumsum(X1==&quot;Fillup&quot;))</code></pre>
+<pre><code>## # A tibble: 12 x 7
+##    X1          X2    X3    X4    X5    X6 block
+##    &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+##  1 Fillup     1     2     3     4     5       1
+##  2 Computer  41.5  50.7  36.6  37.3  34.2     1
+##  3 Driver    36.5  44.2  37.2  35.6  30.5     1
+##  4 Fillup     6     7     8     9    10       2
+##  5 Computer  45    48    43.2  47.7  42.2     2
+##  6 Driver    40.5  40    41    42.8  39.2     2
+##  7 Fillup    11    12    13    14    15       3
+##  8 Computer  43.2  44.6  48.4  46.4  46.8     3
+##  9 Driver    38.8  44.5  45.4  45.3  45.7     3
+## 10 Fillup    16    17    18    19    20       4
+## 11 Computer  39.2  37.3  43.5  44.3  43.3     4
+## 12 Driver    34.2  35.2  39.8  44.9  47.5     4</code></pre>
+<p>This works because <code>X1=="Fillup"</code> is either true or false. <code>cumsum</code> takes cumulative sums; that is, the sum of all the values in the column down to and including the one you’re looking at. It requires numeric input, though, so it turns the logical values into 1 for <code>TRUE</code> and 0 for <code>FALSE</code> and adds <em>those</em> up. (This is the same thing that <code>as.numeric</code> does.) The idea is that the value of <code>block</code> gets bumped by one every time you hit a <code>Fillup</code> line.</p>
+<p>Then pivot-longer as before:</p>
+<pre class="r"><code>gas %&gt;% mutate(block = cumsum(X1==&quot;Fillup&quot;)) %&gt;% 
+  pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;)</code></pre>
+<pre><code>## # A tibble: 60 x 4
+##    X1       block var_name var_value
+##    &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;        &lt;dbl&gt;
+##  1 Fillup       1 X2             1  
+##  2 Fillup       1 X3             2  
+##  3 Fillup       1 X4             3  
+##  4 Fillup       1 X5             4  
+##  5 Fillup       1 X6             5  
+##  6 Computer     1 X2            41.5
+##  7 Computer     1 X3            50.7
+##  8 Computer     1 X4            36.6
+##  9 Computer     1 X5            37.3
+## 10 Computer     1 X6            34.2
+## # … with 50 more rows</code></pre>
+<p>and now you can check that the <code>var_name</code> - <code>block</code> combinations are unique for each value in <code>X1</code>, so pivoting wider should work smoothly now:</p>
+<pre class="r"><code>(gas %&gt;% mutate(block = cumsum(X1==&quot;Fillup&quot;)) %&gt;% 
+  pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;) %&gt;% 
+  pivot_wider(names_from = X1, values_from = var_value) -&gt; gas1)</code></pre>
+<pre><code>## # A tibble: 20 x 5
+##    block var_name Fillup Computer Driver
+##    &lt;int&gt; &lt;chr&gt;     &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+##  1     1 X2            1     41.5   36.5
+##  2     1 X3            2     50.7   44.2
+##  3     1 X4            3     36.6   37.2
+##  4     1 X5            4     37.3   35.6
+##  5     1 X6            5     34.2   30.5
+##  6     2 X2            6     45     40.5
+##  7     2 X3            7     48     40  
+##  8     2 X4            8     43.2   41  
+##  9     2 X5            9     47.7   42.8
+## 10     2 X6           10     42.2   39.2
+## 11     3 X2           11     43.2   38.8
+## 12     3 X3           12     44.6   44.5
+## 13     3 X4           13     48.4   45.4
+## 14     3 X5           14     46.4   45.3
+## 15     3 X6           15     46.8   45.7
+## 16     4 X2           16     39.2   34.2
+## 17     4 X3           17     37.3   35.2
+## 18     4 X4           18     43.5   39.8
+## 19     4 X5           19     44.3   44.9
+## 20     4 X6           20     43.3   47.5</code></pre>
+<p>and so it does.</p>
+<p>Sometimes a <code>pivot_longer</code> followed by a <code>pivot_wider</code> can be turned into a single <code>pivot_longer</code> with options (see the <a href="https://tidyr.tidyverse.org/articles/pivot.html">pivoting vignette</a> for examples), but this appears not to be one of those.</p>
+</div>
+</div>
+<div id="comparing-the-driver-and-the-computer" class="section level2">
+<h2>Comparing the driver and the computer</h2>
+<p>Now that we have tidy data, we can do an analysis. These are matched-pair data (one <code>Computer</code> and one <code>Driver</code> measurement), so a sensible graph would be of the differences, a histogram, say:</p>
+<pre class="r"><code>gas1 %&gt;% mutate(diff = Computer - Driver) %&gt;% 
+  ggplot(aes(x=diff)) + geom_histogram(bins=6)</code></pre>
+<p><img src="/post/2020-07-09-another-tidying-problem_files/figure-html/unnamed-chunk-12-1.png" width="672" />
+There is only one observation where the driver’s measurement is much bigger than the computer’s; otherwise, there is not much to choose or the computer’s measurement is bigger. Is this something that would generalize to “all measurements”, presumably all measurements at fillup by this driver and this computer?</p>
+<pre class="r"><code>with(gas1, t.test(Computer, Driver, paired = TRUE))</code></pre>
+<pre><code>## 
+##  Paired t-test
+## 
+## data:  Computer and Driver
+## t = 4.358, df = 19, p-value = 0.0003386
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  1.418847 4.041153
+## sample estimates:
+## mean of the differences 
+##                    2.73</code></pre>
+<p>It is. The computer’s mean measurement is estimated to be between about 1.4 and 4.0 miles per gallon larger on average than the driver’s.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li>Data from <a href="https://www.amazon.com/Freeman-Introduction-Practice-Statistics-7th/dp/1429274077">here</a>, exercise 7.35.</li>
+<li><a href="http://www.solearabiantree.net/namingofparts/namingofparts.php">Naming of parts</a></li>
+<li><a href="https://tidyr.tidyverse.org/articles/pivot.html">Pivoting vignette from tidyr</a></li>
+</ul>
+</div>

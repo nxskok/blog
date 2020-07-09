@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 
@@ -9,9 +10,11 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="R, it&#39;s OK I guess">
-<meta name="generator" content="Hugo 0.26" />
+<meta name="generator" content="Hugo 0.73.0" />
 
   
+
+
 
 
 
@@ -35,6 +38,21 @@
 
 
 <link rel="stylesheet" href="../../../../css/tuftesque.css">
+<script src="../../../../js/lightbox.js"></script>
+<style>
+body {
+  
+    background-color: #fffff8;
+  
+}
+</style>
+
+
+
+<script>
+
+</script>
+
 
 </head>
 
@@ -45,9 +63,7 @@
   <h1>
     <a href="../../../../">
       <span id = "blog_logo">
-        
-          <img src=http://www.utsc.utoronto.ca/~butler/156-front.jpg alt="Blog Logo" style="height: 40px; width:40px">
-        
+         <img src="http://www.utsc.utoronto.ca/~butler/156-front.jpg" alt="Blog Logo" style="height: 40px; width:40px">
       </span>
       
     </a>
@@ -100,7 +116,10 @@
     </section>
 
 
-<section><div id="introduction" class="section level2">
+<section>
+
+
+<div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>I learned Stan a while back, when I was fitting some Bayesian models. I wanted to fix up one of them, and I realized that I had forgotten most of what I knew about Stan, so I had to go back and learn it again.</p>
 <p>A Bayesian model has two parts: a prior distribution, which summarizes your belief about the parameters you are trying to estimate before you look at any data, and a model that asserts the data-generating mechanism conditional on the parameter value(s). These are combined into a posterior distribution which <em>is</em> your inference about your parameter(s) based on your prior beliefs and on the data. I learned my Bayesian statistics from <a href="http://www.stat.sfu.ca/people/faculty/history/Villegas.html">this guy</a> and I can still hear him saying, with Uruguayan accent, “posterior is proportional to likelihhhhhood times pri-or”. What you do is to summarize your posterior distribution somehow, its mean or mode or a highest posterior density interval (or region), which plays the same role as a confidence interval (or region). You can also generate simulated data from the posterior distribution, called a <strong>predictive distribution</strong>. An important part of model checking is to compare the distribution of your data with the predictive distribution. If they match reasonably well, you can have confidence in your model. This is something <a href="http://www.stat.columbia.edu/~gelman/book/">Gelman et al</a> encourage doing.</p>
@@ -604,7 +623,7 @@ tibble(x=ppp2$x_new) %&gt;%
 	<div class="copyright">
 	<p>
     
-      &copy; 2020
+      &copy;2020
     .
     All rights reserved.
     

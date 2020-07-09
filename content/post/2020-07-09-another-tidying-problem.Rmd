@@ -1,0 +1,162 @@
+---
+title: Another tidying problem
+author: Ken
+date: '2020-07-09'
+slug: another-tidying-problem
+categories:
+  - stats
+tags:
+  - '#rstats'
+  - '#tidyverse'
+math: no
+meta: yes
+toc: yes
+---
+
+## Packages
+
+```{r}
+library(tidyverse)
+```
+
+## Introduction
+
+Some cars have a computer that records gas mileage since the last time the computer was reset. A driver is concerned that the computer on their car is not as accurate as it might be, so they keep an old-fashioned notebook and record the miles driven since the last fillup, and the amount of gas filled up, and use that to compute the miles per gallon. They also record what the car's computer says the miles per gallon was. 
+
+Is there a systematic difference between the computer's values and the driver's? If so, which way does it go?
+
+##  The data
+
+The driver's notebook has small pages, so the data look like this:
+
+```
+Fillup     1    2    3    4    5
+Computer 41.5 50.7 36.6 37.3 34.2
+Driver   36.5 44.2 37.2 35.6 30.5
+Fillup     6    7    8    9   10
+Computer 45.0 48.0 43.2 47.7 42.2
+Driver   40.5 40.0 41.0 42.8 39.2
+Fillup    11   12   13   14   15
+Computer 43.2 44.6 48.4 46.4 46.8
+Driver   38.8 44.5 45.4 45.3 45.7
+Fillup    16   17   18   19   20
+Computer 39.2 37.3 43.5 44.3 43.3
+Driver   34.2 35.2 39.8 44.9 47.5
+```
+
+This is not very close to tidy. There are three variables: the fillup number (identification), the computer's miles-per-gallon value, and the driver's. These should be in *columns*, not rows. Also, there are really four sets of rows, because of the way the data was recorded. How are we going to make this tidy?
+
+## Making it tidy
+
+As ever, we take this one step at a time, building a pipeline as we go: we see what each step produces before figuring out what to do next. 
+
+The first thing is to read the data in; these are aligned columns, so `read_table` is the thing. Also, there are no column headers, so we have to say that as well:
+
+```{r}
+gas <- read_table("gas-mileage.txt", col_names = FALSE)
+gas
+```
+
+### Longer first
+
+I usually find it easier to make the dataframe longer first, and then figure out what to do next. Here, that means putting all the data values in one column, and having a column of variable names indicating what each variable is a value of, thus:
+
+```{r}
+gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value")
+```
+
+The things in `X1` are our column-names-to-be, and the values that go with them are in `var_value`. `var_name` has served its purpose; these are the original columns in the data file, which we don't need any more. So now, we make this wider, right?
+
+```{r}
+gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>% 
+  pivot_wider(names_from = X1, values_from = var_value)  
+```
+
+Oh. How did we get list-columns?
+
+The answer is that `pivot_wider` needs to know which *column* each `var_value` is going to, but also which *row*. The way it decides about rows is to look at all combinations of things in the *other* columns, the ones not involved in the `pivot_wider`. The only one of those here is `var_name`, so each value goes in the column according to its value in `X1`, and the row according to its value in `var_name`. For example, the value 41.5 in row 6 of the longer dataframe goes into the column labelled `Computer` and the row labelled `X2`. But if you scroll down the longer dataframe, you'll find there are four data values with the `Computer`-`X2` combination, so `pivot_wider` collects them together into one cell of the output dataframe.
+
+`spread` handled this much less gracefully:
+
+```{r, error=TRUE}
+gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>% 
+  spread(X1, var_value)  
+```
+
+It required a unique combination of values for the other variables in the dataframe, [which in our case we have not got](http://www.solearabiantree.net/namingofparts/namingofparts.php).
+
+All right, back to this:
+
+```{r}
+gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>% 
+  pivot_wider(names_from = X1, values_from = var_value)  
+```
+
+There is a mindless way to go on from here, and a thoughtful way.
+
+The mindless way to handle unwanted list-columns is to throw an `unnest` at the problem and see what happens:
+
+```{r}
+gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>% 
+  pivot_wider(names_from = X1, values_from = var_value)  %>% 
+  unnest()
+```
+
+This has worked. The fillup numbers have come out in the wrong order, but that's probably not a problem. It would also work if you had a different number of observations on each row of the original data file, as long as you had a fillup number, a computer value and a driver value for each one.
+
+The thoughtful way to go is to organize it so that each row will have a unique combination of columns that are left. A way to do that is to note that the original data file has four "blocks" of five observations each:
+
+```{r}
+gas
+```
+
+Each set of three rows is one block. So if we number the blocks, each observation of `Fillup`, `Computer`, and `Driver` will have an X-something column that it comes from and a block, and this combination will be unique.
+
+You could create the block column by hand easily enough, or note that each block starts with a row called `Fillup` and use [this idea](https://tidyr.tidyverse.org/articles/pivot.html#contact-list-1):
+
+```{r}
+gas %>% mutate(block = cumsum(X1=="Fillup"))
+```
+
+This works because `X1=="Fillup"` is either true or false. `cumsum` takes cumulative sums; that is, the sum of all the values in the column down to and including the one you're looking at. It requires numeric input, though, so it turns the logical values into 1 for `TRUE` and 0 for `FALSE` and adds *those* up. (This is the same thing that `as.numeric` does.) The idea is that the value of `block` gets bumped by one every time you hit a `Fillup` line.
+
+Then pivot-longer as before:
+
+```{r}
+gas %>% mutate(block = cumsum(X1=="Fillup")) %>% 
+  pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value")
+```
+
+and now you can check that the `var_name` - `block` combinations are unique for each value in `X1`, so pivoting wider should work smoothly now:
+
+```{r}
+(gas %>% mutate(block = cumsum(X1=="Fillup")) %>% 
+  pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>% 
+  pivot_wider(names_from = X1, values_from = var_value) -> gas1)
+```
+
+and so it does.
+
+Sometimes a `pivot_longer` followed by a `pivot_wider` can be turned into a single `pivot_longer` with options (see the [pivoting vignette](https://tidyr.tidyverse.org/articles/pivot.html) for examples), but this appears not to be one of those.
+
+## Comparing the driver and the computer
+
+Now that we have tidy data, we can do an analysis. These are matched-pair data (one `Computer` and one `Driver` measurement), so a sensible graph would be of the differences, a histogram, say:
+
+```{r}
+gas1 %>% mutate(diff = Computer - Driver) %>% 
+  ggplot(aes(x=diff)) + geom_histogram(bins=6)
+```
+There is only one observation where the driver's measurement is much bigger than the computer's; otherwise, there is not much to choose or the computer's measurement is bigger. Is this something that would generalize to "all measurements", presumably all measurements at fillup by this driver and this computer?
+
+```{r}
+with(gas1, t.test(Computer, Driver, paired = TRUE))
+```
+
+It is. The computer's mean measurement is estimated to be between about 1.4 and 4.0 miles per gallon larger on average than the driver's.
+
+## References
+
+- Data from [here](https://www.amazon.com/Freeman-Introduction-Practice-Statistics-7th/dp/1429274077), exercise 7.35.
+- [Naming of parts](http://www.solearabiantree.net/namingofparts/namingofparts.php)
+- [Pivoting vignette from tidyr](https://tidyr.tidyverse.org/articles/pivot.html)
