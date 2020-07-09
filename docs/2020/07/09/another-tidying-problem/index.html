@@ -163,7 +163,8 @@ Driver   34.2 35.2 39.8 44.9 47.5</code></pre>
 <h2>Making it tidy</h2>
 <p>As ever, we take this one step at a time, building a pipeline as we go: we see what each step produces before figuring out what to do next.</p>
 <p>The first thing is to read the data in; these are aligned columns, so <code>read_table</code> is the thing. Also, there are no column headers, so we have to say that as well:</p>
-<pre class="r"><code>gas &lt;- read_table(&quot;gas-mileage.txt&quot;, col_names = FALSE)</code></pre>
+<pre class="r"><code>my_url &lt;- &quot;https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/gas-mileage.txt&quot;
+gas &lt;- read_table(my_url, col_names = FALSE)</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   X1 = col_character(),
@@ -207,7 +208,7 @@ Driver   34.2 35.2 39.8 44.9 47.5</code></pre>
 ##  9 Computer X5            37.3
 ## 10 Computer X6            34.2
 ## # … with 50 more rows</code></pre>
-<p>The things in <code>X1</code> are our column-names-to-be, and the values that go with them are in <code>var_value</code>. <code>var_name</code> has served its purpose; these are the original columns in the data file, which we don’t need any more. So now, we make this wider, right?</p>
+<p>The things in <code>X1</code> are our column-names-to-be, and the values that go with them are in <code>var_value</code>. <code>var_name</code> has mostly served its purpose; these are the original columns in the data file, which we don’t need any more. So now, we make this wider, right?</p>
 <pre class="r"><code>gas %&gt;% pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;) %&gt;% 
   pivot_wider(names_from = X1, values_from = var_value)  </code></pre>
 <pre><code>## Warning: Values are not uniquely identified; output will contain list-cols.
@@ -224,6 +225,7 @@ Driver   34.2 35.2 39.8 44.9 47.5</code></pre>
 ## 5 X6       &lt;dbl [4]&gt; &lt;dbl [4]&gt; &lt;dbl [4]&gt;</code></pre>
 <p>Oh. How did we get list-columns?</p>
 <p>The answer is that <code>pivot_wider</code> needs to know which <em>column</em> each <code>var_value</code> is going to, but also which <em>row</em>. The way it decides about rows is to look at all combinations of things in the <em>other</em> columns, the ones not involved in the <code>pivot_wider</code>. The only one of those here is <code>var_name</code>, so each value goes in the column according to its value in <code>X1</code>, and the row according to its value in <code>var_name</code>. For example, the value 41.5 in row 6 of the longer dataframe goes into the column labelled <code>Computer</code> and the row labelled <code>X2</code>. But if you scroll down the longer dataframe, you’ll find there are four data values with the <code>Computer</code>-<code>X2</code> combination, so <code>pivot_wider</code> collects them together into one cell of the output dataframe.</p>
+<p>This is what the warning is about.</p>
 <p><code>spread</code> handled this much less gracefully:</p>
 <pre class="r"><code>gas %&gt;% pivot_longer(X2:X6, names_to = &quot;var_name&quot;, values_to = &quot;var_value&quot;) %&gt;% 
   spread(X1, var_value)  </code></pre>
@@ -294,7 +296,8 @@ Driver   34.2 35.2 39.8 44.9 47.5</code></pre>
 ## 18 X6           10     42.2   39.2
 ## 19 X6           15     46.8   45.7
 ## 20 X6           20     43.3   47.5</code></pre>
-<p>This has worked. The fillup numbers have come out in the wrong order, but that’s probably not a problem. It would also work if you had a different number of observations on each row of the original data file, as long as you had a fillup number, a computer value and a driver value for each one.</p>
+<p>This has worked.<label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">I did get away with using unnest the old-fashioned way, though. What I should have done is given below the second warning.</span>
+The fillup numbers have come out in the wrong order, but that’s probably not a problem. It would also work if you had a different number of observations on each row of the original data file, as long as you had a fillup number, a computer value and a driver value for each one.</p>
 <p>The thoughtful way to go is to organize it so that each row will have a unique combination of columns that are left. A way to do that is to note that the original data file has four “blocks” of five observations each:</p>
 <pre class="r"><code>gas</code></pre>
 <pre><code>## # A tibble: 12 x 6
@@ -385,7 +388,7 @@ Driver   34.2 35.2 39.8 44.9 47.5</code></pre>
 <pre class="r"><code>gas1 %&gt;% mutate(diff = Computer - Driver) %&gt;% 
   ggplot(aes(x=diff)) + geom_histogram(bins=6)</code></pre>
 <p><img src="../../../../post/2020-07-09-another-tidying-problem_files/figure-html/unnamed-chunk-12-1.png" width="672" />
-There is only one observation where the driver’s measurement is much bigger than the computer’s; otherwise, there is not much to choose or the computer’s measurement is bigger. Is this something that would generalize to “all measurements”, presumably all measurements at fillup by this driver and this computer?</p>
+There is only one observation where the driver’s measurement is much bigger than the computer’s; otherwise, there is not much to choose or the computer’s measurement is bigger. Is this something that would generalize to “all measurements”, presumably all measurements at fillup by this driver and this computer? The differences are not badly non-normal, so a <span class="math inline">\(t\)</span>-test should be fine:</p>
 <pre class="r"><code>with(gas1, t.test(Computer, Driver, paired = TRUE))</code></pre>
 <pre><code>## 
 ##  Paired t-test
@@ -398,7 +401,7 @@ There is only one observation where the driver’s measurement is much bigger th
 ## sample estimates:
 ## mean of the differences 
 ##                    2.73</code></pre>
-<p>It is. The computer’s mean measurement is estimated to be between about 1.4 and 4.0 miles per gallon larger on average than the driver’s.</p>
+<p>It is. The computer’s mean measurement is estimated to be between about 1.4 and 4.0 miles per gallon larger than the driver’s.</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>

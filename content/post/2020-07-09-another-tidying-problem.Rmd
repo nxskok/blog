@@ -53,7 +53,8 @@ As ever, we take this one step at a time, building a pipeline as we go: we see w
 The first thing is to read the data in; these are aligned columns, so `read_table` is the thing. Also, there are no column headers, so we have to say that as well:
 
 ```{r}
-gas <- read_table("gas-mileage.txt", col_names = FALSE)
+my_url <- "https://raw.githubusercontent.com/nxskok/nxskok.github.io/master/gas-mileage.txt"
+gas <- read_table(my_url, col_names = FALSE)
 gas
 ```
 
@@ -65,7 +66,7 @@ I usually find it easier to make the dataframe longer first, and then figure out
 gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value")
 ```
 
-The things in `X1` are our column-names-to-be, and the values that go with them are in `var_value`. `var_name` has served its purpose; these are the original columns in the data file, which we don't need any more. So now, we make this wider, right?
+The things in `X1` are our column-names-to-be, and the values that go with them are in `var_value`. `var_name` has mostly served its purpose; these are the original columns in the data file, which we don't need any more. So now, we make this wider, right?
 
 ```{r}
 gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>% 
@@ -75,6 +76,8 @@ gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>%
 Oh. How did we get list-columns?
 
 The answer is that `pivot_wider` needs to know which *column* each `var_value` is going to, but also which *row*. The way it decides about rows is to look at all combinations of things in the *other* columns, the ones not involved in the `pivot_wider`. The only one of those here is `var_name`, so each value goes in the column according to its value in `X1`, and the row according to its value in `var_name`. For example, the value 41.5 in row 6 of the longer dataframe goes into the column labelled `Computer` and the row labelled `X2`. But if you scroll down the longer dataframe, you'll find there are four data values with the `Computer`-`X2` combination, so `pivot_wider` collects them together into one cell of the output dataframe.
+
+This is what the warning is about.
 
 `spread` handled this much less gracefully:
 
@@ -102,7 +105,8 @@ gas %>% pivot_longer(X2:X6, names_to = "var_name", values_to = "var_value") %>%
   unnest()
 ```
 
-This has worked. The fillup numbers have come out in the wrong order, but that's probably not a problem. It would also work if you had a different number of observations on each row of the original data file, as long as you had a fillup number, a computer value and a driver value for each one.
+This has worked.`r tufte::margin_note("I did get away with using unnest the old-fashioned way, though. What I should have done is given below the second warning.")`
+The fillup numbers have come out in the wrong order, but that's probably not a problem. It would also work if you had a different number of observations on each row of  the original data file, as long as you had a fillup number, a computer value and a driver value for each one.
 
 The thoughtful way to go is to organize it so that each row will have a unique combination of columns that are left. A way to do that is to note that the original data file has four "blocks" of five observations each:
 
@@ -147,13 +151,13 @@ Now that we have tidy data, we can do an analysis. These are matched-pair data (
 gas1 %>% mutate(diff = Computer - Driver) %>% 
   ggplot(aes(x=diff)) + geom_histogram(bins=6)
 ```
-There is only one observation where the driver's measurement is much bigger than the computer's; otherwise, there is not much to choose or the computer's measurement is bigger. Is this something that would generalize to "all measurements", presumably all measurements at fillup by this driver and this computer?
+There is only one observation where the driver's measurement is much bigger than the computer's; otherwise, there is not much to choose or the computer's measurement is bigger. Is this something that would generalize to "all measurements", presumably all measurements at fillup by this driver and this computer? The differences are not badly non-normal, so a $t$-test should be fine:
 
 ```{r}
 with(gas1, t.test(Computer, Driver, paired = TRUE))
 ```
 
-It is. The computer's mean measurement is estimated to be between about 1.4 and 4.0 miles per gallon larger on average than the driver's.
+It is. The computer's mean measurement is estimated to be between about 1.4 and 4.0 miles per gallon larger than the driver's.
 
 ## References
 
