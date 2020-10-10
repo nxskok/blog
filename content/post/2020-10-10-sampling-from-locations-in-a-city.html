@@ -137,10 +137,47 @@ d</code></pre>
 <div id="htmlwidget-1" style="width:672px;height:480px;" class="leaflet html-widget"></div>
 <script type="application/json" data-for="htmlwidget-1">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addCircleMarkers","args":[[43.8405856347538,43.6142636974005,43.6426254201052,43.7333733423392,43.6883476533822,43.7869079166744,43.6465799339535,43.6396968865662,43.740718059208,43.8079513767513,43.7892276994954,43.6821760909643,43.6186219538923,43.7004526383779,43.7960451051954,43.7757609975478,43.7179439867509,43.6734056267957,43.8174444213754,43.7353308267088],[-79.6133690229235,-79.4667217004932,-79.5794000967983,-79.3068632841418,-79.1685870058518,-79.3238925372232,-79.2202741911337,-79.2137170310309,-79.5196319680633,-79.2255765117444,-79.3659771945663,-79.5367257098705,-79.1490086372094,-79.4227933171159,-79.4004283973714,-79.2079592188233,-79.321934687146,-79.1151048495993,-79.6166347121717,-79.1885206499314],10,null,null,{"interactive":true,"className":"","stroke":true,"color":["red","red","blue","blue","red","blue","red","red","blue","blue","blue","blue","red","blue","blue","blue","blue","red","red","blue"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["red","red","blue","blue","red","blue","red","red","blue","blue","blue","blue","red","blue","blue","blue","blue","red","red","blue"],"fillOpacity":0.2},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addPolygons","args":[[[[{"lng":[-79.639,-79.17,-79.15,-79.115,-79.33,-79.39,-79.45,-79.5,-79.54,-79.59,-79.61,-79.59,-79.639],"lat":[43.75,43.855,43.815,43.795,43.61,43.61,43.635,43.59,43.58,43.645,43.645,43.665,43.75]}]]],null,null,{"interactive":true,"className":"","stroke":true,"color":"#03F","weight":5,"opacity":0.5,"fill":true,"fillColor":"#03F","fillOpacity":0.2,"smoothFactor":1,"noClip":false},null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[43.58,43.855],"lng":[-79.639,-79.115]}},"evals":[],"jsHooks":[]}</script>
 <p>The polygons come from a different dataframe, so I need to specify that in <code>addPolygons</code>. Leaflet is clever enough to figure out which is longitude and which latitude (there are several possibilities it will understand).</p>
-<p>This one seems to have classified the points more or less correctly. The bottom left red circle is just in the lake, though it looks as if one of the three rightmost blue circles is in the lake also. Oops. The way to test this is to generate several sets of random points, test the ones near the boundary, and if they were classified wrongly, tweak the boundary points and try again.</p>
+<p>This one seems to have classified the points more or less correctly. The bottom left red circle is just in the lake, though it looks as if one of the three rightmost blue circles is in the lake also. Oops. The way to test this is to generate several sets of random points, test the ones near the boundary, and if they were classified wrongly, tweak the boundary points and try again. The coastline around the Scarborough Bluffs is not as straight as I was hoping.</p>
+</div>
+<div id="mapbox" class="section level2">
+<h2>Mapbox</h2>
+<p><a href="https://www.rostrum.blog/2020/09/21/londonmapbot/">Matt Dray’s blog post</a> gives a nice clear explanation of how to set up MapBox to return you a satellite image of a lat and long you feed it. What you need is a Mapbox API key. A good place to save this is in your <code>.Renviron</code>, and <code>edit_r_environ</code> from <code>usethis</code> is a good way to get at that. Then you use this key to construct a URL that will return you an image of that point.</p>
+<p>Let’s grab one of those sampled points that actually is in Toronto:</p>
+<pre class="r"><code>d %&gt;% filter(inside == 1) %&gt;% slice(1) -&gt; d1
+d1</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##     lat  long inside colour
+##   &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt; &lt;chr&gt; 
+## 1  43.6 -79.6      1 blue</code></pre>
+<p>and then I get my API key and use it to make a URL for an image at this point:</p>
+<pre class="r"><code>mapbox_token &lt;- Sys.getenv(&quot;MAPBOX_TOKEN&quot;)
+url &lt;- str_c(&quot;https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/&quot;,
+             d1$long,
+             &quot;,&quot;,
+             d1$lat,
+             &quot;,15,0/600x400?access_token=&quot;,
+             mapbox_token)</code></pre>
+<p>I’m not showing you the actual URL, since it contains my key! The last-but-one line contains the zoom (15) and the size of the image (600 by 400). These are slightly more zoomed out and bigger than the values Matt uses. (I wanted to have a wider area to make it easier to guess.)</p>
+<p>Then download this and save it somewhere, this being the place where blogdown seems to want me to save images:</p>
+<pre class="r"><code>where &lt;- &quot;../../static/img.png&quot;
+download.file(url, where)</code></pre>
+<p>and display it:</p>
+<div class="figure">
+<img src="/img.png" alt="" />
+<p class="caption">satellite image of somewhere in Toronto</p>
+</div>
+<p>I don’t recognize that, so I’ll fire up leaflet again:</p>
+<pre class="r"><code>leaflet(d1) %&gt;% 
+  addTiles() %&gt;% 
+  addCircleMarkers() </code></pre>
+<pre><code>## Assuming &quot;long&quot; and &quot;lat&quot; are longitude and latitude, respectively</code></pre>
+<div id="htmlwidget-2" style="width:672px;height:480px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addCircleMarkers","args":[43.6426254201052,-79.5794000967983,10,null,null,{"interactive":true,"className":"","stroke":true,"color":"#03F","weight":5,"opacity":0.5,"fill":true,"fillColor":"#03F","fillOpacity":0.2},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[43.6426254201052,43.6426254201052],"lng":[-79.5794000967983,-79.5794000967983]}},"evals":[],"jsHooks":[]}</script>
+<p>It’s the bit of Toronto that’s almost in Mississauga. The boundary is Etobicoke Creek, at the bottom left of the image.</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
 <p><a href="https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/">How to determine if point inside polygon</a></p>
 <p><a href="https://www.rdocumentation.org/packages/sp/versions/1.4-2/topics/point.in.polygon">point.in.polygon function documentation</a></p>
+<p><a href="https://www.rostrum.blog/2020/09/21/londonmapbot/">Matt Dray blog post on londonmapbot</a></p>
 </div>

@@ -94,10 +94,58 @@ leaflet(d) %>%
 
 The polygons come from a different dataframe, so I need to specify that in `addPolygons`. Leaflet is clever enough to figure out which is longitude and which latitude (there are several possibilities it will understand).
 
-This one seems to have classified the points more or less correctly. The bottom left red circle is just in the lake, though it looks as if one of the three rightmost blue circles is in the lake also. Oops. The way to test this is to generate several sets of random points, test the ones near the boundary, and if they were classified wrongly, tweak the boundary points and try again.
+This one seems to have classified the points more or less correctly. The bottom left red circle is just in the lake, though it looks as if one of the three rightmost blue circles is in the lake also. Oops. The way to test this is to generate several sets of random points, test the ones near the boundary, and if they were classified wrongly, tweak the boundary points and try again. The coastline around the Scarborough Bluffs is not as straight as I was hoping.
+
+## Mapbox
+
+[Matt Dray's blog post](https://www.rostrum.blog/2020/09/21/londonmapbot/) gives a nice clear explanation of how to set up MapBox to return you a satellite image of a lat and long you feed it. What you need is a Mapbox API key. A good place to save this is in your `.Renviron`, and `edit_r_environ` from `usethis` is a good way to get at that. Then you use this key to construct a URL that will return you an image of that point.
+
+Let's grab one of those sampled points that actually is in Toronto:
+
+```{r}
+d %>% filter(inside == 1) %>% slice(1) -> d1
+d1
+```
+
+and then I get my API key and use it to make a URL for an image at this point:
+
+```{r}
+mapbox_token <- Sys.getenv("MAPBOX_TOKEN")
+url <- str_c("https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/",
+             d1$long,
+             ",",
+             d1$lat,
+             ",15,0/600x400?access_token=",
+             mapbox_token)
+```
+
+I'm not showing you the actual URL, since it contains my key! The last-but-one line contains the zoom (15) and the size of the image (600 by 400). These are slightly more zoomed out and bigger than the values Matt uses. (I wanted to have a wider area to make it easier to guess.)
+
+Then download this and save it somewhere, this being the place where blogdown seems to want me to save images:
+
+```{r, message = FALSE}
+where <- "../../static/img.png"
+download.file(url, where)
+```
+
+and display it:
+
+![satellite image of somewhere in Toronto](/img.png)
+
+I don't recognize that, so I'll fire up leaflet again:
+
+```{r}
+leaflet(d1) %>% 
+  addTiles() %>% 
+  addCircleMarkers() 
+```
+
+It's the bit of Toronto that's almost in Mississauga. The boundary is Etobicoke Creek, at the bottom left of the image.
 
 ## References
 
 [How to determine if point inside polygon](https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/)
 
 [point.in.polygon function documentation](https://www.rdocumentation.org/packages/sp/versions/1.4-2/topics/point.in.polygon)
+
+[Matt Dray blog post on londonmapbot](https://www.rostrum.blog/2020/09/21/londonmapbot/)
