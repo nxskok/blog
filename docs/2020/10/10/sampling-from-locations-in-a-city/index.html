@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+<head>
+<title>R, it&#39;s OK I guess - Sampling locations in a city</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="R, it&#39;s OK I guess">
+<meta name="generator" content="Hugo 0.73.0" />
+
+  
+
+
+
+
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+<link rel="stylesheet" href="../../../../css/tuftesque.css">
+<script src="../../../../js/lightbox.js"></script>
+<style>
+body {
+  
+    background-color: #fffff8;
+  
+}
+</style>
+
+
+
+<script>
+
+</script>
+
+
+</head>
+
+<body>
+<div id="layout" class="pure-g">
+<article class="pure-u-1">
+<header class="brand">
+  <h1>
+    <a href="../../../../">
+      <span id = "blog_logo">
+         <img src="http://www.utsc.utoronto.ca/~butler/156-front.jpg" alt="Blog Logo" style="height: 40px; width:40px">
+      </span>
+      
+    </a>
+  </h1>
+</header>
+
+<section>
+  <h1 class="content-title">
+  
+  <a href="../../../../2020/10/10/sampling-from-locations-in-a-city/">Sampling locations in a city</a>
+  
+  </h1>
+  
+  
+  
+  <span class="content-meta">
+    
+  
+  
+  
+  <i class="fa fa-user">&nbsp;</i><span class="author">
+    &nbsp;Ken</span> <br>
+    
+  
+  
+  
+  <i class="fa fa-calendar"></i>
+    &nbsp;Oct 10, 2020
+  
+  
+  
+  &nbsp;<i class="fa fa-clock-o"></i>
+    &nbsp;6 min read
+  
+  
+  
+  <br>
+    <i class="fa fa-tags"> </i>
+    
+    <a  href="../../../../categories/stats">stats</a>
+    
+    <a  href="../../../../categories/maps">maps</a>
+    
+    
+    </span>
+    
+    
+    </section>
+
+<section>
+  <details closed class="toc">
+    <summary>Contents</summary>
+    
+  </details>
+</section>
+
+
+<section>
+<script src="../../../../rmarkdown-libs/header-attrs/header-attrs.js"></script>
+<script src="../../../../rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="../../../../rmarkdown-libs/jquery/jquery.min.js"></script>
+<link href="../../../../rmarkdown-libs/leaflet/leaflet.css" rel="stylesheet" />
+<script src="../../../../rmarkdown-libs/leaflet/leaflet.js"></script>
+<link href="../../../../rmarkdown-libs/leafletfix/leafletfix.css" rel="stylesheet" />
+<script src="../../../../rmarkdown-libs/Proj4Leaflet/proj4-compressed.js"></script>
+<script src="../../../../rmarkdown-libs/Proj4Leaflet/proj4leaflet.js"></script>
+<link href="../../../../rmarkdown-libs/rstudio_leaflet/rstudio_leaflet.css" rel="stylesheet" />
+<script src="../../../../rmarkdown-libs/leaflet-binding/leaflet.js"></script>
+
+<div id="TOC">
+yes
+</div>
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Do you follow @londonmapbot on Twitter? You should. Every so often a satellite photo is posted of somewhere in London (the one in England), with the implied invitation to guess where it is. Along with the tweet is a link to openstreetmap, and if you click on it, it gives you a map of where the photo is, so you can see whether your guess was right. Or, if you’re me, you look at the latitude and longitude in the link, and figure out roughly where in the city it is. My strategy is to note that Oxford Circus, in the centre of London, is at about 51.5 north and 0.15 west, and work from there.</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">London extends roughly between latitude 51.2 and 51.7 degrees, and between longitude 0.25 degrees east and 0.5 west. Knowing this enables you to place a location in London from its lat and long.</span></p>
+<p>Matt Dray, who is behind @londonmapbot, selects random points in a rectangle that goes as far in each compass direction as the M25 goes. (This motorway surrounds London in something like a circle, and is often taken as a definition of what is considered to be London; if outside, not in London. There is a surprising amount of countryside inside the M25.)</p>
+<p>London has the advantage of being roughly a rectangle aligned north-south and east-west, and is therefore easy to sample from. I have been thinking about doing something similar for my home city Toronto, but I ran into an immediate problem:</p>
+<div class="figure">
+<img src="../../../../Screenshot_2020-10-10_12-39-13.png" title="Toronto map" alt="" />
+<p class="caption">Toronto with boundary</p>
+</div>
+<p>Toronto is <em>not</em> nicely aligned north-south and east-west, and so if you sample from a rectangle enclosing it, this is what will happen:</p>
+<div class="figure">
+<img src="../../../../Screenshot_2020-10-10_12-40-39.png" title="Map of Toronto with randomly sampled points" alt="" />
+<p class="caption">randomly sampled points from rectangle surrounding Toronto</p>
+</div>
+<p>You get some points inside the city, but you will also get a number of points in Vaughan or Mississauga or Pickering or Lake Ontario! How to eliminate the ones I don’t want?</p>
+</div>
+<div id="sampling-from-a-region" class="section level2">
+<h2>Sampling from a region</h2>
+<p>Let’s load some packages:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ──────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
+## ✓ tibble  3.0.3     ✓ dplyr   1.0.2
+## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
+<pre><code>## ── Conflicts ─────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(leaflet)
+library(sp)</code></pre>
+<p>I had this vague idea that it would be possible to decide if a sampled point was inside a polygon or not. So I figured I would start by defining the boundary of Toronto as a collection of straight lines joining points, at least approximately. The northern boundary of Toronto is Steeles Avenue, all the way across, and <em>that</em> is a straight line, but the southern boundary is Lake Ontario, and the western and eastern boundaries are a mixture of streets and rivers, so I tried to pick points which, when joined by straight lines, enclosed all of Toronto without too much extra. This is what I came up with:</p>
+<pre class="r"><code>boundary &lt;- tribble(
+  ~where, ~lat, ~long,
+&quot;Steeles @ 427&quot;, 43.75, -79.639,
+&quot;Steeles @ Pickering Townline&quot;, 43.855, -79.17,
+&quot;Twyn Rivers @ Rouge River&quot;, 43.815, -79.15,
+&quot;Rouge Beach&quot;, 43.795, -79.115,
+&quot;Tommy Thompson Park&quot;, 43.61, -79.33,
+&quot;Gibraltar Point&quot;, 43.61, -79.39,
+&quot;Sunnyside Beach&quot;, 43.635, -79.45,
+&quot;Cliff Lumsden Park&quot;, 43.59, -79.50,
+&quot;Marie Curtis Park&quot;, 43.58, -79.54,
+&quot;Rathburn @ Mill&quot;, 43.645, -79.59,
+&quot;Etobicoke Creek @ Eglinton&quot;, 43.645, -79.61,
+&quot;Eglinton @ Renforth&quot;, 43.665, -79.59,
+&quot;Steeles @ 427&quot;, 43.75, -79.639,
+)
+boundary</code></pre>
+<pre><code>## # A tibble: 13 x 3
+##    where                          lat  long
+##    &lt;chr&gt;                        &lt;dbl&gt; &lt;dbl&gt;
+##  1 Steeles @ 427                 43.8 -79.6
+##  2 Steeles @ Pickering Townline  43.9 -79.2
+##  3 Twyn Rivers @ Rouge River     43.8 -79.2
+##  4 Rouge Beach                   43.8 -79.1
+##  5 Tommy Thompson Park           43.6 -79.3
+##  6 Gibraltar Point               43.6 -79.4
+##  7 Sunnyside Beach               43.6 -79.4
+##  8 Cliff Lumsden Park            43.6 -79.5
+##  9 Marie Curtis Park             43.6 -79.5
+## 10 Rathburn @ Mill               43.6 -79.6
+## 11 Etobicoke Creek @ Eglinton    43.6 -79.6
+## 12 Eglinton @ Renforth           43.7 -79.6
+## 13 Steeles @ 427                 43.8 -79.6</code></pre>
+<p>I kind of had the idea that you could determine whether a point was inside a polygon or not. The idea turns out to be <a href="https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/">this</a>: you draw a line to the right from your point; if it crosses the boundary of the polygon an odd number of times, it’s inside, and if an even number of times, it’s outside. So is there something like this in R? Yes: <a href="https://www.rdocumentation.org/packages/sp/versions/1.4-2/topics/point.in.polygon">this function</a> in the <code>sp</code> package.</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">Having had a bad experience with rgdal earlier, I was afraid that sp would be a pain to install, but there was no problem at all.</span></p>
+<p>So now I could generate some points in the enclosing rectangle and see whether they were inside or outside the city, like this:</p>
+<pre class="r"><code>set.seed(457299)
+n_point &lt;- 20
+tibble(lat = runif(n_point, min(boundary$lat), max(boundary$lat)),
+       long = runif(n_point, min(boundary$long), max(boundary$long))) -&gt; d
+d %&gt;% mutate(inside = point.in.polygon(d$long, d$lat, boundary$long, boundary$lat)) %&gt;% 
+  mutate(colour = ifelse(inside == 1, &quot;blue&quot;, &quot;red&quot;)) -&gt; d
+d</code></pre>
+<pre><code>## # A tibble: 20 x 4
+##      lat  long inside colour
+##    &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt; &lt;chr&gt; 
+##  1  43.8 -79.6      0 red   
+##  2  43.6 -79.5      0 red   
+##  3  43.6 -79.6      1 blue  
+##  4  43.7 -79.3      1 blue  
+##  5  43.7 -79.2      0 red   
+##  6  43.8 -79.3      1 blue  
+##  7  43.6 -79.2      0 red   
+##  8  43.6 -79.2      0 red   
+##  9  43.7 -79.5      1 blue  
+## 10  43.8 -79.2      1 blue  
+## 11  43.8 -79.4      1 blue  
+## 12  43.7 -79.5      1 blue  
+## 13  43.6 -79.1      0 red   
+## 14  43.7 -79.4      1 blue  
+## 15  43.8 -79.4      1 blue  
+## 16  43.8 -79.2      1 blue  
+## 17  43.7 -79.3      1 blue  
+## 18  43.7 -79.1      0 red   
+## 19  43.8 -79.6      0 red   
+## 20  43.7 -79.2      1 blue</code></pre>
+<p>The function <code>point.in.polygon</code> returns a 1 if the point is inside the polygon (city boundary) and a 0 if outside.</p>
+<p><label for="tufte-mn-" class="margin-toggle">⊕</label><input type="checkbox" id="tufte-mn-" class="margin-toggle"><span class="marginnote">It also returns a 2 if the point is on an edge of the polygon and a 3 if at a vertex.</span></p>
+<p>I added a column <code>colour</code> to plot the inside and outside points in different colours on a map, which we do next. The <code>leaflet</code> package is much the easiest way to do this:</p>
+<pre class="r"><code>leaflet(d) %&gt;% 
+  addTiles() %&gt;% 
+  addCircleMarkers(color = d$colour) %&gt;% 
+    addPolygons(boundary$long, boundary$lat)</code></pre>
+<pre><code>## Assuming &quot;long&quot; and &quot;lat&quot; are longitude and latitude, respectively</code></pre>
+<div id="htmlwidget-1" style="width:672px;height:480px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addCircleMarkers","args":[[43.8405856347538,43.6142636974005,43.6426254201052,43.7333733423392,43.6883476533822,43.7869079166744,43.6465799339535,43.6396968865662,43.740718059208,43.8079513767513,43.7892276994954,43.6821760909643,43.6186219538923,43.7004526383779,43.7960451051954,43.7757609975478,43.7179439867509,43.6734056267957,43.8174444213754,43.7353308267088],[-79.6133690229235,-79.4667217004932,-79.5794000967983,-79.3068632841418,-79.1685870058518,-79.3238925372232,-79.2202741911337,-79.2137170310309,-79.5196319680633,-79.2255765117444,-79.3659771945663,-79.5367257098705,-79.1490086372094,-79.4227933171159,-79.4004283973714,-79.2079592188233,-79.321934687146,-79.1151048495993,-79.6166347121717,-79.1885206499314],10,null,null,{"interactive":true,"className":"","stroke":true,"color":["red","red","blue","blue","red","blue","red","red","blue","blue","blue","blue","red","blue","blue","blue","blue","red","red","blue"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["red","red","blue","blue","red","blue","red","red","blue","blue","blue","blue","red","blue","blue","blue","blue","red","red","blue"],"fillOpacity":0.2},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addPolygons","args":[[[[{"lng":[-79.639,-79.17,-79.15,-79.115,-79.33,-79.39,-79.45,-79.5,-79.54,-79.59,-79.61,-79.59,-79.639],"lat":[43.75,43.855,43.815,43.795,43.61,43.61,43.635,43.59,43.58,43.645,43.645,43.665,43.75]}]]],null,null,{"interactive":true,"className":"","stroke":true,"color":"#03F","weight":5,"opacity":0.5,"fill":true,"fillColor":"#03F","fillOpacity":0.2,"smoothFactor":1,"noClip":false},null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[43.58,43.855],"lng":[-79.639,-79.115]}},"evals":[],"jsHooks":[]}</script>
+<p>The polygons come from a different dataframe, so I need to specify that in <code>addPolygons</code>. Leaflet is clever enough to figure out which is longitude and which latitude (there are several possibilities it will understand).</p>
+<p>This one seems to have classified the points more or less correctly. The bottom left red circle is just in the lake, though it looks as if one of the three rightmost blue circles is in the lake also. Oops. The way to test this is to generate several sets of random points, test the ones near the boundary, and if they were classified wrongly, tweak the boundary points and try again.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><a href="https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/">How to determine if point inside polygon</a></p>
+<p><a href="https://www.rdocumentation.org/packages/sp/versions/1.4-2/topics/point.in.polygon">point.in.polygon function documentation</a></p>
+</div>
+</section>
+<section>
+  
+
+  
+
+
+
+  
+  <footer class="page-footer">
+		<hr>
+		<ul class="page-footer-menu">
+		
+		</ul>
+
+  
+
+	<div class="copyright">
+	<p>
+    
+      &copy;2020
+    .
+    All rights reserved.
+    
+  </p>
+</div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    });
+    </script>
+    <script type="text/javascript"
+      src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</footer>
+
+</section>
+</article>
+</div>
+</body>
+</html>

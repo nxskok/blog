@@ -6,10 +6,19 @@
     <description>Recent content in maps on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 24 Dec 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/maps/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Sampling locations in a city</title>
+      <link>/2020/10/10/sampling-from-locations-in-a-city/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/2020/10/10/sampling-from-locations-in-a-city/</guid>
+      <description>yes  Introduction Do you follow @londonmapbot on Twitter? You should. Every so often a satellite photo is posted of somewhere in London (the one in England), with the implied invitation to guess where it is. Along with the tweet is a link to openstreetmap, and if you click on it, it gives you a map of where the photo is, so you can see whether your guess was right.</description>
+    </item>
     
     <item>
       <title>Drawing maps in R with &#34;ggmap&#34; and &#34;OpenStreetMap&#34;</title>

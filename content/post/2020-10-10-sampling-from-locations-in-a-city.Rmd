@@ -1,0 +1,103 @@
+---
+title: Sampling locations in a city
+author: Ken
+date: '2020-10-10'
+slug: sampling-from-locations-in-a-city
+categories:
+  - stats
+  - maps
+tags:
+  - '#rstats'
+math: no
+meta: yes
+toc: yes
+---
+
+## Introduction
+
+Do you follow \@londonmapbot on Twitter? You should. Every so often a satellite photo is posted of somewhere in London (the one in England), with the implied invitation to guess where it is. Along with the tweet is a link to openstreetmap, and if you click on it, it gives you a map of where the photo is, so you can see whether your guess was right. Or, if you're me, you look at the latitude and longitude in the link, and figure out roughly where in the city it is. My strategy is to note that Oxford Circus, in the centre of London, is at about 51.5 north and 0.15 west, and work from there.
+
+`r tufte::margin_note("London extends roughly between latitude 51.2 and 51.7 degrees, and between longitude 0.25 degrees east and 0.5 west. Knowing this enables you to place a location in London from its lat and long.")`
+
+Matt Dray, who is behind \@londonmapbot, selects random points in a rectangle that goes as far in each compass direction as the M25 goes. (This motorway surrounds London in something like a circle, and is often taken as a definition of what is considered to be London; if outside, not in London. There is a surprising amount of countryside inside the M25.)
+
+London has the advantage of being roughly a rectangle aligned north-south and east-west, and is therefore easy to sample from. I have been thinking about doing something similar for my home city Toronto, but I ran into an immediate problem:
+
+![Toronto with boundary](/Screenshot_2020-10-10_12-39-13.png "Toronto map")
+
+Toronto is *not* nicely aligned north-south and east-west, and so if you sample from a rectangle enclosing it, this is what will happen:
+
+![randomly sampled points from rectangle surrounding Toronto](/Screenshot_2020-10-10_12-40-39.png "Map of Toronto with randomly sampled points")
+
+You get some points inside the city, but you will also get a number of points in Vaughan or Mississauga or Pickering or Lake Ontario! How to eliminate the ones I don't want?
+
+## Sampling from a region
+
+Let's load some packages:
+
+```{r}
+library(tidyverse)
+library(leaflet)
+library(sp)
+```
+
+I had this vague idea that it would be possible to decide if a sampled point was inside a polygon or not. So I figured I would start by defining the boundary of Toronto as a collection of straight lines joining points, at least approximately. The northern boundary of Toronto is Steeles Avenue, all the way across, and *that* is a straight line, but the southern boundary is Lake Ontario, and the western and eastern boundaries are a mixture of streets and rivers, so I tried to pick points which, when joined by straight lines, enclosed all of Toronto without too much extra. This is what I came up with:
+
+```{r}
+boundary <- tribble(
+  ~where, ~lat, ~long,
+"Steeles @ 427", 43.75, -79.639,
+"Steeles @ Pickering Townline", 43.855, -79.17,
+"Twyn Rivers @ Rouge River", 43.815, -79.15,
+"Rouge Beach", 43.795, -79.115,
+"Tommy Thompson Park", 43.61, -79.33,
+"Gibraltar Point", 43.61, -79.39,
+"Sunnyside Beach", 43.635, -79.45,
+"Cliff Lumsden Park", 43.59, -79.50,
+"Marie Curtis Park", 43.58, -79.54,
+"Rathburn @ Mill", 43.645, -79.59,
+"Etobicoke Creek @ Eglinton", 43.645, -79.61,
+"Eglinton @ Renforth", 43.665, -79.59,
+"Steeles @ 427", 43.75, -79.639,
+)
+boundary
+```
+
+I kind of had the idea that you could determine whether a point was inside a polygon or not. The idea turns out to be [this](https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/): you draw a line to the right from your point; if it crosses the boundary of the polygon an odd number of times, it's inside, and if an even number of times, it's outside. So is there something like this in R? Yes: [this function](https://www.rdocumentation.org/packages/sp/versions/1.4-2/topics/point.in.polygon) in the `sp` package.
+
+`r tufte::margin_note("Having had a bad experience with rgdal earlier, I was afraid that sp would be a pain to install, but there was no problem at all.")`
+
+So now I could generate some points in the enclosing rectangle and see whether they were inside or outside the city, like this:
+
+```{r}
+set.seed(457299)
+n_point <- 20
+tibble(lat = runif(n_point, min(boundary$lat), max(boundary$lat)),
+       long = runif(n_point, min(boundary$long), max(boundary$long))) -> d
+d %>% mutate(inside = point.in.polygon(d$long, d$lat, boundary$long, boundary$lat)) %>% 
+  mutate(colour = ifelse(inside == 1, "blue", "red")) -> d
+d
+```
+
+The function `point.in.polygon` returns a 1 if the point is inside the polygon (city boundary) and a 0 if outside.
+
+`r tufte::margin_note("It also returns a 2 if the point is on an edge of the polygon and a 3 if at a vertex.")`
+
+I added a column `colour` to plot the inside and outside points in different colours on a map, which we do next. The `leaflet` package is much the easiest way to do this:
+
+```{r}
+leaflet(d) %>% 
+  addTiles() %>% 
+  addCircleMarkers(color = d$colour) %>% 
+    addPolygons(boundary$long, boundary$lat)
+```
+
+The polygons come from a different dataframe, so I need to specify that in `addPolygons`. Leaflet is clever enough to figure out which is longitude and which latitude (there are several possibilities it will understand).
+
+This one seems to have classified the points more or less correctly. The bottom left red circle is just in the lake, though it looks as if one of the three rightmost blue circles is in the lake also. Oops. The way to test this is to generate several sets of random points, test the ones near the boundary, and if they were classified wrongly, tweak the boundary points and try again.
+
+## References
+
+[How to determine if point inside polygon](https://www.geeksforgeeks.org/how-to-check-if-a-given-point-lies-inside-a-polygon/)
+
+[point.in.polygon function documentation](https://www.rdocumentation.org/packages/sp/versions/1.4-2/topics/point.in.polygon)
