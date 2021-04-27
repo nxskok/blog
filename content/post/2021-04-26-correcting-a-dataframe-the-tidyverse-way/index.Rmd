@@ -1,0 +1,162 @@
+---
+title: Correcting a dataframe, the tidyverse way
+author: Ken
+date: '2021-04-26'
+slug: correcting-a-dataframe-the-tidyverse-way
+categories: []
+tags:
+  - '#rstats'
+  - '#tidyverse'
+math: no
+meta: yes
+toc: yes
+---
+
+
+## Packages
+
+```{r}
+library(tidyverse)
+library(tmaptools)
+library(leaflet)
+```
+
+## Introduction
+
+So I had a dataframe today, in which I wanted to make some small corrections. Specifically, I had this one:
+
+```{r}
+my_url <- "http://ritsokiguess.site/datafiles/wisconsin.txt"
+wisc <- read_table(my_url)
+wisc %>% select(location)
+```
+These are mostly, but not all, cities in Wisconsin, and I want to draw them on a map. To do that, though, I need to affix their states to them, and I thought a good starting point was to start by pretending that they were all in Wisconsin, and then correct the ones that aren't:
+
+```{r}
+wisc %>% select(location) %>% 
+  mutate(state = "WI") -> wisc
+wisc
+```
+
+The last three cities are in the wrong state: Dubuque is in Iowa (IA), St. Paul in Minnesota (MN), and Chicago is in Illinois (IL). I know how to fix this in base R: I write something like
+
+```{r, eval=FALSE}
+wisc$state[12] <- "IL"
+```
+
+but how do you do this the Tidyverse way?
+
+## A better way
+
+The first step is to make a small dataframe with the cities that need to be corrected, and the states they are actually in:
+
+```{r}
+corrections <- tribble(
+  ~location, ~state,
+  "Dubuque", "IA",
+  "St.Paul", "MN",
+  "Chicago", "IL"
+)
+corrections
+```
+
+Note that the columns of this dataframe have the *same names* as the ones in the original dataframe `wisc`.
+
+So, I was thinking, this is a lookup table (of a sort), and so joining this to `wisc` might yield something helpful. We want to look up locations and *not* match states, since we want to have these three cities have their correct state as a possibility. So what does this do?
+
+```{r}
+wisc %>% 
+  left_join(corrections, by = "location")
+```
+
+Now, we have *two* states for each city. The first one is always Wisconsin, and the second one is usually missing, but where the state in `state.y` has a value, *that* is the true state of the city. So, the thought process is that the actual `state` should be:
+
+- if `state.y` is not missing, use that
+- else, use the value in `state.x`.
+
+I had an idea that there was a function that would do exactly this, only I couldn't remember its name, so I couldn't really search for it. My first thought was [`na_if`](https://dplyr.tidyverse.org/reference/na_if.html). What this does is every time it sees a certain value, it replaces it with NA. This, though, is the opposite way from what I wanted. So I looked at the See Also, and saw [`replace_na`](https://tidyr.tidyverse.org/reference/replace_na.html). This replaces NAs with a given value. Not quite right, but closer.
+
+In the See Also for `replace_na`, I saw one more thing: [`coalesce`](https://dplyr.tidyverse.org/reference/coalesce.html), "replace NAs with values from other vectors". Was that what I was thinking of? It was. The way it works is that you feed it several vectors, and the first one that is not missing gives its value to the result. Hence, what I needed was this:
+
+```{r}
+wisc %>% 
+  left_join(corrections, by = "location") %>% 
+  mutate(state=coalesce(state.y, state.x))
+```
+
+Where `state.y` has a value, it is used; if it's missing, the value in `state.x` is used instead.
+
+
+## The best way
+
+I was quite pleased with myself for coming up with this, but I had missed the actual best way of doing this. In SQL, there is UPDATE, and what that does is to take a table of keys to look up and some new values for other columns to replace the ones in the original table. Because `dplyr` has a lot of things in common with SQL, it is perhaps no surprise that there is a [`rows_update`](https://dplyr.tidyverse.org/reference/rows.html), and for this job it is as simple as this:
+
+```{r}
+wisc %>% 
+  rows_update(corrections) -> wisc
+wisc
+```
+
+The values to look up (the "keys") are by default in the first column, which is where they are in `corrections`. If they had not been, I would have used a `by` in the same way as with a join. 
+
+Mind. Blown. (Well, my mind was, anyway.)
+
+## Geocoding
+
+I said I wanted to draw a map with these cities on it. For that, I need to look up the longitude and latitude of these places, and for *that*, I need to glue the state onto the name of each city, to make sure I don't look up the wrong one. It is perhaps easy to forget that `unite` is the cleanest way of doing this, particularly if you don't want the individual columns any more:
+
+```{r}
+wisc %>% unite(where, c(location, state), sep = " ") -> wisc
+wisc
+```
+
+The function `geocode_OSM` from `tmaptools` will find the longitude and latitude of a place. It expects *one* place as input, not a vector of placenames, so we will work `rowwise` to geocode one at a time. (Using `map` from `purrr` is also an option.) The geocoder returns a list, which contains, buried a little deeply,  the longitudes and latitudes:
+
+```{r}
+wisc %>% 
+  rowwise() %>% 
+  mutate(ll = list(geocode_OSM(where))) -> wisc
+wisc
+```
+
+The column `ll` is a list-column, and the usual way to handle these is to `unnest`, but that isn't quite right here:
+
+```{r}
+wisc %>% unnest(ll)
+```
+
+Unnesting a list of three things produces *three* rows for each city. It would make more sense to have the unnesting go to the right and produce a new *column* for each thing in the list. The new `tidyr` has a variant called `unnest_wider` that does this:
+
+```{r}
+wisc %>% 
+  unnest_wider(ll)
+```
+
+The longitudes and latitudes we want are still hidden in a list-column, the one called `coords`, so with luck, if we unnest that wider as well, we should be in business:
+
+```{r}
+wisc %>% 
+  unnest_wider(ll) %>% 
+  unnest_wider(coords) -> wisc
+wisc
+```
+
+And now we are. `x` contains the longitudes (negative for degrees west), and `y` the latitudes (positive for degrees north).
+
+## Making a map with these on them
+
+The most enjoyable way to make a map in R is to use the `leaflet` package. Making a map is a three-step process:
+
+- `leaflet()` with the name of the dataframe
+- `addTiles()` to get map tiles to draw the map with
+- add some kind of markers to show where the points are. I use circle markers here; there are also markers (from `addMarkers`) that look like Google map pins. Here also you associate the longs and lats with the columns they are in in your dataframe:
+
+
+
+```{r}
+leaflet(data = wisc) %>% 
+  addTiles() %>% 
+  addCircleMarkers(lng = ~x, lat = ~y) 
+```
+
+The nice thing about Leaflet maps is that you can zoom, pan and generally move about in them. For example, you can zoom in to find out which city each circle represents. 

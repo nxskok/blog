@@ -1,0 +1,303 @@
+---
+title: Correcting a dataframe, the tidyverse way
+author: Ken
+date: '2021-04-26'
+slug: correcting-a-dataframe-the-tidyverse-way
+categories: []
+tags:
+  - '#rstats'
+  - '#tidyverse'
+math: no
+meta: yes
+toc: yes
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+<script src="{{< blogdown/postref >}}index_files/htmlwidgets/htmlwidgets.js"></script>
+<script src="{{< blogdown/postref >}}index_files/jquery/jquery.min.js"></script>
+<link href="{{< blogdown/postref >}}index_files/leaflet/leaflet.css" rel="stylesheet" />
+<script src="{{< blogdown/postref >}}index_files/leaflet/leaflet.js"></script>
+<link href="{{< blogdown/postref >}}index_files/leafletfix/leafletfix.css" rel="stylesheet" />
+<script src="{{< blogdown/postref >}}index_files/proj4/proj4.min.js"></script>
+<script src="{{< blogdown/postref >}}index_files/Proj4Leaflet/proj4leaflet.js"></script>
+<link href="{{< blogdown/postref >}}index_files/rstudio_leaflet/rstudio_leaflet.css" rel="stylesheet" />
+<script src="{{< blogdown/postref >}}index_files/leaflet-binding/leaflet.js"></script>
+
+<div id="TOC">
+
+</div>
+
+<div id="packages" class="section level2">
+<h2>Packages</h2>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+## ✓ tibble  3.1.0     ✓ dplyr   1.0.5
+## ✓ tidyr   1.1.3     ✓ stringr 1.4.0
+## ✓ readr   1.4.0     ✓ forcats 0.5.1</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(tmaptools)
+library(leaflet)</code></pre>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>So I had a dataframe today, in which I wanted to make some small corrections. Specifically, I had this one:</p>
+<pre class="r"><code>my_url &lt;- &quot;http://ritsokiguess.site/datafiles/wisconsin.txt&quot;
+wisc &lt;- read_table(my_url)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   location = col_character(),
+##   Appleton = col_double(),
+##   Beloit = col_double(),
+##   Fort.Atkinson = col_double(),
+##   Madison = col_double(),
+##   Marshfield = col_double(),
+##   Milwaukee = col_double(),
+##   Monroe = col_double(),
+##   Superior = col_double(),
+##   Wausau = col_double(),
+##   Dubuque = col_double(),
+##   St.Paul = col_double(),
+##   Chicago = col_double()
+## )</code></pre>
+<pre class="r"><code>wisc %&gt;% select(location)</code></pre>
+<pre><code>## # A tibble: 12 x 1
+##    location     
+##    &lt;chr&gt;        
+##  1 Appleton     
+##  2 Beloit       
+##  3 Fort.Atkinson
+##  4 Madison      
+##  5 Marshfield   
+##  6 Milwaukee    
+##  7 Monroe       
+##  8 Superior     
+##  9 Wausau       
+## 10 Dubuque      
+## 11 St.Paul      
+## 12 Chicago</code></pre>
+<p>These are mostly, but not all, cities in Wisconsin, and I want to draw them on a map. To do that, though, I need to affix their states to them, and I thought a good starting point was to start by pretending that they were all in Wisconsin, and then correct the ones that aren’t:</p>
+<pre class="r"><code>wisc %&gt;% select(location) %&gt;% 
+  mutate(state = &quot;WI&quot;) -&gt; wisc
+wisc</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##    location      state
+##    &lt;chr&gt;         &lt;chr&gt;
+##  1 Appleton      WI   
+##  2 Beloit        WI   
+##  3 Fort.Atkinson WI   
+##  4 Madison       WI   
+##  5 Marshfield    WI   
+##  6 Milwaukee     WI   
+##  7 Monroe        WI   
+##  8 Superior      WI   
+##  9 Wausau        WI   
+## 10 Dubuque       WI   
+## 11 St.Paul       WI   
+## 12 Chicago       WI</code></pre>
+<p>The last three cities are in the wrong state: Dubuque is in Iowa (IA), St. Paul in Minnesota (MN), and Chicago is in Illinois (IL). I know how to fix this in base R: I write something like</p>
+<pre class="r"><code>wisc$state[12] &lt;- &quot;IL&quot;</code></pre>
+<p>but how do you do this the Tidyverse way?</p>
+</div>
+<div id="a-better-way" class="section level2">
+<h2>A better way</h2>
+<p>The first step is to make a small dataframe with the cities that need to be corrected, and the states they are actually in:</p>
+<pre class="r"><code>corrections &lt;- tribble(
+  ~location, ~state,
+  &quot;Dubuque&quot;, &quot;IA&quot;,
+  &quot;St.Paul&quot;, &quot;MN&quot;,
+  &quot;Chicago&quot;, &quot;IL&quot;
+)
+corrections</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   location state
+##   &lt;chr&gt;    &lt;chr&gt;
+## 1 Dubuque  IA   
+## 2 St.Paul  MN   
+## 3 Chicago  IL</code></pre>
+<p>Note that the columns of this dataframe have the <em>same names</em> as the ones in the original dataframe <code>wisc</code>.</p>
+<p>So, I was thinking, this is a lookup table (of a sort), and so joining this to <code>wisc</code> might yield something helpful. We want to look up locations and <em>not</em> match states, since we want to have these three cities have their correct state as a possibility. So what does this do?</p>
+<pre class="r"><code>wisc %&gt;% 
+  left_join(corrections, by = &quot;location&quot;)</code></pre>
+<pre><code>## # A tibble: 12 x 3
+##    location      state.x state.y
+##    &lt;chr&gt;         &lt;chr&gt;   &lt;chr&gt;  
+##  1 Appleton      WI      &lt;NA&gt;   
+##  2 Beloit        WI      &lt;NA&gt;   
+##  3 Fort.Atkinson WI      &lt;NA&gt;   
+##  4 Madison       WI      &lt;NA&gt;   
+##  5 Marshfield    WI      &lt;NA&gt;   
+##  6 Milwaukee     WI      &lt;NA&gt;   
+##  7 Monroe        WI      &lt;NA&gt;   
+##  8 Superior      WI      &lt;NA&gt;   
+##  9 Wausau        WI      &lt;NA&gt;   
+## 10 Dubuque       WI      IA     
+## 11 St.Paul       WI      MN     
+## 12 Chicago       WI      IL</code></pre>
+<p>Now, we have <em>two</em> states for each city. The first one is always Wisconsin, and the second one is usually missing, but where the state in <code>state.y</code> has a value, <em>that</em> is the true state of the city. So, the thought process is that the actual <code>state</code> should be:</p>
+<ul>
+<li>if <code>state.y</code> is not missing, use that</li>
+<li>else, use the value in <code>state.x</code>.</li>
+</ul>
+<p>I had an idea that there was a function that would do exactly this, only I couldn’t remember its name, so I couldn’t really search for it. My first thought was <a href="https://dplyr.tidyverse.org/reference/na_if.html"><code>na_if</code></a>. What this does is every time it sees a certain value, it replaces it with NA. This, though, is the opposite way from what I wanted. So I looked at the See Also, and saw <a href="https://tidyr.tidyverse.org/reference/replace_na.html"><code>replace_na</code></a>. This replaces NAs with a given value. Not quite right, but closer.</p>
+<p>In the See Also for <code>replace_na</code>, I saw one more thing: <a href="https://dplyr.tidyverse.org/reference/coalesce.html"><code>coalesce</code></a>, “replace NAs with values from other vectors”. Was that what I was thinking of? It was. The way it works is that you feed it several vectors, and the first one that is not missing gives its value to the result. Hence, what I needed was this:</p>
+<pre class="r"><code>wisc %&gt;% 
+  left_join(corrections, by = &quot;location&quot;) %&gt;% 
+  mutate(state=coalesce(state.y, state.x))</code></pre>
+<pre><code>## # A tibble: 12 x 4
+##    location      state.x state.y state
+##    &lt;chr&gt;         &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;
+##  1 Appleton      WI      &lt;NA&gt;    WI   
+##  2 Beloit        WI      &lt;NA&gt;    WI   
+##  3 Fort.Atkinson WI      &lt;NA&gt;    WI   
+##  4 Madison       WI      &lt;NA&gt;    WI   
+##  5 Marshfield    WI      &lt;NA&gt;    WI   
+##  6 Milwaukee     WI      &lt;NA&gt;    WI   
+##  7 Monroe        WI      &lt;NA&gt;    WI   
+##  8 Superior      WI      &lt;NA&gt;    WI   
+##  9 Wausau        WI      &lt;NA&gt;    WI   
+## 10 Dubuque       WI      IA      IA   
+## 11 St.Paul       WI      MN      MN   
+## 12 Chicago       WI      IL      IL</code></pre>
+<p>Where <code>state.y</code> has a value, it is used; if it’s missing, the value in <code>state.x</code> is used instead.</p>
+</div>
+<div id="the-best-way" class="section level2">
+<h2>The best way</h2>
+<p>I was quite pleased with myself for coming up with this, but I had missed the actual best way of doing this. In SQL, there is UPDATE, and what that does is to take a table of keys to look up and some new values for other columns to replace the ones in the original table. Because <code>dplyr</code> has a lot of things in common with SQL, it is perhaps no surprise that there is a <a href="https://dplyr.tidyverse.org/reference/rows.html"><code>rows_update</code></a>, and for this job it is as simple as this:</p>
+<pre class="r"><code>wisc %&gt;% 
+  rows_update(corrections) -&gt; wisc</code></pre>
+<pre><code>## Matching, by = &quot;location&quot;</code></pre>
+<pre class="r"><code>wisc</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##    location      state
+##    &lt;chr&gt;         &lt;chr&gt;
+##  1 Appleton      WI   
+##  2 Beloit        WI   
+##  3 Fort.Atkinson WI   
+##  4 Madison       WI   
+##  5 Marshfield    WI   
+##  6 Milwaukee     WI   
+##  7 Monroe        WI   
+##  8 Superior      WI   
+##  9 Wausau        WI   
+## 10 Dubuque       IA   
+## 11 St.Paul       MN   
+## 12 Chicago       IL</code></pre>
+<p>The values to look up (the “keys”) are by default in the first column, which is where they are in <code>corrections</code>. If they had not been, I would have used a <code>by</code> in the same way as with a join.</p>
+<p>Mind. Blown. (Well, my mind was, anyway.)</p>
+</div>
+<div id="geocoding" class="section level2">
+<h2>Geocoding</h2>
+<p>I said I wanted to draw a map with these cities on it. For that, I need to look up the longitude and latitude of these places, and for <em>that</em>, I need to glue the state onto the name of each city, to make sure I don’t look up the wrong one. It is perhaps easy to forget that <code>unite</code> is the cleanest way of doing this, particularly if you don’t want the individual columns any more:</p>
+<pre class="r"><code>wisc %&gt;% unite(where, c(location, state), sep = &quot; &quot;) -&gt; wisc
+wisc</code></pre>
+<pre><code>## # A tibble: 12 x 1
+##    where           
+##    &lt;chr&gt;           
+##  1 Appleton WI     
+##  2 Beloit WI       
+##  3 Fort.Atkinson WI
+##  4 Madison WI      
+##  5 Marshfield WI   
+##  6 Milwaukee WI    
+##  7 Monroe WI       
+##  8 Superior WI     
+##  9 Wausau WI       
+## 10 Dubuque IA      
+## 11 St.Paul MN      
+## 12 Chicago IL</code></pre>
+<p>The function <code>geocode_OSM</code> from <code>tmaptools</code> will find the longitude and latitude of a place. It expects <em>one</em> place as input, not a vector of placenames, so we will work <code>rowwise</code> to geocode one at a time. (Using <code>map</code> from <code>purrr</code> is also an option.) The geocoder returns a list, which contains, buried a little deeply, the longitudes and latitudes:</p>
+<pre class="r"><code>wisc %&gt;% 
+  rowwise() %&gt;% 
+  mutate(ll = list(geocode_OSM(where))) -&gt; wisc
+wisc</code></pre>
+<pre><code>## # A tibble: 12 x 2
+## # Rowwise: 
+##    where            ll              
+##    &lt;chr&gt;            &lt;list&gt;          
+##  1 Appleton WI      &lt;named list [3]&gt;
+##  2 Beloit WI        &lt;named list [3]&gt;
+##  3 Fort.Atkinson WI &lt;named list [3]&gt;
+##  4 Madison WI       &lt;named list [3]&gt;
+##  5 Marshfield WI    &lt;named list [3]&gt;
+##  6 Milwaukee WI     &lt;named list [3]&gt;
+##  7 Monroe WI        &lt;named list [3]&gt;
+##  8 Superior WI      &lt;named list [3]&gt;
+##  9 Wausau WI        &lt;named list [3]&gt;
+## 10 Dubuque IA       &lt;named list [3]&gt;
+## 11 St.Paul MN       &lt;named list [3]&gt;
+## 12 Chicago IL       &lt;named list [3]&gt;</code></pre>
+<p>The column <code>ll</code> is a list-column, and the usual way to handle these is to <code>unnest</code>, but that isn’t quite right here:</p>
+<pre class="r"><code>wisc %&gt;% unnest(ll)</code></pre>
+<pre><code>## # A tibble: 36 x 2
+##    where            ll          
+##    &lt;chr&gt;            &lt;named list&gt;
+##  1 Appleton WI      &lt;chr [1]&gt;   
+##  2 Appleton WI      &lt;dbl [2]&gt;   
+##  3 Appleton WI      &lt;bbox [4]&gt;  
+##  4 Beloit WI        &lt;chr [1]&gt;   
+##  5 Beloit WI        &lt;dbl [2]&gt;   
+##  6 Beloit WI        &lt;bbox [4]&gt;  
+##  7 Fort.Atkinson WI &lt;chr [1]&gt;   
+##  8 Fort.Atkinson WI &lt;dbl [2]&gt;   
+##  9 Fort.Atkinson WI &lt;bbox [4]&gt;  
+## 10 Madison WI       &lt;chr [1]&gt;   
+## # … with 26 more rows</code></pre>
+<p>Unnesting a list of three things produces <em>three</em> rows for each city. It would make more sense to have the unnesting go to the right and produce a new <em>column</em> for each thing in the list. The new <code>tidyr</code> has a variant called <code>unnest_wider</code> that does this:</p>
+<pre class="r"><code>wisc %&gt;% 
+  unnest_wider(ll)</code></pre>
+<pre><code>## # A tibble: 12 x 4
+##    where            query            coords    bbox      
+##    &lt;chr&gt;            &lt;chr&gt;            &lt;list&gt;    &lt;list&gt;    
+##  1 Appleton WI      Appleton WI      &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  2 Beloit WI        Beloit WI        &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  3 Fort.Atkinson WI Fort.Atkinson WI &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  4 Madison WI       Madison WI       &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  5 Marshfield WI    Marshfield WI    &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  6 Milwaukee WI     Milwaukee WI     &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  7 Monroe WI        Monroe WI        &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  8 Superior WI      Superior WI      &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+##  9 Wausau WI        Wausau WI        &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+## 10 Dubuque IA       Dubuque IA       &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+## 11 St.Paul MN       St.Paul MN       &lt;dbl [2]&gt; &lt;bbox [4]&gt;
+## 12 Chicago IL       Chicago IL       &lt;dbl [2]&gt; &lt;bbox [4]&gt;</code></pre>
+<p>The longitudes and latitudes we want are still hidden in a list-column, the one called <code>coords</code>, so with luck, if we unnest that wider as well, we should be in business:</p>
+<pre class="r"><code>wisc %&gt;% 
+  unnest_wider(ll) %&gt;% 
+  unnest_wider(coords) -&gt; wisc
+wisc</code></pre>
+<pre><code>## # A tibble: 12 x 5
+##    where            query                x     y bbox      
+##    &lt;chr&gt;            &lt;chr&gt;            &lt;dbl&gt; &lt;dbl&gt; &lt;list&gt;    
+##  1 Appleton WI      Appleton WI      -88.4  44.3 &lt;bbox [4]&gt;
+##  2 Beloit WI        Beloit WI        -89.0  42.5 &lt;bbox [4]&gt;
+##  3 Fort.Atkinson WI Fort.Atkinson WI -88.8  42.9 &lt;bbox [4]&gt;
+##  4 Madison WI       Madison WI       -89.4  43.1 &lt;bbox [4]&gt;
+##  5 Marshfield WI    Marshfield WI    -90.2  44.7 &lt;bbox [4]&gt;
+##  6 Milwaukee WI     Milwaukee WI     -87.9  43.0 &lt;bbox [4]&gt;
+##  7 Monroe WI        Monroe WI        -89.6  42.6 &lt;bbox [4]&gt;
+##  8 Superior WI      Superior WI      -92.1  46.6 &lt;bbox [4]&gt;
+##  9 Wausau WI        Wausau WI        -89.6  45.0 &lt;bbox [4]&gt;
+## 10 Dubuque IA       Dubuque IA       -90.7  42.5 &lt;bbox [4]&gt;
+## 11 St.Paul MN       St.Paul MN       -93.1  45.0 &lt;bbox [4]&gt;
+## 12 Chicago IL       Chicago IL       -87.6  41.9 &lt;bbox [4]&gt;</code></pre>
+<p>And now we are. <code>x</code> contains the longitudes (negative for degrees west), and <code>y</code> the latitudes (positive for degrees north).</p>
+</div>
+<div id="making-a-map-with-these-on-them" class="section level2">
+<h2>Making a map with these on them</h2>
+<p>The most enjoyable way to make a map in R is to use the <code>leaflet</code> package. Making a map is a three-step process:</p>
+<ul>
+<li><code>leaflet()</code> with the name of the dataframe</li>
+<li><code>addTiles()</code> to get map tiles to draw the map with</li>
+<li>add some kind of markers to show where the points are. I use circle markers here; there are also markers (from <code>addMarkers</code>) that look like Google map pins. Here also you associate the longs and lats with the columns they are in in your dataframe:</li>
+</ul>
+<pre class="r"><code>leaflet(data = wisc) %&gt;% 
+  addTiles() %&gt;% 
+  addCircleMarkers(lng = ~x, lat = ~y) </code></pre>
+<div id="htmlwidget-1" style="width:672px;height:480px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addCircleMarkers","args":[[44.2611337,42.5083272,42.9288944,43.074761,44.6688524,43.0349931,42.6136586,46.623324,44.9596017,42.5006217,44.9504037,41.8755616],[-88.4067604,-89.031784,-88.8370509,-89.3837613,-90.1717987,-87.922497,-89.5852052208876,-92.117435,-89.6298239,-90.6647967,-93.1015026,-87.6244212],10,null,null,{"interactive":true,"className":"","stroke":true,"color":"#03F","weight":5,"opacity":0.5,"fill":true,"fillColor":"#03F","fillOpacity":0.2},null,null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[41.8755616,46.623324],"lng":[-93.1015026,-87.6244212]}},"evals":[],"jsHooks":[]}</script>
+<p>The nice thing about Leaflet maps is that you can zoom, pan and generally move about in them. For example, you can zoom in to find out which city each circle represents.</p>
+</div>
