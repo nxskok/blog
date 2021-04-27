@@ -6,10 +6,19 @@
     <description>Recent content in Posts on R, it&#39;s OK I guess</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 26 Apr 2021 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Correcting a dataframe, the tidyverse way</title>
+      <link>/2021/04/26/correcting-a-dataframe-the-tidyverse-way/</link>
+      <pubDate>Mon, 26 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/2021/04/26/correcting-a-dataframe-the-tidyverse-way/</guid>
+      <description>Packages library(tidyverse) ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ── ## ✓ ggplot2 3.3.3 ✓ purrr 0.3.4 ## ✓ tibble 3.1.0 ✓ dplyr 1.0.5 ## ✓ tidyr 1.1.3 ✓ stringr 1.4.0 ## ✓ readr 1.4.0 ✓ forcats 0.5.1 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ── ## x dplyr::filter() masks stats::filter() ## x dplyr::lag() masks stats::lag() library(tmaptools) library(leaflet)  Introduction So I had a dataframe today, in which I wanted to make some small corrections.</description>
+    </item>
     
     <item>
       <title>Sampling locations in a city</title>

@@ -4,7 +4,32 @@
   
   <url>
     <loc>/tags/#rstats/</loc>
-    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
+    <lastmod>2021-04-26T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/#tidyverse/</loc>
+    <lastmod>2021-04-26T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/2021/04/26/correcting-a-dataframe-the-tidyverse-way/</loc>
+    <lastmod>2021-04-26T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/</loc>
+    <lastmod>2021-04-26T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2021-04-26T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2021-04-26T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -18,16 +43,6 @@
   </url>
   
   <url>
-    <loc>/post/</loc>
-    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/</loc>
-    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>/2020/10/10/sampling-from-locations-in-a-city/</loc>
     <lastmod>2020-10-10T00:00:00+00:00</lastmod>
   </url>
@@ -35,16 +50,6 @@
   <url>
     <loc>/categories/stats/</loc>
     <lastmod>2020-10-10T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
-    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/#tidyverse/</loc>
-    <lastmod>2020-07-09T00:00:00+00:00</lastmod>
   </url>
   
   <url>
