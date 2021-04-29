@@ -159,4 +159,6 @@ leaflet(data = wisc) %>%
   addCircleMarkers(lng = ~x, lat = ~y) 
 ```
 
+(Dammit, the map didn't come out.)
+
 The nice thing about Leaflet maps is that you can zoom, pan and generally move about in them. For example, you can zoom in to find out which city each circle represents. 
